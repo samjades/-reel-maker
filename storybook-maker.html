@@ -1,0 +1,1105 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Storybook Maker — turn a story into a cartoon video</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink: #3b2b4a;
+    --ink-soft: #7a6a8a;
+    --paper: #f1ecf7;
+    --card: #ffffff;
+    --line: #e2d9ee;
+    --berry: #e0518b;
+    --leaf: #3fae6a;
+    --marigold: #f5a623;
+    --sky: #6bb8e8;
+    --display: "Baloo 2", "Trebuchet MS", system-ui, sans-serif;
+    --body: "Nunito", -apple-system, "Segoe UI", Helvetica, sans-serif;
+  }
+  *{ box-sizing: border-box; }
+  html,body{ margin:0; width:100%; }
+  body{
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--body);
+    min-height:100vh;
+    display:flex; flex-direction:column;
+  }
+
+  header{
+    display:flex; align-items:center; justify-content:space-between;
+    gap:16px; flex-wrap:wrap;
+    padding:16px 24px;
+    background: var(--card);
+    border-bottom:2px solid var(--line);
+  }
+  header h1{
+    font-family: var(--display); font-weight:800;
+    font-size:26px; margin:0; letter-spacing:-.2px;
+  }
+  header h1 .dot{ color: var(--berry); }
+  .ratios{ display:flex; gap:6px; align-items:center; }
+  .ratios span{ font-size:13px; color:var(--ink-soft); margin-right:4px; }
+  .ratio{
+    font-family: var(--body); font-weight:700; font-size:13px;
+    border:2px solid var(--line); background:var(--card); color:var(--ink);
+    border-radius:999px; padding:7px 14px; cursor:pointer;
+  }
+  .ratio.active{ background: var(--ink); color:#fff; border-color: var(--ink); }
+  .ratio:hover{ border-color: var(--ink-soft); }
+
+  main{
+    flex:1; display:grid;
+    grid-template-columns: minmax(300px, 30%) 1fr;
+    max-width:1500px; width:100%; margin:0 auto;
+  }
+  @media (max-width: 900px){ main{ grid-template-columns: 1fr; } }
+
+  .desk{
+    padding:22px; min-width:0;
+    display:flex; flex-direction:column; gap:22px;
+    border-right:2px solid var(--line);
+    background: var(--card);
+  }
+  .desk h2{
+    font-family: var(--display); font-weight:700; font-size:17px;
+    margin:0 0 10px;
+  }
+  textarea{
+    width:100%; min-height:150px; resize:vertical;
+    font-family: var(--body); font-size:15px; line-height:1.6;
+    color: var(--ink); background:#fbf9fe;
+    border:2px solid var(--line); border-radius:14px; padding:12px 14px;
+  }
+  textarea:focus, select:focus{ outline:3px solid var(--sky); outline-offset:1px; border-color:var(--sky); }
+  .note{ font-size:12.5px; color: var(--ink-soft); line-height:1.55; margin:8px 0 0; }
+  .note a{ color: var(--berry); }
+
+  .scenes{ display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+  .scene{
+    display:flex; align-items:center; gap:9px;
+    border:2px solid var(--line); border-radius:12px;
+    background:#fbf9fe; padding:9px 10px;
+    font-size:13.5px; font-weight:600; cursor:pointer; color:var(--ink);
+    min-width:0;
+  }
+  .scene span.chip{ width:22px; height:22px; border-radius:7px; flex:none; }
+  .scene.active{ border-color: var(--berry); background:#fdf1f6; }
+  .scene:hover{ border-color: var(--ink-soft); }
+  .chip.meadow{ background: linear-gradient(160deg,#bfe6fa 45%,#5ec17e 45%); }
+  .chip.forest{ background: linear-gradient(160deg,#79b98c 40%,#2c5e52 40%); }
+  .chip.ocean{ background: linear-gradient(160deg,#9fdcf0 40%,#2e90c4 40%); }
+  .chip.night{ background: linear-gradient(160deg,#3b2b5a 55%,#f5e6a3 55%); }
+  .chip.snow{ background: linear-gradient(160deg,#dceaf5 45%,#ffffff 45%); border:1px solid #cfe0ee; }
+  .chip.castle{ background: linear-gradient(160deg,#f6c57a 40%,#e0518b 75%,#4a3a63 75%); }
+  .chip.pictures{ background: linear-gradient(160deg,#cbb8e2,#8e79ab); }
+
+  .sliderow{ display:flex; align-items:center; justify-content:space-between; gap:10px; }
+  .sliderow label{ font-size:13.5px; font-weight:600; }
+  .readout{ font-family: var(--display); font-weight:700; font-size:14px; color: var(--berry); }
+  input[type=range]{ width:100%; accent-color: var(--berry); }
+  select{
+    width:100%; font-family: var(--body); font-size:13.5px;
+    border:2px solid var(--line); border-radius:12px; padding:9px 10px;
+    background:#fbf9fe; color:var(--ink);
+  }
+  .check{ display:flex; align-items:center; gap:9px; font-size:13.5px; font-weight:600; cursor:pointer; }
+  .check input{ width:17px; height:17px; accent-color: var(--berry); }
+  input[type=file]{ font-family: var(--body); font-size:13px; width:100%; }
+
+  .actions{ display:flex; gap:10px; flex-wrap:wrap; }
+  .btn{
+    font-family: var(--display); font-weight:700; font-size:15.5px;
+    border-radius:999px; border:2px solid var(--ink);
+    background: var(--card); color: var(--ink);
+    padding:11px 20px; cursor:pointer;
+  }
+  .btn:hover{ background:#f6f1fb; }
+  .btn.go{ background: var(--berry); border-color: var(--berry); color:#fff; }
+  .btn.go:hover{ background:#cf457e; }
+  .btn:disabled{ opacity:.45; cursor:not-allowed; }
+
+  .saved{ display:none; margin-top:4px; }
+  .saved a{
+    display:inline-block; font-family: var(--display); font-weight:700; font-size:15px;
+    background: var(--leaf); color:#fff; text-decoration:none;
+    padding:11px 18px; border-radius:999px;
+  }
+
+  .readingroom{
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    gap:18px; padding:28px 24px; min-width:0;
+  }
+  .book{
+    position:relative;
+    width: min(440px, 92%);
+    background: var(--card);
+    border-radius:20px; padding:14px;
+    border:2px solid var(--line);
+    box-shadow: 10px 12px 0 rgba(59,43,74,.09);
+  }
+  .book.wide{ width: min(760px, 96%); }
+  canvas{
+    display:block; width:100%; height:auto;
+    border-radius:12px; background:#dfd6ec;
+  }
+
+  .pagestrip{ display:flex; gap:5px; width:100%; max-width:640px; }
+  .pagedot{
+    flex:1; height:8px; border-radius:999px; background:#ded3ec;
+    overflow:hidden; position:relative;
+  }
+  .pagedot .fill{ position:absolute; inset:0 auto 0 0; width:0%; background: var(--berry); }
+  .statusrow{
+    display:flex; justify-content:space-between; gap:14px;
+    width:100%; max-width:640px; font-size:13px;
+  }
+  .statusrow .what{ font-weight:600; }
+  .statusrow .clock{ font-family: var(--display); font-weight:700; color: var(--ink-soft); }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Storybook Maker<span class="dot">.</span></h1>
+  <div class="ratios" id="ratioRow">
+    <span>Shape</span>
+    <button class="ratio active" data-ratio="portrait">Tall</button>
+    <button class="ratio" data-ratio="square">Square</button>
+    <button class="ratio" data-ratio="landscape">Wide</button>
+  </div>
+</header>
+
+<main>
+  <section class="desk">
+
+    <div>
+      <h2>Your story</h2>
+      <textarea id="storyInput" placeholder="Write the story one sentence at a time. Each sentence becomes its own picture. &#10;&#10;Pip the hedgehog could not sleep. The moon was too bright and the crickets were too loud. So Pip packed a tiny bag and went looking for a quieter hill."></textarea>
+      <p class="note">Every sentence turns into one page of the cartoon. Short sentences read better out loud.</p>
+    </div>
+
+    <div>
+      <h2>Where it happens</h2>
+      <div class="scenes" id="sceneRow">
+        <div class="scene active" data-scene="meadow"><span class="chip meadow"></span>Sunny meadow</div>
+        <div class="scene" data-scene="forest"><span class="chip forest"></span>Deep forest</div>
+        <div class="scene" data-scene="ocean"><span class="chip ocean"></span>Under the sea</div>
+        <div class="scene" data-scene="night"><span class="chip night"></span>Starry night</div>
+        <div class="scene" data-scene="snow"><span class="chip snow"></span>Snowy hills</div>
+        <div class="scene" data-scene="castle"><span class="chip castle"></span>Castle sunset</div>
+        <div class="scene" data-scene="pictures"><span class="chip pictures"></span>Real pictures</div>
+      </div>
+      <p class="note" id="sceneNote">Cartoon scenery drawn right here in the page, with clouds that drift and a sun that turns.</p>
+      <label class="check" id="toonWrap" style="margin-top:11px; display:none">
+        <input type="checkbox" id="toonOn" checked>Draw pictures as cartoons
+      </label>
+    </div>
+
+    <div>
+      <div class="sliderow"><label for="paceSlider">Seconds per page</label><span class="readout" id="paceOut">4.0s</span></div>
+      <input type="range" id="paceSlider" min="2" max="8" step="0.5" value="4">
+    </div>
+
+    <div>
+      <h2>Read it out loud</h2>
+      <label class="check"><input type="checkbox" id="narrateOn">Speak each page while it plays</label>
+      <select id="voicePick" style="margin-top:9px"></select>
+      <div class="sliderow" style="margin-top:10px"><label for="rateSlider">Reading speed</label><span class="readout" id="rateOut">0.9x</span></div>
+      <input type="range" id="rateSlider" min="0.5" max="1.4" step="0.1" value="0.9">
+      <p class="note">This voice is built into your browser and plays while you watch here. It can't be saved into the video file, so for narration in the finished video, make a free MP3 at <a href="https://ttsmp3.com" target="_blank" rel="noopener">ttsmp3.com</a> and add it below.</p>
+    </div>
+
+    <div>
+      <h2>Sound for the video</h2>
+      <input type="file" id="audioInput" accept="audio/*">
+      <div class="sliderow" style="margin-top:10px"><label for="volSlider">Volume</label><span class="readout" id="volOut">70%</span></div>
+      <input type="range" id="volSlider" min="0" max="100" step="1" value="70">
+      <p class="note">Add your narration MP3 or a lullaby. Free music: <a href="https://pixabay.com/music/" target="_blank" rel="noopener">Pixabay Music</a>. Your file stays on your computer.</p>
+    </div>
+
+    <div class="actions">
+      <button class="btn" id="playBtn">Play story</button>
+      <button class="btn go" id="makeBtn">Make video</button>
+    </div>
+    <div class="saved" id="savedRow"><a id="savedLink" download="story.webm">Save video</a></div>
+
+  </section>
+
+  <section class="readingroom">
+    <div class="book" id="bookFrame">
+      <canvas id="page" width="1080" height="1920"></canvas>
+    </div>
+
+    <div class="pagestrip" id="pageStrip"></div>
+    <div class="statusrow">
+      <span class="what" id="statusWhat">Write a story, then press Play story.</span>
+      <span class="clock" id="statusClock">0:00 / 0:00</span>
+    </div>
+  </section>
+</main>
+
+<script>
+const canvas = document.getElementById('page');
+const ctx = canvas.getContext('2d');
+let W = canvas.width, H = canvas.height;
+
+const storyInput = document.getElementById('storyInput');
+const sceneRow = document.getElementById('sceneRow');
+const sceneNote = document.getElementById('sceneNote');
+const ratioRow = document.getElementById('ratioRow');
+const bookFrame = document.getElementById('bookFrame');
+const paceSlider = document.getElementById('paceSlider');
+const paceOut = document.getElementById('paceOut');
+const narrateOn = document.getElementById('narrateOn');
+const voicePick = document.getElementById('voicePick');
+const rateSlider = document.getElementById('rateSlider');
+const rateOut = document.getElementById('rateOut');
+const audioInput = document.getElementById('audioInput');
+const volSlider = document.getElementById('volSlider');
+const volOut = document.getElementById('volOut');
+const playBtn = document.getElementById('playBtn');
+const makeBtn = document.getElementById('makeBtn');
+const savedRow = document.getElementById('savedRow');
+const savedLink = document.getElementById('savedLink');
+const pageStrip = document.getElementById('pageStrip');
+const statusWhat = document.getElementById('statusWhat');
+const statusClock = document.getElementById('statusClock');
+const toonOn = document.getElementById('toonOn');
+const toonWrap = document.getElementById('toonWrap');
+
+const SIZES = {
+  portrait:  { w: 1080, h: 1920 },
+  square:    { w: 1080, h: 1080 },
+  landscape: { w: 1920, h: 1080 }
+};
+
+const sceneNotes = {
+  meadow: 'Cartoon scenery drawn right here in the page, with clouds that drift and a sun that turns.',
+  forest: 'Layered pine trees with fireflies blinking in the dark.',
+  ocean: 'Rolling waves, drifting bubbles and fish swimming past.',
+  night: 'A crescent moon, twinkling stars and the odd shooting star.',
+  snow: 'Soft white hills with snow falling slowly past bare trees.',
+  castle: 'A castle on the hill against a pink and gold sunset, flags waving.',
+  pictures: 'Searches Wikimedia Commons for a picture matching each sentence, preferring cartoons and drawings. Free, no signup. Pages with no match get cartoon scenery instead.'
+};
+
+let scene = 'meadow';
+let pace = parseFloat(paceSlider.value);
+let pages = [];
+let images = [];
+let rafId = null;
+let mode = 'idle';
+let startTime = 0;
+let recorder = null;
+let chunks = [];
+let audioFile = null;
+let audioEl = null;
+let pictureNote = '';
+
+/* ---------- inputs ---------- */
+
+ratioRow.addEventListener('click', (e) => {
+  const btn = e.target.closest('.ratio');
+  if (!btn) return;
+  document.querySelectorAll('.ratio').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  applyRatio(btn.dataset.ratio);
+});
+
+function applyRatio(key) {
+  const s = SIZES[key];
+  canvas.width = s.w;
+  canvas.height = s.h;
+  W = s.w; H = s.h;
+  bookFrame.classList.toggle('wide', key === 'landscape');
+  drawIdlePage();
+}
+
+sceneRow.addEventListener('click', (e) => {
+  const el = e.target.closest('.scene');
+  if (!el) return;
+  document.querySelectorAll('.scene').forEach(s => s.classList.remove('active'));
+  el.classList.add('active');
+  scene = el.dataset.scene;
+  sceneNote.textContent = sceneNotes[scene];
+  toonWrap.style.display = scene === 'pictures' ? 'flex' : 'none';
+  images = [];
+  drawIdlePage();
+});
+
+toonOn.addEventListener('change', () => { images = []; });
+
+paceSlider.addEventListener('input', () => {
+  pace = parseFloat(paceSlider.value);
+  paceOut.textContent = pace.toFixed(1) + 's';
+});
+rateSlider.addEventListener('input', () => {
+  rateOut.textContent = parseFloat(rateSlider.value).toFixed(1) + 'x';
+});
+volSlider.addEventListener('input', () => {
+  volOut.textContent = volSlider.value + '%';
+  if (audioEl) audioEl.volume = volSlider.value / 100;
+});
+audioInput.addEventListener('change', () => { audioFile = audioInput.files[0] || null; });
+
+/* ---------- narration (browser voice, preview only) ---------- */
+
+let voices = [];
+function loadVoices() {
+  voices = speechSynthesis.getVoices();
+  voicePick.innerHTML = '';
+  voices.forEach((v, i) => {
+    const opt = document.createElement('option');
+    opt.value = i;
+    opt.textContent = v.name + ' (' + v.lang + ')';
+    voicePick.appendChild(opt);
+  });
+}
+if ('speechSynthesis' in window) {
+  loadVoices();
+  speechSynthesis.onvoiceschanged = loadVoices;
+} else {
+  narrateOn.disabled = true;
+}
+
+let spokenIdx = -1;
+function speakPage(i) {
+  if (!narrateOn.checked || !('speechSynthesis' in window)) return;
+  if (i === spokenIdx) return;
+  spokenIdx = i;
+  speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(pages[i] || '');
+  const v = voices[voicePick.value];
+  if (v) u.voice = v;
+  u.rate = parseFloat(rateSlider.value);
+  u.pitch = 1.05;
+  speechSynthesis.speak(u);
+}
+
+/* ---------- story text ---------- */
+
+function splitPages(text) {
+  return text.split(/(?<=[.!?])\s+|\n+/).map(s => s.trim()).filter(Boolean);
+}
+
+function wrapLines(text, maxWidth, font) {
+  ctx.font = font;
+  const words = text.split(' ');
+  const lines = [];
+  let line = '';
+  for (const w of words) {
+    const test = line ? line + ' ' + w : w;
+    if (ctx.measureText(test).width > maxWidth && line) { lines.push(line); line = w; }
+    else line = test;
+  }
+  if (line) lines.push(line);
+  return lines;
+}
+
+/* ---------- picture search (Wikimedia Commons) ---------- */
+
+const SKIP = new Set(['a','an','the','is','are','was','were','be','been','to','of','in','on','at','for','with',
+  'by','as','it','its','this','that','these','those','and','or','but','if','then','so','than','too','very',
+  'can','will','just','not','no','you','your','we','our','they','their','i','my','me','got','now','here',
+  'there','from','into','about','up','out','over','under','again','more','some','any','all','each','only',
+  'said','went','came','could','would','when','what','who','why','how','his','her','him','she','he','them',
+  'had','has','have','did','does','do','were','because','very','little','one','two','off','down','back',
+  'youre','dont','cant','wont','didnt','wasnt','isnt','thats','theres','hasnt','couldnt','wouldnt','shouldnt',
+  'really','maybe','always','never','something','anything','nothing','everyone','somebody','again','still',
+  'while','after','before','around','through','without','together','suddenly','finally','then','soon','much']);
+
+function keywordFor(sentence) {
+  const words = sentence.toLowerCase().replace(/[^a-z0-9\s]/g, '').split(/\s+/).filter(Boolean);
+  const picks = [...new Set(words.filter(w => w.length > 3 && !SKIP.has(w)))];
+  picks.sort((a, b) => b.length - a.length);
+  return picks.slice(0, 2).join(' ') || 'storybook illustration';
+}
+
+async function searchCommons(query) {
+  const url = 'https://commons.wikimedia.org/w/api.php?action=query&generator=search'
+    + '&gsrnamespace=6&gsrlimit=20&gsrsearch=' + encodeURIComponent(query)
+    + '&prop=imageinfo&iiprop=url|size|mime&iiurlwidth=1400&format=json&origin=*';
+  const res = await fetch(url);
+  if (!res.ok) throw new Error('http ' + res.status);
+  const data = await res.json();
+  const found = data && data.query && data.query.pages;
+  if (!found) return [];
+  return Object.values(found)
+    .map(p => p.imageinfo && p.imageinfo[0])
+    .filter(i => i && i.mime && i.mime.startsWith('image/') && i.width >= 300 && i.height >= 250);
+}
+
+// Tries drawn/cartoon styles first, then falls back to anything matching, so a
+// page is far less likely to come up empty than with one strict query.
+async function findPicture(keyword) {
+  const tries = [
+    keyword + ' cartoon',
+    keyword + ' drawing',
+    keyword + ' illustration',
+    keyword
+  ];
+  for (const q of tries) {
+    try {
+      const hits = await searchCommons(q);
+      if (hits.length) {
+        const pick = hits[Math.floor(Math.random() * hits.length)];
+        console.log('[Storybook] "' + q + '" matched', hits.length, '→ using', pick.url);
+        return pick.thumburl || pick.url;
+      }
+      console.log('[Storybook] "' + q + '" found nothing, trying next');
+    } catch (e) {
+      console.error('[Storybook] search failed for "' + q + '"', e);
+      return null; // network is down or blocked; no point trying the rest
+    }
+  }
+  return null;
+}
+
+async function loadPicture(url) {
+  if (!url) return null;
+  try {
+    const res = await fetch(url, { mode: 'cors' });
+    if (!res.ok) throw new Error('http ' + res.status);
+    const blob = await res.blob();
+    const objUrl = URL.createObjectURL(blob);
+    const img = await new Promise(r => {
+      const el = new Image();
+      el.onload = () => r(el);
+      el.onerror = () => r(null);
+      el.src = objUrl;
+    });
+    if (img) return img;
+  } catch (e) {
+    console.warn('[Storybook] blob load failed, trying direct', url, e);
+  }
+  return await new Promise(r => {
+    const el = new Image();
+    el.crossOrigin = 'anonymous';
+    el.onload = () => r(el);
+    el.onerror = () => r(null);
+    el.src = url;
+  });
+}
+
+// Flattens a photo into cartoon-style art: colours snapped into a few bands,
+// then edges traced in dark ink. Runs once per page, in the page itself.
+function cartoonify(img) {
+  const maxSide = 900;
+  const scale = Math.min(1, maxSide / Math.max(img.width, img.height));
+  const w = Math.max(2, Math.round(img.width * scale));
+  const h = Math.max(2, Math.round(img.height * scale));
+
+  const off = document.createElement('canvas');
+  off.width = w; off.height = h;
+  const octx = off.getContext('2d');
+  octx.drawImage(img, 0, 0, w, h);
+
+  let data;
+  try {
+    data = octx.getImageData(0, 0, w, h);
+  } catch (e) {
+    console.warn('[Storybook] cannot read pixels (cross-origin), leaving picture as-is', e);
+    return img;
+  }
+
+  const src = data.data;
+  const lum = new Float32Array(w * h);
+  for (let i = 0, p = 0; i < src.length; i += 4, p++) {
+    lum[p] = 0.299 * src[i] + 0.587 * src[i + 1] + 0.114 * src[i + 2];
+  }
+
+  const bands = 5;
+  const step = 255 / (bands - 1);
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      const p = y * w + x;
+      const i = p * 4;
+      // flat poster colours, nudged brighter and more saturated for a drawn feel
+      for (let c = 0; c < 3; c++) {
+        let v = Math.round(src[i + c] / step) * step;
+        v = Math.min(255, v * 1.08);
+        src[i + c] = v;
+      }
+      // outline where brightness changes sharply
+      if (x > 0 && y > 0) {
+        const edge = Math.abs(lum[p] - lum[p - 1]) + Math.abs(lum[p] - lum[p - w]);
+        if (edge > 34) {
+          src[i] = src[i] * 0.18 + 40 * 0.82;
+          src[i + 1] = src[i + 1] * 0.18 + 30 * 0.82;
+          src[i + 2] = src[i + 2] * 0.18 + 50 * 0.82;
+        }
+      }
+    }
+  }
+  octx.putImageData(data, 0, 0);
+  return off;
+}
+
+async function gatherPictures() {
+  statusWhat.textContent = 'Looking for pictures…';
+  const keys = pages.map(keywordFor);
+  const urls = await Promise.all(keys.map(findPicture));
+  images = await Promise.all(urls.map(loadPicture));
+  if (toonOn.checked) {
+    statusWhat.textContent = 'Turning the pictures into cartoons…';
+    images = images.map(img => img ? cartoonify(img) : null);
+  }
+  const got = images.filter(Boolean).length;
+  console.log('[Storybook] keywords:', keys, '— pictures:', got, '/', images.length);
+  pictureNote = got ? `· ${got} of ${images.length} pages found a picture`
+                    : '· no pictures found, using cartoon scenery';
+}
+
+/* ---------- scene drawing ---------- */
+
+function rnd(i) { const x = Math.sin(i * 127.1) * 43758.5453; return x - Math.floor(x); }
+
+function skyGradient(c1, c2, from, to) {
+  const g = ctx.createLinearGradient(0, H * from, 0, H * to);
+  g.addColorStop(0, c1); g.addColorStop(1, c2);
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, W, H);
+}
+
+function drawCloud(x, y, s) {
+  ctx.fillStyle = 'rgba(255,255,255,0.92)';
+  ctx.beginPath();
+  ctx.arc(x, y, 46 * s, 0, Math.PI * 2);
+  ctx.arc(x + 52 * s, y + 10 * s, 34 * s, 0, Math.PI * 2);
+  ctx.arc(x - 50 * s, y + 12 * s, 30 * s, 0, Math.PI * 2);
+  ctx.arc(x + 12 * s, y - 26 * s, 34 * s, 0, Math.PI * 2);
+  ctx.fill();
+}
+
+function drawHill(cy, radius, color) {
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.ellipse(W / 2, cy, radius, radius * 0.55, 0, 0, Math.PI * 2);
+  ctx.fill();
+}
+
+function sceneMeadow(t) {
+  skyGradient('#8fd4f5', '#e4f5ff', 0, 0.75);
+  // turning sun
+  const sx = W * 0.79, sy = H * 0.17;
+  ctx.save();
+  ctx.translate(sx, sy);
+  ctx.rotate(t * 0.25);
+  ctx.strokeStyle = 'rgba(245,166,35,0.75)';
+  ctx.lineWidth = 9;
+  for (let i = 0; i < 10; i++) {
+    const a = (i / 10) * Math.PI * 2;
+    ctx.beginPath();
+    ctx.moveTo(Math.cos(a) * 92, Math.sin(a) * 92);
+    ctx.lineTo(Math.cos(a) * 128, Math.sin(a) * 128);
+    ctx.stroke();
+  }
+  ctx.restore();
+  ctx.fillStyle = '#f7c948';
+  ctx.beginPath(); ctx.arc(sx, sy, 74, 0, Math.PI * 2); ctx.fill();
+
+  for (let i = 0; i < 3; i++) {
+    const span = W + 400;
+    const x = ((rnd(i + 1) * span) + t * (14 + i * 7)) % span - 200;
+    drawCloud(x, H * (0.12 + rnd(i + 9) * 0.18), 0.8 + rnd(i + 3) * 0.5);
+  }
+
+  drawHill(H * 0.86, W * 0.95, '#69c98a');
+  drawHill(H * 0.95, W * 1.15, '#4aab6c');
+  // flowers on the near hill
+  for (let i = 0; i < 16; i++) {
+    const fx = rnd(i + 21) * W;
+    const fy = H * 0.9 + rnd(i + 44) * H * 0.07;
+    ctx.fillStyle = ['#f5a623', '#e0518b', '#ffffff'][i % 3];
+    ctx.beginPath(); ctx.arc(fx, fy, 9, 0, Math.PI * 2); ctx.fill();
+  }
+  // butterfly
+  const bx = W * 0.2 + Math.sin(t * 0.7) * W * 0.16;
+  const by = H * 0.6 + Math.cos(t * 1.1) * H * 0.04;
+  const flap = Math.abs(Math.sin(t * 6)) * 0.7 + 0.3;
+  ctx.fillStyle = '#e0518b';
+  ctx.beginPath(); ctx.ellipse(bx - 16, by, 17 * flap, 22, -0.4, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(bx + 16, by, 17 * flap, 22, 0.4, 0, Math.PI * 2); ctx.fill();
+}
+
+function sceneForest(t) {
+  skyGradient('#a9dcc0', '#3f8f72', 0, 0.8);
+  const rows = [
+    { y: 0.62, s: 0.7, c: '#2f7360' },
+    { y: 0.74, s: 0.9, c: '#255e4e' },
+    { y: 0.88, s: 1.15, c: '#1b4a3d' }
+  ];
+  rows.forEach((row, r) => {
+    const count = 7 + r * 2;
+    for (let i = 0; i <= count; i++) {
+      const x = (i / count) * W + (rnd(i + r * 30) - 0.5) * 60;
+      const baseY = H * row.y;
+      const hgt = (180 + rnd(i + r * 7) * 120) * row.s;
+      const wid = (90 + rnd(i + r * 13) * 40) * row.s;
+      ctx.fillStyle = row.c;
+      ctx.beginPath();
+      ctx.moveTo(x, baseY - hgt);
+      ctx.lineTo(x + wid, baseY);
+      ctx.lineTo(x - wid, baseY);
+      ctx.closePath(); ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo(x, baseY - hgt * 1.35);
+      ctx.lineTo(x + wid * 0.72, baseY - hgt * 0.45);
+      ctx.lineTo(x - wid * 0.72, baseY - hgt * 0.45);
+      ctx.closePath(); ctx.fill();
+    }
+  });
+  ctx.fillStyle = '#143a30';
+  ctx.fillRect(0, H * 0.9, W, H * 0.1);
+  for (let i = 0; i < 22; i++) {
+    const fx = rnd(i + 51) * W;
+    const fy = H * (0.35 + rnd(i + 71) * 0.5);
+    const glow = 0.25 + 0.75 * Math.abs(Math.sin(t * 2 + i));
+    ctx.fillStyle = 'rgba(247,201,72,' + glow.toFixed(2) + ')';
+    ctx.beginPath(); ctx.arc(fx, fy, 8, 0, Math.PI * 2); ctx.fill();
+  }
+}
+
+function sceneOcean(t) {
+  skyGradient('#bdeafa', '#8ed4ef', 0, 0.42);
+  const g = ctx.createLinearGradient(0, H * 0.4, 0, H);
+  g.addColorStop(0, '#3ba0d0'); g.addColorStop(1, '#0f4f7a');
+  ctx.fillStyle = g;
+  ctx.fillRect(0, H * 0.4, W, H * 0.6);
+  // wave crests
+  for (let k = 0; k < 3; k++) {
+    ctx.beginPath();
+    const baseY = H * (0.4 + k * 0.035);
+    ctx.moveTo(0, baseY);
+    for (let x = 0; x <= W; x += 24) {
+      ctx.lineTo(x, baseY + Math.sin((x / 150) + t * (1.1 + k * 0.4)) * (16 - k * 3));
+    }
+    ctx.strokeStyle = 'rgba(255,255,255,' + (0.5 - k * 0.14) + ')';
+    ctx.lineWidth = 8 - k * 2;
+    ctx.stroke();
+  }
+  // fish
+  for (let i = 0; i < 5; i++) {
+    const span = W + 300;
+    const dir = i % 2 === 0 ? 1 : -1;
+    let x = ((rnd(i + 5) * span) + t * (50 + i * 22) * dir) % span;
+    if (x < 0) x += span;
+    x -= 150;
+    const y = H * (0.52 + rnd(i + 17) * 0.34);
+    const col = ['#f5a623', '#e0518b', '#ffd479', '#7ae1c3', '#ffffff'][i % 5];
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.scale(dir, 1);
+    ctx.fillStyle = col;
+    ctx.beginPath(); ctx.ellipse(0, 0, 46, 27, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(-42, 0); ctx.lineTo(-76, -24); ctx.lineTo(-76, 24);
+    ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#23394d';
+    ctx.beginPath(); ctx.arc(20, -6, 6, 0, Math.PI * 2); ctx.fill();
+    ctx.restore();
+  }
+  // bubbles
+  for (let i = 0; i < 16; i++) {
+    const bx = rnd(i + 61) * W;
+    const travel = (t * (40 + rnd(i + 3) * 60) + rnd(i + 8) * H) % (H * 0.6);
+    const by = H - travel - H * 0.02;
+    ctx.strokeStyle = 'rgba(255,255,255,0.5)';
+    ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.arc(bx, by, 7 + rnd(i + 12) * 12, 0, Math.PI * 2); ctx.stroke();
+  }
+}
+
+function sceneNight(t) {
+  skyGradient('#1a1b3d', '#4a3266', 0, 0.9);
+  for (let i = 0; i < 70; i++) {
+    const sx = rnd(i + 2) * W;
+    const sy = rnd(i + 90) * H * 0.78;
+    const tw = 0.3 + 0.7 * Math.abs(Math.sin(t * 1.5 + i * 0.7));
+    ctx.fillStyle = 'rgba(255,252,230,' + tw.toFixed(2) + ')';
+    ctx.beginPath(); ctx.arc(sx, sy, 2 + rnd(i + 33) * 4, 0, Math.PI * 2); ctx.fill();
+  }
+  // shooting star every ~8s
+  const cyc = t % 8;
+  if (cyc < 1) {
+    const p = cyc;
+    const sx = W * 0.15 + p * W * 0.5, sy = H * 0.12 + p * H * 0.12;
+    ctx.strokeStyle = 'rgba(255,255,255,' + (1 - p).toFixed(2) + ')';
+    ctx.lineWidth = 6;
+    ctx.beginPath(); ctx.moveTo(sx, sy); ctx.lineTo(sx - 120, sy - 40); ctx.stroke();
+  }
+  // crescent moon
+  const mx = W * 0.24, my = H * 0.16;
+  ctx.fillStyle = '#f7ea9b';
+  ctx.beginPath(); ctx.arc(mx, my, 88, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = '#1e1f42';
+  ctx.beginPath(); ctx.arc(mx + 42, my - 22, 78, 0, Math.PI * 2); ctx.fill();
+
+  drawHill(H * 0.95, W * 1.1, '#241a38');
+  drawHill(H * 1.02, W * 1.4, '#170f25');
+}
+
+function sceneSnow(t) {
+  skyGradient('#cfe3f2', '#f6fbff', 0, 0.8);
+  drawHill(H * 0.88, W * 0.98, '#ffffff');
+  drawHill(H * 0.97, W * 1.2, '#eaf3fa');
+  // bare trees
+  for (let i = 0; i < 5; i++) {
+    const x = W * (0.12 + i * 0.19);
+    const base = H * (0.82 + rnd(i + 4) * 0.03);
+    const h = 150 + rnd(i + 14) * 90;
+    ctx.strokeStyle = '#6b7c93';
+    ctx.lineWidth = 11;
+    ctx.beginPath(); ctx.moveTo(x, base); ctx.lineTo(x, base - h); ctx.stroke();
+    ctx.lineWidth = 7;
+    [[-1, 0.55], [1, 0.7], [-1, 0.85]].forEach(([dir, at]) => {
+      ctx.beginPath();
+      ctx.moveTo(x, base - h * at);
+      ctx.lineTo(x + dir * 52, base - h * at - 42);
+      ctx.stroke();
+    });
+  }
+  for (let i = 0; i < 70; i++) {
+    const fx = (rnd(i + 3) * W + Math.sin(t * 0.6 + i) * 30) % W;
+    const fy = (rnd(i + 40) * H + t * (25 + rnd(i) * 40)) % H;
+    ctx.fillStyle = 'rgba(255,255,255,0.92)';
+    ctx.beginPath(); ctx.arc(fx, fy, 4 + rnd(i + 70) * 7, 0, Math.PI * 2); ctx.fill();
+  }
+}
+
+function sceneCastle(t) {
+  const g = ctx.createLinearGradient(0, 0, 0, H * 0.9);
+  g.addColorStop(0, '#5f6fae');
+  g.addColorStop(0.45, '#e0518b');
+  g.addColorStop(0.8, '#f6c57a');
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, W, H);
+  ctx.fillStyle = 'rgba(255,240,200,0.95)';
+  ctx.beginPath(); ctx.arc(W * 0.7, H * 0.63, 92, 0, Math.PI * 2); ctx.fill();
+
+  drawHill(H * 1.0, W * 1.25, '#7b5a86');
+
+  // castle
+  const baseY = H * 0.78, cx = W * 0.44, unit = Math.min(W, H) * 0.055;
+  ctx.fillStyle = '#41314f';
+  ctx.fillRect(cx - unit * 2.2, baseY - unit * 3.4, unit * 4.4, unit * 3.4);
+  const towers = [-3.1, 0, 3.1];
+  towers.forEach((off, i) => {
+    const tx = cx + off * unit;
+    const th = unit * (4.4 + (i === 1 ? 1.5 : 0));
+    ctx.fillStyle = '#4a3a63';
+    ctx.fillRect(tx - unit * 0.7, baseY - th, unit * 1.4, th);
+    ctx.fillStyle = '#31243d';
+    ctx.beginPath();
+    ctx.moveTo(tx, baseY - th - unit * 1.3);
+    ctx.lineTo(tx + unit * 0.95, baseY - th);
+    ctx.lineTo(tx - unit * 0.95, baseY - th);
+    ctx.closePath(); ctx.fill();
+    // waving flag
+    const fy = baseY - th - unit * 1.3;
+    ctx.strokeStyle = '#31243d'; ctx.lineWidth = 5;
+    ctx.beginPath(); ctx.moveTo(tx, fy); ctx.lineTo(tx, fy - unit * 0.8); ctx.stroke();
+    ctx.fillStyle = '#f5a623';
+    ctx.beginPath();
+    ctx.moveTo(tx, fy - unit * 0.8);
+    ctx.lineTo(tx + unit * 0.75 + Math.sin(t * 3 + i) * 8, fy - unit * 0.62);
+    ctx.lineTo(tx, fy - unit * 0.42);
+    ctx.closePath(); ctx.fill();
+  });
+  // lit windows
+  ctx.fillStyle = '#ffd479';
+  for (let i = 0; i < 6; i++) {
+    const wx = cx - unit * 1.6 + (i % 3) * unit * 1.5;
+    const wy = baseY - unit * (2.7 - Math.floor(i / 3) * 1.2);
+    ctx.fillRect(wx, wy, unit * 0.45, unit * 0.6);
+  }
+  drawHill(H * 1.08, W * 1.5, '#3b2b4a');
+}
+
+function scenePicture(idx) {
+  const img = images[idx];
+  const scale = Math.max(W / img.width, H / img.height);
+  const iw = img.width * scale, ih = img.height * scale;
+  ctx.drawImage(img, (W - iw) / 2, (H - ih) / 2, iw, ih);
+  const g = ctx.createLinearGradient(0, H * 0.45, 0, H);
+  g.addColorStop(0, 'rgba(30,20,40,0)');
+  g.addColorStop(1, 'rgba(30,20,40,0.55)');
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, W, H);
+}
+
+const scenePainters = {
+  meadow: sceneMeadow, forest: sceneForest, ocean: sceneOcean,
+  night: sceneNight, snow: sceneSnow, castle: sceneCastle
+};
+
+function paintScene(idx, t) {
+  if (scene === 'pictures' && images[idx]) { scenePicture(idx); return; }
+  const painter = scenePainters[scene] || sceneMeadow;
+  painter(t);
+}
+
+/* ---------- the story card ---------- */
+
+function roundRect(x, y, w, h, r) {
+  ctx.beginPath();
+  if (ctx.roundRect) { ctx.roundRect(x, y, w, h, r); return; }
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + w, y, x + w, y + h, r);
+  ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r);
+  ctx.arcTo(x, y, x + w, y, r);
+  ctx.closePath();
+}
+
+function easeOut(x) { return 1 - Math.pow(1 - x, 3); }
+
+function paintCard(idx, localT) {
+  const total = pace * 1000;
+  const p = Math.max(0, Math.min(1, localT / total));
+  let alpha = 1, lift = 0;
+  if (p < 0.16) { const e = easeOut(p / 0.16); alpha = e; lift = (1 - e) * 40; }
+  else if (p > 0.88) { const e = (p - 0.88) / 0.12; alpha = 1 - e; lift = -e * 24; }
+
+  const size = Math.round(Math.min(W, H) * 0.062);
+  const font = '700 ' + size + 'px "Baloo 2", "Trebuchet MS", sans-serif';
+  const cardW = W * 0.86;
+  const padX = size * 0.75, padY = size * 0.8;
+  const lines = wrapLines(pages[idx] || '', cardW - padX * 2, font);
+  const lh = size * 1.32;
+  const cardH = padY * 2 + lines.length * lh + size * 0.55;
+  const cardX = (W - cardW) / 2;
+  const cardY = H - cardH - H * 0.06 + lift;
+
+  ctx.save();
+  ctx.globalAlpha = alpha;
+
+  ctx.fillStyle = 'rgba(59,43,74,0.18)';
+  roundRect(cardX + 10, cardY + 14, cardW, cardH, size * 0.5);
+  ctx.fill();
+
+  ctx.fillStyle = '#fffdf8';
+  roundRect(cardX, cardY, cardW, cardH, size * 0.5);
+  ctx.fill();
+
+  ctx.fillStyle = '#f5a623';
+  roundRect(cardX + padX, cardY + padY * 0.55, size * 1.6, size * 0.16, size * 0.08);
+  ctx.fill();
+
+  ctx.font = font;
+  ctx.fillStyle = '#3b2b4a';
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'alphabetic';
+  lines.forEach((line, i) => {
+    ctx.fillText(line, cardX + padX, cardY + padY + size * 0.9 + i * lh);
+  });
+
+  ctx.font = '500 ' + Math.round(size * 0.46) + 'px "Baloo 2", sans-serif';
+  ctx.fillStyle = '#9a8aab';
+  ctx.textAlign = 'right';
+  ctx.fillText('page ' + (idx + 1) + ' of ' + pages.length, cardX + cardW - padX, cardY + cardH - padY * 0.5);
+
+  ctx.restore();
+}
+
+function drawIdlePage() {
+  paintScene(0, 0);
+  const size = Math.round(Math.min(W, H) * 0.05);
+  ctx.font = '700 ' + size + 'px "Baloo 2", sans-serif';
+  ctx.fillStyle = 'rgba(255,253,248,0.94)';
+  ctx.textAlign = 'center';
+  ctx.fillText('your story appears here', W / 2, H * 0.9);
+  ctx.textAlign = 'left';
+}
+
+/* ---------- playback loop ---------- */
+
+function frame(now) {
+  if (!startTime) startTime = now;
+  const elapsed = now - startTime;
+  const perPage = pace * 1000;
+  const total = pages.length * perPage;
+
+  if (mode === 'recording' && elapsed >= total) { finishRecording(); return; }
+
+  const eff = mode === 'preview' ? elapsed % total : elapsed;
+  const idx = Math.min(pages.length - 1, Math.floor(eff / perPage));
+  const localT = eff - idx * perPage;
+
+  if (mode === 'preview') speakPage(idx);
+
+  paintScene(idx, now / 1000);
+  paintCard(idx, localT);
+  updateStrip(idx, localT / perPage, eff, total);
+
+  rafId = requestAnimationFrame(frame);
+}
+
+function updateStrip(idx, prog, elapsed, total) {
+  const dots = pageStrip.children;
+  for (let i = 0; i < dots.length; i++) {
+    const fill = dots[i].querySelector('.fill');
+    fill.style.width = i < idx ? '100%' : (i === idx ? (prog * 100).toFixed(0) + '%' : '0%');
+  }
+  const fmt = s => Math.floor(s / 60) + ':' + String(Math.floor(s % 60)).padStart(2, '0');
+  statusClock.textContent = fmt(elapsed / 1000) + ' / ' + fmt(total / 1000);
+}
+
+function buildStrip(n) {
+  pageStrip.innerHTML = '';
+  for (let i = 0; i < n; i++) {
+    const d = document.createElement('div');
+    d.className = 'pagedot';
+    d.innerHTML = '<div class="fill"></div>';
+    pageStrip.appendChild(d);
+  }
+}
+
+function stopLoop() {
+  if (rafId) cancelAnimationFrame(rafId);
+  rafId = null;
+  startTime = 0;
+  if ('speechSynthesis' in window) speechSynthesis.cancel();
+  spokenIdx = -1;
+}
+
+async function preparePages() {
+  pages = splitPages(storyInput.value);
+  if (!pages.length) {
+    statusWhat.textContent = 'Write a story first — each sentence becomes a page.';
+    return false;
+  }
+  buildStrip(pages.length);
+  if (scene === 'pictures') await gatherPictures();
+  return true;
+}
+
+/* ---------- play ---------- */
+
+playBtn.addEventListener('click', async () => {
+  stopLoop();
+  mode = 'idle';
+  pictureNote = '';
+  const ok = await preparePages();
+  if (!ok) return;
+  mode = 'preview';
+  statusWhat.textContent = 'Playing, looping until you make the video ' + pictureNote;
+  rafId = requestAnimationFrame(frame);
+});
+
+/* ---------- make video ---------- */
+
+makeBtn.addEventListener('click', async () => {
+  stopLoop();
+  mode = 'idle';
+  pictureNote = '';
+  savedRow.style.display = 'none';
+  makeBtn.disabled = true;
+  playBtn.disabled = true;
+
+  const videoStream = canvas.captureStream(30);
+  let stream = videoStream;
+  let hasAudio = false;
+
+  // Set the audio up first, on the click itself — waiting for the picture
+  // search first would spend the browser's permission to start audio.
+  if (audioFile) {
+    statusWhat.textContent = 'Getting the sound ready…';
+    if (audioEl) { audioEl.pause(); URL.revokeObjectURL(audioEl.src); audioEl.remove(); }
+    audioEl = new Audio(URL.createObjectURL(audioFile));
+    audioEl.loop = true;
+    audioEl.volume = volSlider.value / 100;
+    audioEl.style.display = 'none';
+    document.body.appendChild(audioEl);
+
+    try { await audioEl.play(); audioEl.pause(); audioEl.currentTime = 0; }
+    catch (e) { console.warn('[Storybook] audio unlock failed', e); }
+
+    if (audioEl.readyState < 2) {
+      await new Promise(r => {
+        audioEl.addEventListener('loadeddata', r, { once: true });
+        audioEl.addEventListener('error', r, { once: true });
+        setTimeout(r, 1500);
+      });
+    }
+
+    try {
+      const aStream = audioEl.captureStream ? audioEl.captureStream() : audioEl.mozCaptureStream();
+      const tracks = aStream.getAudioTracks();
+      if (tracks.length) {
+        stream = new MediaStream([...videoStream.getVideoTracks(), ...tracks]);
+        hasAudio = true;
+      } else {
+        console.warn('[Storybook] no audio tracks from file');
+        statusWhat.textContent = 'This browser gave no audio track — making a silent video…';
+      }
+    } catch (err) {
+      console.error('[Storybook] captureStream failed', err);
+      statusWhat.textContent = 'This browser cannot record that audio — making a silent video…';
+    }
+  }
+
+  const ok = await preparePages();
+  if (!ok) { makeBtn.disabled = false; playBtn.disabled = false; return; }
+
+  // With audio in the stream the codec string must name an audio codec too,
+  // or browsers quietly record video only.
+  const withAudio = ['video/mp4;codecs=avc1,mp4a.40.2', 'video/webm;codecs=vp9,opus', 'video/webm;codecs=vp8,opus', 'video/webm'];
+  const silent = ['video/mp4;codecs=avc1', 'video/webm;codecs=vp9', 'video/webm;codecs=vp8', 'video/webm'];
+  let mimeType = (hasAudio ? withAudio : silent).find(m => MediaRecorder.isTypeSupported(m)) || 'video/webm';
+  let ext = mimeType.startsWith('video/mp4') ? 'mp4' : 'webm';
+
+  chunks = [];
+  try {
+    recorder = new MediaRecorder(stream, { mimeType, videoBitsPerSecond: 6_000_000 });
+  } catch (err) {
+    recorder = new MediaRecorder(stream);
+    ext = 'webm';
+  }
+  recorder.ondataavailable = e => { if (e.data.size) chunks.push(e.data); };
+  recorder.onstop = () => {
+    const blob = new Blob(chunks, { type: recorder.mimeType || mimeType });
+    savedLink.href = URL.createObjectURL(blob);
+    savedLink.download = 'story.' + ext;
+    savedLink.textContent = 'Save video (' + ext.toUpperCase() + ', ' + (blob.size / 1048576).toFixed(1) + ' MB)';
+    savedRow.style.display = 'block';
+    statusWhat.textContent = hasAudio ? 'Done — video with sound is ready to save.' : 'Done — video is ready to save.';
+    makeBtn.disabled = false;
+    playBtn.disabled = false;
+  };
+
+  recorder.start();
+  if (audioEl && hasAudio) {
+    audioEl.currentTime = 0;
+    audioEl.play().catch(err => {
+      statusWhat.textContent = 'The browser blocked the sound (' + err.name + ') — recording without it.';
+    });
+  }
+  mode = 'recording';
+  statusWhat.textContent = 'Recording your story ' + pictureNote;
+  rafId = requestAnimationFrame(frame);
+});
+
+function finishRecording() {
+  stopLoop();
+  mode = 'idle';
+  if (audioEl) audioEl.pause();
+  if (recorder && recorder.state !== 'inactive') recorder.stop();
+}
+
+/* ---------- start ---------- */
+
+if (document.fonts && document.fonts.ready) {
+  document.fonts.ready.then(drawIdlePage);
+} else {
+  drawIdlePage();
+}
+</script>
+</body>
+</html>
