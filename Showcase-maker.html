@@ -1,0 +1,619 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Showcase Maker — turn a topic into a photo video</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@600;700;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #231b16;
+    --panel: #2c231c;
+    --panel-2: #382c22;
+    --line: #4a3b2e;
+    --text: #f5efe6;
+    --muted: #b0a08c;
+    --brick: #c1583a;
+    --sage: #7fa06b;
+    --glow: #eab04c;
+    --display: "Fraunces", Georgia, serif;
+    --body: "Inter", -apple-system, "Segoe UI", Helvetica, sans-serif;
+  }
+  *{ box-sizing: border-box; }
+  html,body{ margin:0; width:100%; }
+  body{
+    background: var(--bg); color: var(--text); font-family: var(--body);
+    min-height:100vh; display:flex; flex-direction:column;
+  }
+
+  header{
+    display:flex; align-items:center; justify-content:space-between;
+    gap:16px; flex-wrap:wrap; padding:16px 24px;
+    background: var(--panel); border-bottom:1px solid var(--line);
+  }
+  header h1{ font-family: var(--display); font-weight:700; font-size:24px; margin:0; }
+  header h1 em{ color: var(--brick); font-style:normal; }
+  .ratios{ display:flex; gap:6px; align-items:center; }
+  .ratios span{ font-size:12.5px; color:var(--muted); margin-right:2px; }
+  .ratio{
+    font-family: var(--body); font-weight:600; font-size:13px;
+    border:1px solid var(--line); background:var(--panel-2); color:var(--text);
+    border-radius:8px; padding:7px 13px; cursor:pointer;
+  }
+  .ratio.active{ background: var(--brick); border-color: var(--brick); color:#fff; }
+
+  main{
+    flex:1; display:grid; grid-template-columns: minmax(320px, 32%) 1fr;
+    max-width:1500px; width:100%; margin:0 auto;
+  }
+  @media (max-width: 920px){ main{ grid-template-columns: 1fr; } }
+
+  .rail{
+    padding:22px; min-width:0; display:flex; flex-direction:column; gap:22px;
+    border-right:1px solid var(--line); background: var(--panel);
+    overflow-y:auto;
+  }
+  .rail h2{ font-family: var(--display); font-weight:700; font-size:17px; margin:0 0 10px; }
+  label.f{ display:block; font-size:12.5px; color:var(--muted); margin-bottom:6px; font-weight:500; }
+  input[type=text], textarea, select{
+    width:100%; font-family: var(--body); font-size:14.5px; color: var(--text);
+    background: var(--panel-2); border:1px solid var(--line); border-radius:10px;
+    padding:10px 12px;
+  }
+  textarea{ min-height:70px; resize:vertical; line-height:1.5; }
+  input:focus, textarea:focus, select:focus{ outline:2px solid var(--glow); outline-offset:1px; }
+  .note{ font-size:12px; color: var(--muted); line-height:1.55; margin:8px 0 0; }
+  .note a{ color: var(--glow); }
+  .row{ display:flex; align-items:center; justify-content:space-between; gap:10px; }
+  .readout{ font-family: var(--display); font-weight:700; font-size:13.5px; color: var(--brick); }
+  input[type=range]{ width:100%; accent-color: var(--brick); }
+  .check{ display:flex; align-items:center; gap:9px; font-size:13.5px; font-weight:500; cursor:pointer; }
+  .check input{ width:16px; height:16px; accent-color: var(--brick); }
+
+  .btn{
+    font-family: var(--body); font-weight:700; font-size:14.5px;
+    border-radius:10px; border:1px solid var(--line);
+    background: var(--panel-2); color: var(--text); padding:11px 16px; cursor:pointer;
+  }
+  .btn:hover{ border-color: var(--muted); }
+  .btn.go{ background: var(--brick); border-color: var(--brick); color:#fff; }
+  .btn.go:hover{ filter:brightness(1.08); }
+  .btn:disabled{ opacity:.4; cursor:not-allowed; }
+  .btnrow{ display:flex; gap:9px; flex-wrap:wrap; }
+
+  .saved{ display:none; }
+  .saved a{
+    display:inline-block; font-family: var(--body); font-weight:700; font-size:14px;
+    background: var(--sage); color:#12200f; text-decoration:none;
+    padding:10px 16px; border-radius:10px;
+  }
+
+  .stage{
+    display:flex; flex-direction:column; align-items:center; gap:18px;
+    padding:26px 24px; min-width:0;
+  }
+  .frame{
+    position:relative; width: min(420px, 92%);
+    background:#000; border-radius:14px; overflow:hidden;
+    box-shadow: 0 18px 44px rgba(0,0,0,.4);
+  }
+  .frame.wide{ width: min(760px, 96%); }
+  canvas{ display:block; width:100%; height:auto; background:#151016; }
+
+  .strip{ display:flex; gap:5px; width:100%; max-width:640px; }
+  .dot{ flex:1; height:6px; border-radius:999px; background:var(--panel-2); overflow:hidden; position:relative; }
+  .dot .fill{ position:absolute; inset:0 auto 0 0; width:0%; background: var(--glow); }
+  .statusrow{ display:flex; justify-content:space-between; gap:14px; width:100%; max-width:640px; font-size:12.5px; }
+  .statusrow .clock{ font-family: var(--display); font-weight:700; color: var(--muted); }
+
+  .picker{
+    width:100%; max-width:900px;
+    background: var(--panel); border:1px solid var(--line); border-radius:14px;
+    padding:16px; display:none;
+  }
+  .picker h3{ font-family: var(--display); font-size:16px; margin:0 0 4px; }
+  .picker p{ font-size:12.5px; color:var(--muted); margin:0 0 12px; }
+  .grid{
+    display:grid; grid-template-columns:repeat(auto-fill, minmax(120px, 1fr));
+    gap:10px;
+  }
+  .thumb{
+    position:relative; border-radius:10px; overflow:hidden; cursor:pointer;
+    border:3px solid transparent; aspect-ratio:1; background:var(--panel-2);
+  }
+  .thumb img{ width:100%; height:100%; object-fit:cover; display:block; }
+  .thumb.picked{ border-color: var(--brick); }
+  .thumb .num{
+    position:absolute; top:6px; left:6px; background: var(--brick); color:#fff;
+    font-family: var(--display); font-weight:700; font-size:12px;
+    width:22px; height:22px; border-radius:50%; display:none;
+    align-items:center; justify-content:center;
+  }
+  .thumb.picked .num{ display:flex; }
+  .thumb .credit{
+    position:absolute; bottom:0; left:0; right:0; padding:4px 6px;
+    font-size:9.5px; background:rgba(0,0,0,0.6); color:#fff;
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Showcase <em>Maker</em></h1>
+  <div class="ratios" id="ratioRow">
+    <span>Shape</span>
+    <button class="ratio" data-ratio="square">Square</button>
+    <button class="ratio active" data-ratio="portrait">Reels/Story</button>
+    <button class="ratio" data-ratio="landscape">Feed video</button>
+  </div>
+</header>
+
+<main>
+  <section class="rail">
+
+    <div>
+      <h2>What's it about</h2>
+      <label class="f" for="topicInput">Topic to search for</label>
+      <input type="text" id="topicInput" placeholder="e.g. paver patio backyard, outdoor kitchen, stone walkway">
+      <p class="note">Pulls real, clean stock photos matching this from Openverse — free, no signup, no API key. Sources include Flickr, Wikimedia and museum collections, filtered to commercially-usable licenses.</p>
+      <button class="btn go" id="findBtn" style="margin-top:12px; width:100%">Find photos</button>
+    </div>
+
+    <div>
+      <label class="f" for="headlineInput">Headline (optional)</label>
+      <input type="text" id="headlineInput" placeholder="e.g. Transform Your Backyard This Summer">
+      <label class="f" for="subInput" style="margin-top:10px">Small line under it (optional)</label>
+      <input type="text" id="subInput" placeholder="e.g. Free estimates · Licensed & insured">
+    </div>
+
+    <div>
+      <div class="row"><label class="f" style="margin:0" for="paceSlider">Seconds per photo</label><span class="readout" id="paceOut">3.0s</span></div>
+      <input type="range" id="paceSlider" min="1.5" max="6" step="0.5" value="3">
+    </div>
+
+    <div>
+      <h2>Sound (optional)</h2>
+      <input type="file" id="audioInput" accept="audio/*">
+      <div class="row" style="margin-top:10px"><label class="f" style="margin:0" for="volSlider">Volume</label><span class="readout" id="volOut">70%</span></div>
+      <input type="range" id="volSlider" min="0" max="100" step="1" value="70">
+      <p class="note">Free royalty-free music: <a href="https://www.youtube.com/audiolibrary" target="_blank" rel="noopener">YouTube Audio Library</a> / <a href="https://pixabay.com/music/" target="_blank" rel="noopener">Pixabay Music</a>. Stays on your computer.</p>
+    </div>
+
+    <div class="btnrow">
+      <button class="btn" id="playBtn">Preview</button>
+      <button class="btn go" id="makeBtn">Make video</button>
+    </div>
+    <div class="saved" id="savedRow"><a id="savedLink" download="showcase.webm">Save video</a></div>
+
+  </section>
+
+  <section class="stage">
+    <div class="frame" id="frameBox">
+      <canvas id="page" width="1080" height="1920"></canvas>
+    </div>
+
+    <div class="strip" id="strip"></div>
+    <div class="statusrow">
+      <span id="statusWhat">Type a topic and press Find photos.</span>
+      <span class="clock" id="statusClock">0:00 / 0:00</span>
+    </div>
+
+    <div class="picker" id="picker">
+      <h3 id="pickerTitle">Pick the photos you like</h3>
+      <p>Click to select or deselect. Selected photos become the slides, in the order you clicked them. <span id="pickCount"></span></p>
+      <div class="grid" id="pickerGrid"></div>
+    </div>
+  </section>
+</main>
+
+<script>
+const canvas = document.getElementById('page');
+const ctx = canvas.getContext('2d');
+let W = canvas.width, H = canvas.height;
+
+const topicInput = document.getElementById('topicInput');
+const headlineInput = document.getElementById('headlineInput');
+const subInput = document.getElementById('subInput');
+const findBtn = document.getElementById('findBtn');
+const ratioRow = document.getElementById('ratioRow');
+const frameBox = document.getElementById('frameBox');
+const paceSlider = document.getElementById('paceSlider');
+const paceOut = document.getElementById('paceOut');
+const audioInput = document.getElementById('audioInput');
+const volSlider = document.getElementById('volSlider');
+const volOut = document.getElementById('volOut');
+const playBtn = document.getElementById('playBtn');
+const makeBtn = document.getElementById('makeBtn');
+const savedRow = document.getElementById('savedRow');
+const savedLink = document.getElementById('savedLink');
+const strip = document.getElementById('strip');
+const statusWhat = document.getElementById('statusWhat');
+const statusClock = document.getElementById('statusClock');
+const picker = document.getElementById('picker');
+const pickerTitle = document.getElementById('pickerTitle');
+const pickerGrid = document.getElementById('pickerGrid');
+const pickCount = document.getElementById('pickCount');
+
+const SIZES = { square: {w:1080,h:1080}, portrait: {w:1080,h:1920}, landscape: {w:1920,h:1080} };
+
+let pace = parseFloat(paceSlider.value);
+let candidates = [];   // all fetched results {thumb, full, credit}
+let pickedIdx = [];    // indices into candidates, in click order
+let slideImages = [];  // loaded Image objects, one per picked slide, aligned to pickedIdx order
+let rafId = null;
+let mode = 'idle';
+let startTime = 0;
+let recorder = null;
+let chunks = [];
+let audioFile = null;
+let audioEl = null;
+
+/* ---------- shape ---------- */
+
+ratioRow.addEventListener('click', (e) => {
+  const b = e.target.closest('.ratio');
+  if (!b) return;
+  document.querySelectorAll('.ratio').forEach(x => x.classList.remove('active'));
+  b.classList.add('active');
+  const s = SIZES[b.dataset.ratio];
+  canvas.width = s.w; canvas.height = s.h; W = s.w; H = s.h;
+  frameBox.classList.toggle('wide', b.dataset.ratio === 'landscape');
+  drawIdle();
+});
+
+paceSlider.addEventListener('input', () => { pace = parseFloat(paceSlider.value); paceOut.textContent = pace.toFixed(1) + 's'; });
+volSlider.addEventListener('input', () => { volOut.textContent = volSlider.value + '%'; if (audioEl) audioEl.volume = volSlider.value / 100; });
+audioInput.addEventListener('change', () => { audioFile = audioInput.files[0] || null; });
+
+/* ---------- find photos (Openverse, no key) ---------- */
+
+async function searchOpenverse(query) {
+  const url = 'https://api.openverse.org/v1/images/?q=' + encodeURIComponent(query)
+    + '&license_type=commercial&category=photograph&page_size=30&mature=false';
+  const res = await fetch(url);
+  if (!res.ok) throw new Error('http ' + res.status);
+  const data = await res.json();
+  const results = data && data.results || [];
+  return results
+    .filter(r => r.url && r.width >= 1000 && r.height >= 700)
+    .map(r => ({
+      thumb: r.thumbnail || r.url,
+      full: r.url,
+      credit: (r.creator ? r.creator : (r.source || 'unknown')) + (r.license ? ' · ' + r.license.toUpperCase() : ''),
+      landing: r.foreign_landing_url || ''
+    }));
+}
+
+findBtn.addEventListener('click', async () => {
+  const q = topicInput.value.trim();
+  if (!q) { statusWhat.textContent = 'Type a topic first, e.g. "paver patio backyard".'; return; }
+  findBtn.disabled = true;
+  statusWhat.textContent = 'Searching for "' + q + '"…';
+  picker.style.display = 'none';
+  candidates = []; pickedIdx = []; slideImages = [];
+
+  try {
+    candidates = await searchOpenverse(q);
+    console.log('[Showcase] found', candidates.length, 'candidates for', q);
+  } catch (e) {
+    console.error('[Showcase] search failed', e);
+    statusWhat.textContent = 'Search failed — if you opened this file directly, it needs to be hosted (http/https), not double-clicked. Check the console for details.';
+    findBtn.disabled = false;
+    return;
+  }
+
+  findBtn.disabled = false;
+  if (!candidates.length) {
+    statusWhat.textContent = 'No clean matches for "' + q + '" — try a broader or different phrase.';
+    return;
+  }
+
+  pickerTitle.textContent = candidates.length + ' photos found for "' + q + '"';
+  pickerGrid.innerHTML = '';
+  candidates.forEach((c, i) => {
+    const el = document.createElement('div');
+    el.className = 'thumb';
+    el.dataset.i = i;
+    el.innerHTML = '<img src="' + c.thumb + '" loading="lazy" referrerpolicy="no-referrer">'
+      + '<span class="num"></span>'
+      + '<span class="credit">' + c.credit.replace(/</g, '') + '</span>';
+    el.addEventListener('click', () => togglePick(i, el));
+    pickerGrid.appendChild(el);
+  });
+  picker.style.display = 'block';
+  statusWhat.textContent = 'Pick the photos you want, then press Preview or Make video.';
+});
+
+function togglePick(i, el) {
+  const pos = pickedIdx.indexOf(i);
+  if (pos === -1) {
+    pickedIdx.push(i);
+    el.classList.add('picked');
+  } else {
+    pickedIdx.splice(pos, 1);
+    el.classList.remove('picked');
+  }
+  // renumber all picked thumbs to show slide order
+  pickerGrid.querySelectorAll('.thumb').forEach(t => {
+    const idx = pickedIdx.indexOf(parseInt(t.dataset.i, 10));
+    t.querySelector('.num').textContent = idx === -1 ? '' : (idx + 1);
+  });
+  pickCount.textContent = pickedIdx.length ? '(' + pickedIdx.length + ' selected)' : '';
+}
+
+async function loadSlideImages() {
+  statusWhat.textContent = 'Loading your picked photos…';
+  slideImages = await Promise.all(pickedIdx.map(async (ci) => {
+    const c = candidates[ci];
+    try {
+      const res = await fetch(c.full, { mode: 'cors' });
+      if (!res.ok) throw new Error('http ' + res.status);
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      return await new Promise(r => {
+        const im = new Image();
+        im.onload = () => r(im);
+        im.onerror = () => r(null);
+        im.src = url;
+      });
+    } catch (e) {
+      console.warn('[Showcase] full-size load failed, trying direct', c.full, e);
+      return await new Promise(r => {
+        const im = new Image();
+        im.crossOrigin = 'anonymous';
+        im.onload = () => r(im);
+        im.onerror = () => r(null);
+        im.src = c.full;
+      });
+    }
+  }));
+  slideImages = slideImages.filter(Boolean);
+}
+
+/* ---------- drawing ---------- */
+
+function roundRect(x, y, w, h, r) {
+  ctx.beginPath();
+  if (ctx.roundRect) { ctx.roundRect(x, y, w, h, r); return; }
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + w, y, x + w, y + h, r);
+  ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r);
+  ctx.arcTo(x, y, x + w, y, r);
+  ctx.closePath();
+}
+
+function easeInOut(x) { return x < 0.5 ? 2 * x * x : 1 - Math.pow(-2 * x + 2, 2) / 2; }
+
+// Slow Ken-Burns zoom/pan so a still photo feels alive on video.
+function drawPhoto(img, localProg, seed) {
+  const zoomFrom = 1.0, zoomTo = 1.14;
+  const z = zoomFrom + (zoomTo - zoomFrom) * easeInOut(localProg);
+  const dirX = (seed % 2 === 0) ? 1 : -1;
+  const dirY = (Math.floor(seed / 2) % 2 === 0) ? 1 : -1;
+  const panAmt = 0.05 * easeInOut(localProg);
+
+  const scale = Math.max(W / img.width, H / img.height) * z;
+  const iw = img.width * scale, ih = img.height * scale;
+  const ox = (W - iw) / 2 + dirX * panAmt * W;
+  const oy = (H - ih) / 2 + dirY * panAmt * H;
+  ctx.drawImage(img, ox, oy, iw, ih);
+
+  const g = ctx.createLinearGradient(0, H * 0.55, 0, H);
+  g.addColorStop(0, 'rgba(20,14,10,0)');
+  g.addColorStop(1, 'rgba(20,14,10,0.62)');
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, W, H);
+  const top = ctx.createLinearGradient(0, 0, 0, H * 0.22);
+  top.addColorStop(0, 'rgba(20,14,10,0.35)');
+  top.addColorStop(1, 'rgba(20,14,10,0)');
+  ctx.fillStyle = top;
+  ctx.fillRect(0, 0, W, H * 0.22);
+}
+
+function drawCaption() {
+  const headline = headlineInput.value.trim();
+  const sub = subInput.value.trim();
+  if (!headline && !sub) return;
+  const baseSize = Math.round(Math.min(W, H) * 0.062);
+  const pad = baseSize * 0.9;
+  let y = H - pad * 1.5;
+
+  if (sub) {
+    ctx.font = '600 ' + Math.round(baseSize * 0.42) + 'px "Inter", sans-serif';
+    ctx.fillStyle = 'rgba(245,239,230,0.88)';
+    ctx.textAlign = 'left';
+    ctx.fillText(sub, pad, y);
+    y -= baseSize * 1.05;
+  }
+  if (headline) {
+    ctx.font = '700 ' + baseSize + 'px "Fraunces", Georgia, serif';
+    ctx.fillStyle = '#faf5ec';
+    ctx.textAlign = 'left';
+    const maxW = W - pad * 2;
+    const words = headline.split(' ');
+    let line = '', lines = [];
+    words.forEach(w => {
+      const test = line ? line + ' ' + w : w;
+      if (ctx.measureText(test).width > maxW && line) { lines.push(line); line = w; }
+      else line = test;
+    });
+    if (line) lines.push(line);
+    const lh = baseSize * 1.14;
+    y -= (lines.length - 1) * lh;
+    ctx.fillStyle = '#c1583a';
+    ctx.fillRect(pad, y - baseSize * 1.05, baseSize * 1.5, baseSize * 0.14);
+    lines.forEach((ln, i) => ctx.fillText(ln, pad, y + i * lh));
+  }
+}
+
+function drawIdle() {
+  ctx.fillStyle = '#1c1510';
+  ctx.fillRect(0, 0, W, H);
+  const s = Math.round(Math.min(W, H) * 0.045);
+  ctx.font = '600 ' + s + 'px "Inter", sans-serif';
+  ctx.fillStyle = 'rgba(245,239,230,0.55)';
+  ctx.textAlign = 'center';
+  ctx.fillText('your photos appear here', W / 2, H / 2);
+  ctx.textAlign = 'left';
+}
+
+/* ---------- playback loop ---------- */
+
+function frame(now) {
+  if (!startTime) startTime = now;
+  const elapsed = now - startTime;
+  const per = pace * 1000;
+  const total = slideImages.length * per;
+
+  if (mode === 'recording' && elapsed >= total) { finishRecording(); return; }
+
+  const eff = mode === 'preview' ? elapsed % total : elapsed;
+  const idx = Math.min(slideImages.length - 1, Math.floor(eff / per));
+  const localT = eff - idx * per;
+  const prog = Math.max(0, Math.min(1, localT / per));
+
+  drawPhoto(slideImages[idx], prog, idx);
+  drawCaption();
+  updateStrip(idx, prog, eff, total);
+
+  rafId = requestAnimationFrame(frame);
+}
+
+function updateStrip(idx, prog, elapsed, total) {
+  const dots = strip.children;
+  for (let i = 0; i < dots.length; i++) {
+    const fill = dots[i].querySelector('.fill');
+    fill.style.width = i < idx ? '100%' : (i === idx ? (prog * 100).toFixed(0) + '%' : '0%');
+  }
+  const fmt = s => Math.floor(s / 60) + ':' + String(Math.floor(s % 60)).padStart(2, '0');
+  statusClock.textContent = fmt(elapsed / 1000) + ' / ' + fmt(total / 1000);
+}
+
+function buildStrip(n) {
+  strip.innerHTML = '';
+  for (let i = 0; i < n; i++) {
+    const d = document.createElement('div');
+    d.className = 'dot';
+    d.innerHTML = '<div class="fill"></div>';
+    strip.appendChild(d);
+  }
+}
+
+function stopLoop() { if (rafId) cancelAnimationFrame(rafId); rafId = null; startTime = 0; }
+
+async function readySlides() {
+  if (!pickedIdx.length) {
+    statusWhat.textContent = 'Pick at least one photo from the grid above first.';
+    return false;
+  }
+  buildStrip(pickedIdx.length);
+  await loadSlideImages();
+  if (!slideImages.length) {
+    statusWhat.textContent = 'Those photos failed to load — try picking different ones.';
+    return false;
+  }
+  return true;
+}
+
+/* ---------- preview ---------- */
+
+playBtn.addEventListener('click', async () => {
+  stopLoop(); mode = 'idle';
+  const ok = await readySlides();
+  if (!ok) return;
+  mode = 'preview';
+  statusWhat.textContent = 'Previewing, loops until you make the video.';
+  rafId = requestAnimationFrame(frame);
+});
+
+/* ---------- export ---------- */
+
+makeBtn.addEventListener('click', async () => {
+  stopLoop(); mode = 'idle';
+  savedRow.style.display = 'none';
+  makeBtn.disabled = true; playBtn.disabled = true;
+
+  const videoStream = canvas.captureStream(30);
+  let stream = videoStream;
+  let hasAudio = false;
+
+  if (audioFile) {
+    statusWhat.textContent = 'Getting the sound ready…';
+    if (audioEl) { audioEl.pause(); URL.revokeObjectURL(audioEl.src); audioEl.remove(); }
+    audioEl = new Audio(URL.createObjectURL(audioFile));
+    audioEl.loop = true;
+    audioEl.volume = volSlider.value / 100;
+    audioEl.style.display = 'none';
+    document.body.appendChild(audioEl);
+
+    try { await audioEl.play(); audioEl.pause(); audioEl.currentTime = 0; }
+    catch (e) { console.warn('[Showcase] audio unlock failed', e); }
+
+    if (audioEl.readyState < 2) {
+      await new Promise(r => {
+        audioEl.addEventListener('loadeddata', r, { once: true });
+        audioEl.addEventListener('error', r, { once: true });
+        setTimeout(r, 1500);
+      });
+    }
+    try {
+      const aStream = audioEl.captureStream ? audioEl.captureStream() : audioEl.mozCaptureStream();
+      const tracks = aStream.getAudioTracks();
+      if (tracks.length) {
+        stream = new MediaStream([...videoStream.getVideoTracks(), ...tracks]);
+        hasAudio = true;
+      } else {
+        statusWhat.textContent = 'This browser gave no audio track — making a silent video…';
+      }
+    } catch (err) {
+      console.error('[Showcase] captureStream failed', err);
+      statusWhat.textContent = 'This browser cannot record that audio — making a silent video…';
+    }
+  }
+
+  const ok = await readySlides();
+  if (!ok) { makeBtn.disabled = false; playBtn.disabled = false; return; }
+
+  const withAudio = ['video/mp4;codecs=avc1,mp4a.40.2', 'video/webm;codecs=vp9,opus', 'video/webm;codecs=vp8,opus', 'video/webm'];
+  const silent = ['video/mp4;codecs=avc1', 'video/webm;codecs=vp9', 'video/webm;codecs=vp8', 'video/webm'];
+  let mimeType = (hasAudio ? withAudio : silent).find(m => MediaRecorder.isTypeSupported(m)) || 'video/webm';
+  let ext = mimeType.startsWith('video/mp4') ? 'mp4' : 'webm';
+
+  chunks = [];
+  try { recorder = new MediaRecorder(stream, { mimeType, videoBitsPerSecond: 8_000_000 }); }
+  catch (err) { recorder = new MediaRecorder(stream); ext = 'webm'; }
+  recorder.ondataavailable = e => { if (e.data.size) chunks.push(e.data); };
+  recorder.onstop = () => {
+    const blob = new Blob(chunks, { type: recorder.mimeType || mimeType });
+    savedLink.href = URL.createObjectURL(blob);
+    savedLink.download = 'showcase.' + ext;
+    savedLink.textContent = 'Save video (' + ext.toUpperCase() + ', ' + (blob.size / 1048576).toFixed(1) + ' MB)';
+    savedRow.style.display = 'block';
+    statusWhat.textContent = hasAudio ? 'Done — video with sound is ready.' : 'Done — video is ready.';
+    makeBtn.disabled = false; playBtn.disabled = false;
+  };
+
+  recorder.start();
+  if (audioEl && hasAudio) {
+    audioEl.currentTime = 0;
+    audioEl.play().catch(err => { statusWhat.textContent = 'Sound blocked by the browser (' + err.name + ') — recording without it.'; });
+  }
+  mode = 'recording';
+  statusWhat.textContent = 'Recording your video…';
+  rafId = requestAnimationFrame(frame);
+});
+
+function finishRecording() {
+  stopLoop(); mode = 'idle';
+  if (audioEl) audioEl.pause();
+  if (recorder && recorder.state !== 'inactive') recorder.stop();
+}
+
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(drawIdle); else drawIdle();
+</script>
+</body>
+</html>
