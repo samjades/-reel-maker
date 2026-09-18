@@ -158,7 +158,7 @@
       <h2>What's it about</h2>
       <label class="f" for="topicInput">Topic to search for</label>
       <input type="text" id="topicInput" placeholder="e.g. paver patio backyard, outdoor kitchen, stone walkway">
-      <p class="note">Pulls real, clean stock photos matching this from Openverse — free, no signup, no API key. Sources include Flickr, Wikimedia and museum collections, filtered to commercially-usable licenses.</p>
+      <p class="note">Pulls real photos matching this from Wikimedia Commons — free, no signup, no API key. Most are Creative Commons or public domain; each thumbnail shows a credit, since some require attribution if you reuse them.</p>
       <button class="btn go" id="findBtn" style="margin-top:12px; width:100%">Find photos</button>
     </div>
 
@@ -268,23 +268,49 @@ paceSlider.addEventListener('input', () => { pace = parseFloat(paceSlider.value)
 volSlider.addEventListener('input', () => { volOut.textContent = volSlider.value + '%'; if (audioEl) audioEl.volume = volSlider.value / 100; });
 audioInput.addEventListener('change', () => { audioFile = audioInput.files[0] || null; });
 
-/* ---------- find photos (Openverse, no key) ---------- */
+/* ---------- find photos (Wikimedia Commons, no key) ---------- */
 
-async function searchOpenverse(query) {
-  const url = 'https://api.openverse.org/v1/images/?q=' + encodeURIComponent(query)
-    + '&license_type=commercial&category=photograph&page_size=30&mature=false';
+function stripCredit(html) {
+  if (!html) return 'Wikimedia Commons';
+  const tmp = document.createElement('div');
+  tmp.innerHTML = html;
+  return (tmp.textContent || 'Wikimedia Commons').trim().slice(0, 40);
+}
+
+async function searchCommonsQuery(q) {
+  const url = 'https://commons.wikimedia.org/w/api.php?action=query&generator=search'
+    + '&gsrnamespace=6&gsrlimit=30&gsrsearch=' + encodeURIComponent(q + ' filetype:bitmap')
+    + '&prop=imageinfo&iiprop=url|size|mime|extmetadata&iiurlwidth=1400&format=json&origin=*';
   const res = await fetch(url);
   if (!res.ok) throw new Error('http ' + res.status);
   const data = await res.json();
-  const results = data && data.results || [];
-  return results
-    .filter(r => r.url && r.width >= 1000 && r.height >= 700)
-    .map(r => ({
-      thumb: r.thumbnail || r.url,
-      full: r.url,
-      credit: (r.creator ? r.creator : (r.source || 'unknown')) + (r.license ? ' · ' + r.license.toUpperCase() : ''),
-      landing: r.foreign_landing_url || ''
+  const found = data && data.query && data.query.pages;
+  if (!found) return [];
+  return Object.values(found)
+    .map(p => p.imageinfo && p.imageinfo[0])
+    .filter(i => i && i.mime && i.mime.startsWith('image/') && i.mime !== 'image/svg+xml'
+      && i.width >= 900 && i.height >= 650)
+    .map(i => ({
+      thumb: i.thumburl || i.url,
+      full: i.url,
+      credit: stripCredit(i.extmetadata && i.extmetadata.Artist && i.extmetadata.Artist.value),
+      landing: i.descriptionurl || ''
     }));
+}
+
+// Tries a few phrasings, biased toward real photos, so a topic is unlikely to
+// come back completely empty the way one strict query can.
+async function searchPhotos(topic) {
+  const tries = [topic + ' photograph', topic + ' photo', topic];
+  const seen = new Set();
+  let all = [];
+  for (const q of tries) {
+    const hits = await searchCommonsQuery(q); // lets a network failure bubble up
+    hits.forEach(h => { if (!seen.has(h.full)) { seen.add(h.full); all.push(h); } });
+    console.log('[Showcase] "' + q + '" →', hits.length, 'new,', all.length, 'total so far');
+    if (all.length >= 24) break;
+  }
+  return all;
 }
 
 findBtn.addEventListener('click', async () => {
@@ -296,7 +322,7 @@ findBtn.addEventListener('click', async () => {
   candidates = []; pickedIdx = []; slideImages = [];
 
   try {
-    candidates = await searchOpenverse(q);
+    candidates = await searchPhotos(q);
     console.log('[Showcase] found', candidates.length, 'candidates for', q);
   } catch (e) {
     console.error('[Showcase] search failed', e);
