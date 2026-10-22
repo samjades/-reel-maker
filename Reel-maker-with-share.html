@@ -178,11 +178,18 @@ $('rebuildText').addEventListener('click',()=>{buildTexts();setShareStatus('Capt
 $('copyAll').addEventListener('click',()=>copyText(['YOUTUBE\n'+platformText('yt'),'FACEBOOK\n'+platformText('fb'),'TIKTOK\n'+platformText('tt')].join('\n\n----------\n\n'),'All three texts copied.'));
 $('shareDevice').addEventListener('click',async()=>{
   if(!lastReel){setShareStatus('Export your reel first.');return}
+  if(!window.isSecureContext){setShareStatus('Sharing only works when this page is opened from an https address.');return}
+  if(!navigator.share){setShareStatus('This browser has no share sheet. Open the page in Chrome (Android) or Safari (iPhone), or use the Download video button and share the file from your Gallery/Files app.');return}
   const file=new File([lastReel.blob],lastReel.name,{type:lastReel.type});
-  if(navigator.canShare&&navigator.canShare({files:[file]})){
-    try{await navigator.share({files:[file],title:$('ytTitle').value,text:$('ttCaption').value})}
-    catch(e){if(e&&e.name!=='AbortError')setShareStatus('Sharing did not finish: '+(e.message||e))}
-  }else setShareStatus('This browser cannot share files directly. Use the Copy & open buttons and pick the downloaded file there.');
+  if(!(navigator.canShare&&navigator.canShare({files:[file]}))){setShareStatus('Your phone will not share this file type'+(lastReel.type.includes('webm')?' (WebM). Use Chrome on Android, which usually exports MP4, or tap Download video again and share it from your Gallery.':'. Tap Download video again and share it from your Gallery/Files app.'));return}
+  try{await navigator.clipboard.writeText($('ttCaption').value)}catch(e){}
+  try{
+    await navigator.share({files:[file]});
+    setShareStatus('Shared. Your TikTok caption is copied, so paste it into the post.');
+  }catch(e){
+    if(e&&e.name==='AbortError')setShareStatus('Share cancelled.');
+    else setShareStatus('Share failed ('+(e&&e.name||'error')+'). Tap Download video again, then share the file from your Gallery/Files app.');
+  }
 });
 
 /* ---------- One-click publishing ---------- */
