@@ -69,6 +69,22 @@
 <label class="posted"><input type="checkbox" data-posted="tt"> Mark as posted</label>
 </div>
 
+<div class="pcard" style="border-color:#166534;border-width:2px">
+<h3>🚀 One-click publish (no download &amp; upload)</h3>
+<p class="acct">Sends the finished video straight from this page. One-time setup below.</p>
+<label class="sm" for="ytPrivacy">YouTube visibility</label>
+<select id="ytPrivacy"><option value="public">Public</option><option value="unlisted">Unlisted</option><option value="private">Private</option></select>
+<div class="actions" style="margin-top:10px"><button type="button" id="pubYT">▶ Publish to YouTube now</button></div>
+<label class="sm" for="gClientId" style="margin-top:14px">Google OAuth Client ID (for YouTube)</label>
+<input id="gClientId" type="text" placeholder="1234567890-abc.apps.googleusercontent.com" autocomplete="off">
+<small>Create it in Google Cloud Console → enable <b>YouTube Data API v3</b> → Credentials → OAuth client ID (Web application) → add this page's address under “Authorized JavaScript origins”. Must be opened from your https site, not a local file.</small>
+<hr style="border:0;border-top:1px solid #e4e7ec;margin:14px 0">
+<label class="sm" for="webhookUrl">Automation webhook URL (Facebook + TikTok, or all three)</label>
+<input id="webhookUrl" type="text" placeholder="https://hook.make.com/... or your n8n / Zapier webhook" autocomplete="off">
+<small>Facebook and TikTok don’t allow uploads straight from a web page. Create a free scenario in Make.com or n8n that starts with a webhook and posts the received <code>video</code> file to your Facebook Page and TikTok (@savemoneytipz). It receives: video, ytTitle, ytDesc, fbCaption, ttCaption.</small>
+<div class="actions" style="margin-top:10px"><button type="button" id="pubHook">📤 Publish via webhook</button></div>
+</div>
+
 <div class="actions" style="margin-top:12px"><button id="copyAll" type="button" class="secondary">Copy all three texts</button></div>
 <div id="shareStatus" class="status" role="status" aria-live="polite"></div>
 <small>This tool never logs in for you or stores passwords. It hands the finished video and text to each platform's own upload page, so you stay in control of what gets published.</small>
@@ -124,7 +140,7 @@ function buildTexts(){
   $('ttCaption').value=(slides[0]||'')+' '+slides.slice(1).join(' ').slice(0,1500)+'\n\n#savemoney #moneytips #budgeting #personalfinance #fyp';
   Object.keys(LIMITS).forEach(updateCount);
 }
-function reelReady(blob,type){
+var reelReady=function(blob,type){
   const ext=type.includes('mp4')?'mp4':'webm';
   if(lastReel&&lastReel.url)URL.revokeObjectURL(lastReel.url);
   lastReel={blob,type:type.split(';')[0]||('video/'+ext),name:'savemoney-reel.'+ext,url:URL.createObjectURL(blob)};
@@ -134,7 +150,7 @@ function reelReady(blob,type){
   $('sharePanel').hidden=false;
   setShareStatus(ext==='webm'?'Your browser made a WebM file. YouTube accepts it; if TikTok or Facebook reject it, use Chrome or Edge on desktop (which usually makes MP4), or convert it to MP4.':'');
   try{$('sharePanel').scrollIntoView({behavior:'smooth',block:'nearest'})}catch(e){}
-}
+};
 async function copyText(text,okMsg){
   try{await navigator.clipboard.writeText(text);setShareStatus(okMsg);return true}
   catch(e){
@@ -167,6 +183,54 @@ $('shareDevice').addEventListener('click',async()=>{
     try{await navigator.share({files:[file],title:$('ytTitle').value,text:$('ttCaption').value})}
     catch(e){if(e&&e.name!=='AbortError')setShareStatus('Sharing did not finish: '+(e.message||e))}
   }else setShareStatus('This browser cannot share files directly. Use the Copy & open buttons and pick the downloaded file there.');
+});
+
+/* ---------- One-click publishing ---------- */
+const LS={get(k){try{return localStorage.getItem(k)||''}catch(e){return ''}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
+$('gClientId').value=LS.get('reel_gcid');$('webhookUrl').value=LS.get('reel_hook');
+$('gClientId').addEventListener('change',()=>LS.set('reel_gcid',$('gClientId').value.trim()));
+$('webhookUrl').addEventListener('change',()=>LS.set('reel_hook',$('webhookUrl').value.trim()));
+function loadGIS(){return new Promise((res,rej)=>{if(window.google&&google.accounts&&google.accounts.oauth2)return res();const sc=document.createElement('script');sc.src='https://accounts.google.com/gsi/client';sc.onload=()=>res();sc.onerror=()=>rej(new Error('Could not load Google sign-in. Check your connection or ad blocker.'));document.head.appendChild(sc)})}
+const _origReady=reelReady;reelReady=function(b,t){_origReady(b,t);loadGIS().catch(()=>{})};
+function getYtToken(cid){return new Promise((res,rej)=>{const tc=google.accounts.oauth2.initTokenClient({client_id:cid,scope:'https://www.googleapis.com/auth/youtube.upload',callback:r=>r.access_token?res(r.access_token):rej(new Error(r.error_description||r.error||'Sign-in failed')),error_callback:e=>rej(new Error('Google sign-in was closed or blocked ('+(e&&e.type||'error')+').'))});tc.requestAccessToken({prompt:''})})}
+$('pubYT').addEventListener('click',async()=>{
+  if(!lastReel){setShareStatus('Export your reel first.');return}
+  const cid=$('gClientId').value.trim();
+  if(!cid){setShareStatus('Paste your Google OAuth Client ID first (see setup note).');return}
+  const btn=$('pubYT');btn.disabled=true;
+  try{
+    setShareStatus('Opening Google sign-in…');
+    await loadGIS();
+    const token=await getYtToken(cid);
+    const meta={snippet:{title:$('ytTitle').value.trim().slice(0,100)||'My reel',description:$('ytDesc').value,categoryId:'22'},status:{privacyStatus:$('ytPrivacy').value,selfDeclaredMadeForKids:false}};
+    setShareStatus('Starting YouTube upload…');
+    const init=await fetch('https://www.googleapis.com/upload/youtube/v3/videos?uploadType=resumable&part=snippet,status',{method:'POST',headers:{'Authorization':'Bearer '+token,'Content-Type':'application/json; charset=UTF-8','X-Upload-Content-Type':lastReel.type,'X-Upload-Content-Length':String(lastReel.blob.size)},body:JSON.stringify(meta)});
+    if(!init.ok){let d='';try{d=(await init.json()).error.message}catch(e){}throw new Error('YouTube refused the upload ('+init.status+'). '+d)}
+    const loc=init.headers.get('Location');
+    if(!loc)throw new Error('YouTube did not return an upload address. Check that your site origin is listed in the OAuth client.');
+    const result=await new Promise((res,rej)=>{const x=new XMLHttpRequest();x.open('PUT',loc);x.setRequestHeader('Content-Type',lastReel.type);x.upload.onprogress=e=>{if(e.lengthComputable)setShareStatus('Uploading to YouTube… '+Math.round(e.loaded/e.total*100)+'%')};x.onload=()=>{if(x.status>=200&&x.status<300){try{res(JSON.parse(x.responseText))}catch(e){res({})}}else rej(new Error('Upload failed ('+x.status+').'))};x.onerror=()=>rej(new Error('Network error during upload.'));x.send(lastReel.blob)});
+    markPosted('yt',true);document.querySelector('[data-posted="yt"]').checked=true;
+    if(result.id&&/^[\w-]+$/.test(result.id)){$('shareStatus').innerHTML='Published to YouTube ✓ <a target="_blank" rel="noopener" href="https://www.youtube.com/shorts/'+result.id+'">Open your Short</a>. If it shows as locked/private, your Google project still needs YouTube API audit approval.'}
+    else setShareStatus('Uploaded to YouTube ✓ Check YouTube Studio.');
+  }catch(err){console.error(err);setShareStatus('YouTube publish failed: '+(err.message||err))}
+  finally{btn.disabled=false}
+});
+$('pubHook').addEventListener('click',async()=>{
+  if(!lastReel){setShareStatus('Export your reel first.');return}
+  const url=$('webhookUrl').value.trim();
+  if(!/^https:\/\//i.test(url)){setShareStatus('Paste your https webhook URL first (see setup note).');return}
+  const btn=$('pubHook');btn.disabled=true;
+  try{
+    const fd=new FormData();
+    fd.append('video',lastReel.blob,lastReel.name);
+    fd.append('ytTitle',$('ytTitle').value);fd.append('ytDesc',$('ytDesc').value);
+    fd.append('fbCaption',$('fbCaption').value);fd.append('ttCaption',$('ttCaption').value);
+    fd.append('ytPrivacy',$('ytPrivacy').value);
+    setShareStatus('Sending video and captions to your automation…');
+    await fetch(url,{method:'POST',body:fd,mode:'no-cors'});
+    setShareStatus('Sent ✓ Your automation received the video. Check its run history to confirm Facebook and TikTok posted (this page cannot see the result).');
+  }catch(err){console.error(err);setShareStatus('Could not reach the webhook: '+(err.message||err))}
+  finally{btn.disabled=false}
 });
 
 drawFrame(0);
