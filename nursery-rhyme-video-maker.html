@@ -41,6 +41,10 @@ button.go{background:var(--pink);box-shadow:0 4px 0 #d63b69}
 button.go:active{box-shadow:0 2px 0 #d63b69}
 button.alt{background:#fff;color:var(--ink);border:2px solid var(--line);box-shadow:0 4px 0 var(--line)}
 button:disabled{opacity:.5;cursor:not-allowed;transform:none}
+input[type=file]{width:100%;font:inherit;font-size:14px}
+.bgbox{display:none;margin-top:10px;padding:12px;border:2px dashed var(--line);border-radius:14px;background:#fbf9ff}
+.bgSearch{display:grid;grid-template-columns:1fr auto;gap:8px;margin-top:8px}.bgResults{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-top:10px}.bgCard{background:#fff;border:2px solid var(--line);border-radius:12px;overflow:hidden;padding:0;box-shadow:none;text-align:left}.bgCard video,.bgCard img{display:block;width:100%;height:92px;object-fit:cover;background:#eee}.bgCard .bgInfo{padding:8px}.bgCard strong{display:block;font-size:13px;line-height:1.2}.bgCard small{display:block;margin-top:3px;font-size:11px;line-height:1.25}.bgCard button{margin:8px;padding:7px 11px;font-size:12px;box-shadow:none}.bgHint{font-size:12px;color:var(--muted);margin-top:6px}
+.bgbox.on{display:block}
 .stage{display:flex;flex-direction:column;align-items:center;gap:14px}
 .screen{width:100%;max-width:760px;background:#000;border-radius:18px;overflow:hidden;border:4px solid #fff;box-shadow:0 8px 0 #e6dcfb,0 18px 40px #2f1d5c26}
 .screen.tall{max-width:340px}
@@ -93,7 +97,23 @@ Dance along to the happy beat!</textarea>
 <div class="step"><h2><i>3</i>Look</h2>
 <div class="two">
 <div><label for="format">Video shape</label><select id="format"><option value="wide">Wide — YouTube (16:9)</option><option value="tall">Tall — Shorts (9:16)</option></select></div>
-<div><label for="theme">Scene</label><select id="theme"><option value="meadow">Sunny meadow</option><option value="candy">Candy rainbow</option><option value="ocean">Under the sea</option><option value="night">Starry night</option></select></div>
+<div><label for="theme">Drawn scene</label><select id="theme"><option value="meadow">Sunny meadow</option><option value="candy">Candy rainbow</option><option value="ocean">Under the sea</option><option value="night">Starry night</option></select></div>
+</div>
+<label for="bgmode" style="margin-top:10px">Background</label>
+<select id="bgmode"><option value="scene">Cartoon scene (drawn for you)</option><option value="video">Real nature video (free)</option></select>
+<div class="bgbox" id="bgbox">
+<label for="bgCategory">Background type</label>
+<select id="bgCategory">
+<option value="river">Clean rivers &amp; waterfalls</option><option value="ocean">Ocean &amp; sea waves</option><option value="fish">Fish swimming underwater</option><option value="coral">Coral reef &amp; underwater life</option><option value="beach">Beach &amp; tropical water</option><option value="lake">Lakes &amp; ponds</option><option value="garden">Green gardens</option><option value="forest">Green forests</option><option value="flowers">Flowers &amp; butterflies</option><option value="mountains">Mountains &amp; landscapes</option><option value="field">Green grass fields</option><option value="sunrise">Sunrise &amp; sunset</option><option value="birds">Birds in nature</option><option value="ducks">Ducks &amp; ponds</option><option value="wildlife">Animals &amp; wildlife</option><option value="train">Moving trains</option><option value="railway">Railways &amp; countryside trains</option><option value="cars">Cars &amp; roads</option><option value="airplane">Airplanes in the sky</option><option value="boat">Boats &amp; sailing</option><option value="rain">Rain</option><option value="snow">Snow</option><option value="clouds">Moving clouds</option><option value="city">City streets &amp; traffic</option><option value="village">Villages &amp; countryside</option><option value="park">Green parks</option><option value="architecture">Architecture &amp; landmarks</option><option value="animals">Animals &amp; birds</option></select>
+<div class="bgSearch"><input id="bgQuery" type="text" maxlength="120" placeholder="Or search: clean river with trees, fish underwater, train in green countryside"><button class="alt" id="searchBg" type="button">Search videos</button></div>
+<div class="btns"><button class="alt" id="findBg" type="button">Find a free background</button></div>
+<div id="bgResults" class="bgResults" aria-live="polite"></div>
+<div class="bgHint">Only MP4/WebM clips with a reusable Creative Commons or public-domain license are offered. Pick a preview to use it. Your selected clip is placed behind the cartoon friends and lyrics and credited in the video description.</div>
+<small>Backgrounds are searched from Wikimedia Commons directly in your browser. Availability changes over time, so check the selected footage before publishing.</small>
+<label for="bgFile" style="margin-top:10px">Optional: use your own background video</label>
+<input id="bgFile" type="file" accept="video/mp4,video/webm,video/quicktime">
+<small>Landscape footage is cropped to fill the frame. The drawn scene is used if no video loads.</small>
+<div class="status" id="bgStatus" style="text-align:left;min-height:0"></div>
 </div>
 <label style="margin-top:10px">Cartoon friends</label>
 <div class="checks"><label><input type="checkbox" class="crit" value="bear" checked>Bear</label><label><input type="checkbox" class="crit" value="bunny" checked>Bunny</label><label><input type="checkbox" class="crit" value="chick" checked>Chick</label><label><input type="checkbox" class="crit" value="kitty">Kitty</label></div>
@@ -420,6 +440,8 @@ $('compose').addEventListener('click',async()=>{
   const btn=$('compose');btn.disabled=true;$('preview').disabled=true;$('make').disabled=true;
   try{
     const bpm=Number($('tempo').value),v1=$('voice').value,v2=$('voice2').value;
+    let bgOk=true;
+    if($('bgmode').value==='video'&&!bgVideo){setStatus('Finding a free background video…');bgOk=await findBgVideo()}
     plan=buildPlan(lines,{bpm,intro:$('optIntro').checked,yay:$('optYay').checked,chorus:$('optChorus').checked,repeat:$('optRepeat').checked,duet:!!v2});
     bpmUsed=bpm;layoutCache={};
     await loadVoice();
@@ -440,12 +462,101 @@ $('compose').addEventListener('click',async()=>{
     timing=r.timing;
     songBuf=actx.createBuffer(2,r.N,SR);songBuf.copyToChannel(r.L,0);songBuf.copyToChannel(r.R,1);
     $('preview').disabled=false;$('make').disabled=false;
-    setStatus('Your song is ready ('+Math.round(plan.duration)+' seconds). Press Play, then Make video.');
+    setStatus('Your song is ready ('+Math.round(plan.duration)+' seconds). Press Play, then Make video.'+(bgOk?'':' (No background video could be loaded, so the drawn scene is used.)'));
     drawFrame(0);
   }catch(err){
     console.error(err);plan=null;
     setStatus('Could not compose: '+(err&&err.message?err.message:err)+' — check your internet connection (the voice model downloads the first time) and try again.');
   }finally{btn.disabled=false;setTimeout(()=>setBar(0),600)}
+});
+
+
+/* ---------- automatic background video (Wikimedia Commons, free) ---------- */
+let bgVideo=null,bgVideoUrl='',bgCredit='',bgUser=false;
+const BG_TERMS={
+ river:'clean clear river flowing water nature',ocean:'clean ocean sea waves coast water',fish:'underwater fish swimming ocean',coral:'underwater coral reef fish marine life',beach:'tropical beach ocean waves',lake:'clear lake pond water nature',garden:'green garden plants flowers',forest:'green forest trees nature',flowers:'beautiful flowers garden butterflies',mountains:'green mountains landscape nature',field:'green grass field countryside',sunrise:'sunrise sunset nature landscape',birds:'birds flying nature',ducks:'ducks swimming pond',wildlife:'wild animals nature',train:'moving train railway',railway:'train railway moving countryside',cars:'cars driving road traffic',airplane:'airplane flying sky',boat:'boat sailing ocean',rain:'rain falling nature',snow:'snow falling landscape',clouds:'moving clouds sky',city:'city street moving traffic',village:'village countryside',park:'green park trees',architecture:'beautiful architecture landscape city',animals:'animals birds ducks farm'};
+function setBgStatus(t){$('bgStatus').textContent=t}
+function releaseBg(){
+  if(bgVideo){try{bgVideo.pause()}catch(e){}try{bgVideo.removeAttribute('src');bgVideo.load&&bgVideo.load()}catch(e){}}
+  bgVideo=null;if(bgVideoUrl&&bgVideoUrl.startsWith('blob:'))URL.revokeObjectURL(bgVideoUrl);
+  bgVideoUrl='';bgCredit='';bgUser=false;
+}
+function licenseCredit(page){
+  const ii=(page.imageinfo&&page.imageinfo[0])||{},meta=ii.extmetadata||{};
+  const title=(page.title||'Wikimedia Commons video').replace(/^File:/,'');
+  const artist=((meta.Artist&&meta.Artist.value)||'').replace(/<[^>]*>/g,'').replace(/&amp;/g,'&').replace(/&#160;/g,' ').trim();
+  const license=((meta.LicenseShortName&&meta.LicenseShortName.value)||'license details').replace(/<[^>]*>/g,'').trim();
+  return{title,credit:(artist?artist+' · ':'')+title+' · '+license};
+}
+function isReusableVideo(page){
+  const ii=page.imageinfo&&page.imageinfo[0];
+  if(!ii||!/^video\/(mp4|webm)$/i.test(ii.mime||''))return false;
+  const ext=(ii.url||'').split('?')[0].toLowerCase();
+  if(!(ext.endsWith('.mp4')||ext.endsWith('.webm')))return false;
+  if(ii.size&&ii.size>80e6)return false;
+  const m=ii.extmetadata||{},lic=((m.LicenseShortName&&m.LicenseShortName.value)||'').toLowerCase(),lurl=((m.LicenseUrl&&m.LicenseUrl.value)||'').toLowerCase();
+  const free=/cc0|public domain|cc by([ -]|$)|cc by-sa/.test(lic)||/creativecommons.org\/licenses\/(by|by-sa|zero)|publicdomain/.test(lurl);
+  const restricted=/non.?commercial|no derivatives|cc by-nc|cc by-nd/.test(lic+' '+lurl);
+  return free&&!restricted;
+}
+function installBg(url,credit){
+  return new Promise((resolve,reject)=>{
+    const v=document.createElement('video');v.crossOrigin='anonymous';v.src=url;v.muted=true;v.loop=true;v.playsInline=true;v.preload='auto';
+    v.addEventListener('loadeddata',()=>{releaseBg();bgVideo=v;bgCredit=credit;bgUser=false;try{v.currentTime=0}catch(e){}v.play().catch(()=>{});setTimeout(()=>{try{v.pause()}catch(e){}},400);drawFrame(0);resolve(v)},{once:true});
+    v.addEventListener('error',()=>reject(new Error('The selected video could not be loaded or decoded by this browser.')),{once:true});
+    v.load();setTimeout(()=>{if(v.readyState<2)reject(new Error('Timed out loading the background video.'))},20000);
+  });
+}
+function clearBgResults(){const el=$('bgResults');if(el)el.innerHTML=''}
+function renderBgResults(pages){
+  const box=$('bgResults');if(!box)return;box.innerHTML='';
+  pages.forEach((page,i)=>{
+    const ii=page.imageinfo&&page.imageinfo[0],meta=licenseCredit(page);if(!ii)return;
+    const card=document.createElement('div');card.className='bgCard';
+    const media=document.createElement('video');media.muted=true;media.loop=true;media.playsInline=true;media.preload='metadata';media.src=ii.url;media.addEventListener('loadeddata',()=>{media.currentTime=0.1;media.play().catch(()=>{})},{once:true});
+    const info=document.createElement('div');info.className='bgInfo';
+    const name=document.createElement('strong');name.textContent=meta.title.replace(/\.[^.]+$/,'').slice(0,70);
+    const lic=document.createElement('small');lic.textContent=(meta.credit.split(' · ').pop()||'Reusable license');
+    const use=document.createElement('button');use.type='button';use.textContent='Use this background';use.className='alt';
+    use.addEventListener('click',async()=>{use.disabled=true;setBgStatus('Loading selected background…');try{await installBg(ii.url,meta.credit);setBgStatus('Loaded: '+meta.title+'. Credit will be added to the video description.');Array.from(box.querySelectorAll('button')).forEach(b=>b.disabled=false)}catch(e){use.disabled=false;setBgStatus('This clip could not be loaded. Try another preview.')}});
+    info.append(name,lic);card.append(media,info,use);box.appendChild(card);
+  });
+}
+async function searchBgVideos(useRandom=false){
+  const btn=$('searchBg'),find=$('findBg');if(btn)btn.disabled=true;if(find)find.disabled=true;
+  setBgStatus('Searching free-to-reuse background videos…');clearBgResults();
+  try{
+    const typed=($('bgQuery')&&$('bgQuery').value||'').trim();
+    const terms=typed||BG_TERMS[$('bgCategory').value]||BG_TERMS.river;
+    const api='https://commons.wikimedia.org/w/api.php?'+new URLSearchParams({action:'query',format:'json',origin:'*',generator:'search',gsrsearch:'filetype:video '+terms,gsrnamespace:'6',gsrlimit:'40',prop:'imageinfo',iiprop:'url|mime|size|extmetadata',iiurlwidth:'360'}).toString();
+    const res=await fetch(api,{mode:'cors'});if(!res.ok)throw new Error('Free media search returned HTTP '+res.status);
+    const data=await res.json();let pages=Object.values((data.query&&data.query.pages)||{}).filter(isReusableVideo);
+    if(!pages.length)throw new Error('No suitable openly licensed MP4/WebM was found. Try a simpler search such as “river”, “fish underwater”, or “moving train”.');
+    pages=pages.sort(()=>Math.random()-0.5).slice(0,8);renderBgResults(pages);
+    if(useRandom){let lastErr;for(const page of pages.slice(0,5)){const ii=page.imageinfo[0],meta=licenseCredit(page);try{await installBg(ii.url,meta.credit);setBgStatus('Loaded: '+meta.title+'. The credit is added to the video.');return true}catch(err){lastErr=err;console.warn('[RhymeMagic] background candidate failed',ii.url,err)}}throw lastErr||new Error('Could not load a compatible video.')}
+    setBgStatus('Found '+pages.length+' reusable background videos. Choose one above.');return true;
+  }catch(err){console.error(err);setBgStatus('Could not search background videos: '+(err&&err.message?err.message:err));return false}
+  finally{if(btn)btn.disabled=false;if(find)find.disabled=false}
+}
+async function findBgVideo(){return searchBgVideos(true)}
+function startBg(){if(bgVideo&&$('bgmode').value==='video'){try{bgVideo.currentTime=0}catch(e){}bgVideo.play().catch(()=>{})}}
+function drawVideoBg(){
+  const v=bgVideo,vw=v.videoWidth||W,vh=v.videoHeight||H,sc=Math.max(W/vw,H/vh),dw=vw*sc,dh=vh*sc;
+  ctx.drawImage(v,(W-dw)/2,(H-dh)/2,dw,dh);
+  const g=ctx.createLinearGradient(0,H*0.45,0,H);g.addColorStop(0,'rgba(30,10,70,0)');g.addColorStop(1,'rgba(30,10,70,0.38)');ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+}
+const useVideoBg=()=>$('bgmode').value==='video'&&bgVideo&&bgVideo.readyState>=2;
+$('bgmode').addEventListener('change',()=>{$('bgbox').classList.toggle('on',$('bgmode').value==='video');if(mode==='idle')drawFrame(0)});
+$('bgCategory').addEventListener('change',()=>{if(!bgUser){releaseBg();clearBgResults();setBgStatus('Category changed — press Search videos or compose to find a matching clip.');if(mode==='idle')drawFrame(0)}});
+$('searchBg').addEventListener('click',()=>searchBgVideos(false));
+$('findBg').addEventListener('click',()=>findBgVideo());
+$('bgQuery').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();searchBgVideos(false)}});
+$('bgFile').addEventListener('change',e=>{
+  const f=e.target.files&&e.target.files[0];if(!f)return;
+  releaseBg();clearBgResults();bgVideoUrl=URL.createObjectURL(f);bgUser=true;
+  const v=document.createElement('video');v.src=bgVideoUrl;v.muted=true;v.loop=true;v.playsInline=true;v.preload='auto';
+  v.onloadeddata=()=>{bgVideo=v;bgCredit='';try{v.currentTime=0}catch(err){}drawFrame(0);setBgStatus('Your video is loaded and will be included in the finished video.')};
+  v.onerror=()=>setBgStatus('This video could not be decoded. Try an MP4 encoded with H.264.');v.load();
 });
 
 /* ---------- drawing ---------- */
@@ -569,7 +680,7 @@ function drawLyrics(k,cur,t){
 function activeKinds(){const k=[...document.querySelectorAll('.crit')].filter(c=>c.checked).map(c=>c.value);return k.length?k:['bear']}
 function drawFrame(t){
   const u=Math.min(W,H);
-  bg($('theme').value,t);
+  if(useVideoBg())drawVideoBg();else bg($('theme').value,t);
   drawNotes(t);
   const bd=60/bpmUsed,phase=(t/bd)%1;
   let state={cur:-1,k:-1};if(plan&&timing.length)state=activeLine(t);
@@ -590,6 +701,7 @@ function drawFrame(t){
     const px=fitText(title,W*0.9,u*0.115);outlined(title,W/2,H*0.17-bob,px,'#ffe14d','#3b2a78');
     const p2=fitText('Let\u2019s sing along!',W*0.7,u*0.06);outlined('Let\u2019s sing along!',W/2,H*0.82,p2,'#ffffff','#3b2a78',700);
   }
+  if($('bgmode').value==='video'&&bgCredit){ctx.textAlign='center';ctx.textBaseline='middle';const cp=Math.max(11,Math.round(u*0.02)),txt=bgCredit.length>96?bgCredit.slice(0,93)+'\u2026':bgCredit;ctx.font='400 '+cp+'px "Nunito",sans-serif';ctx.lineJoin='round';ctx.lineWidth=3;ctx.strokeStyle='rgba(30,10,70,.7)';ctx.strokeText(txt,W/2,H-cp*1.3);ctx.fillStyle='rgba(255,255,255,.92)';ctx.fillText(txt,W/2,H-cp*1.3)}
   if(!outro){const bp=Math.round(u*0.034);ctx.textAlign='left';outlined($('brand').value||'RhymeMagic AI',u*0.03,u*0.04,bp,'rgba(255,255,255,.95)','rgba(59,42,120,.9)',700);ctx.textAlign='center'}
 }
 
@@ -597,11 +709,13 @@ function drawFrame(t){
 function stopAll(){
   if(raf)cancelAnimationFrame(raf);raf=null;
   if(curSrc){try{curSrc.stop()}catch(e){}curSrc=null}
+  if(bgVideo){try{bgVideo.pause()}catch(e){}}
   mode='idle';$('stop').disabled=true;
 }
 $('stop').addEventListener('click',()=>{stopAll();drawFrame(0);setStatus('Stopped.')});
 $('preview').addEventListener('click',()=>{
   if(!songBuf)return;ensureAudio();stopAll();
+  startBg();
   const src=actx.createBufferSource();src.buffer=songBuf;src.connect(actx.destination);
   const start=actx.currentTime+0.12;src.start(start);curSrc=src;mode='play';$('stop').disabled=false;setStatus('Singing…');
   const loop=()=>{const t=actx.currentTime-start;drawFrame(Math.max(0,t));setBar(Math.max(0,t)/plan.duration);if(t<plan.duration+0.2&&mode==='play')raf=requestAnimationFrame(loop);else{stopAll();setStatus('Finished. Press Make video to save it.');setTimeout(()=>setBar(0),500)}};
@@ -631,6 +745,7 @@ $('make').addEventListener('click',async()=>{
       setStatus('Done! Your '+(type.includes('mp4')?'MP4':'WebM')+' video has been saved with the singing, music and picture together.');
       btn.disabled=false;$('preview').disabled=false;$('compose').disabled=false;drawFrame(0);setBar(0);
     };
+    startBg();
     const src=actx.createBufferSource();src.buffer=songBuf;src.connect(dest);src.connect(actx.destination);
     const start=actx.currentTime+0.2;
     recorder.start(250);src.start(start);curSrc=src;mode='rec';setStatus('Recording your video… keep this tab open until it finishes.');
@@ -652,7 +767,7 @@ function reelReady(blob,type){
   const title=$('title').value.trim()||'Nursery Rhyme';
   $('shTitle').value=(title+' | Fun Nursery Rhyme for Kids').slice(0,100);
   const lyr=plan?plan.lineInfo.map(l=>l.words.map(w=>w.text).join(' ')).slice(0,Math.max(1,$('lyrics').value.split('\n').filter(Boolean).length)).join('\n'):'';
-  $('shCap').value=title+' — a happy sing-along for children and families!\n\nLyrics:\n'+lyr+'\n\n#nurseryrhymes #kidssongs #singalong #kidsmusic';
+  $('shCap').value=title+' — a happy sing-along for children and families!\n\nLyrics:\n'+lyr+(($('bgmode').value==='video'&&bgCredit)?'\n\nBackground video: '+bgCredit+' (via Wikimedia Commons)':'')+'\n\n#nurseryrhymes #kidssongs #singalong #kidsmusic';
   $('shDl').href=lastReel.url;$('shDl').download=lastReel.name;
   $('share').classList.add('on');
   setShStatus(ext==='webm'?'Your browser made a WebM file. YouTube accepts it. For an MP4, use Chrome or Edge on desktop.':'');
