@@ -5,7 +5,7 @@
 <title>Free AI Reel Maker with Voiceover</title>
 <style>
 :root{--ink:#172033;--muted:#667085;--line:#e4e7ec;--brand:#166534;--soft:#f3f8f4}*{box-sizing:border-box}body{margin:0;background:#f6f8fb;color:var(--ink);font:16px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}.wrap{max-width:1100px;margin:28px auto;padding:16px}.head{margin-bottom:20px}.head h1{margin:0 0 6px;font-size:clamp(26px,4vw,38px)}.head p{margin:0;color:var(--muted)}.layout{display:grid;grid-template-columns:minmax(0,1fr) minmax(280px,360px);gap:22px;align-items:start}.panel{background:#fff;border:1px solid var(--line);border-radius:16px;padding:18px;box-shadow:0 5px 20px #17203308}.field{margin:0 0 15px}.field label{display:block;font-weight:700;margin-bottom:6px}.field small,.help{color:var(--muted);font-size:13px}textarea,select,input[type=text]{width:100%;border:1px solid #cfd5df;border-radius:10px;padding:11px 12px;font:inherit;background:white;color:var(--ink)}textarea{min-height:190px;resize:vertical}input[type=range]{width:100%;accent-color:var(--brand)}input[type=file]{width:100%;font-size:14px}button,.download{border:0;border-radius:10px;padding:11px 15px;background:var(--brand);color:#fff;font:700 15px system-ui;cursor:pointer;text-decoration:none;display:inline-flex;justify-content:center;align-items:center;gap:7px}button.secondary,.download.secondary{background:#edf2ee;color:#174329;border:1px solid #d6e5d8}button:disabled{opacity:.55;cursor:wait}.actions{display:flex;gap:9px;flex-wrap:wrap}.status{font-size:13px;color:#475467;margin-top:12px;min-height:20px}.previewbox{background:#111827;border-radius:14px;padding:12px;display:flex;justify-content:center}.stage{width:min(100%,300px);aspect-ratio:9/16;position:relative;overflow:hidden;border-radius:8px;background:#123b2b}.stage canvas{width:100%;height:100%;display:block}.notice{padding:12px;border-radius:10px;background:#fff8e6;border:1px solid #f4df9a;font-size:13px;color:#654f12;margin-top:14px}.pill{display:inline-block;background:#e8f4eb;color:#1d6633;border-radius:30px;padding:3px 9px;font-size:12px;font-weight:700}.footer{font-size:12px;color:var(--muted);margin-top:16px}
-.pcard{border:1px solid #d6e5d8;border-radius:12px;background:#fff;padding:14px;margin-top:12px}.pcard h3{margin:0 0 2px;font-size:17px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}.pcard .acct{font-size:13px;color:var(--muted);margin:0 0 10px}.pcard .acct a{color:#166534;font-weight:600}.pcard textarea{min-height:90px;font-size:14px}.pcard .count{font-size:12px;color:var(--muted);text-align:right}.pcard .count.over{color:#b42318;font-weight:700}.pcard label.sm{font-size:13px;font-weight:700;margin:8px 0 4px;display:block}.posted{display:flex;align-items:center;gap:6px;font-size:13px;color:#475467;margin-top:10px}.posted input{width:auto}.steps{margin:8px 0 0;padding-left:20px;font-size:13px;color:#475467}.badge{font-size:11px;font-weight:700;border-radius:20px;padding:2px 8px;background:#e8f4eb;color:#1d6633}.badge.done{background:#166534;color:#fff}
+.bg-result video{display:block}.bg-result:hover{box-shadow:0 3px 12px #17203318}.bgSuggest{padding:7px 10px;font-size:13px}.useBg{padding:8px 10px;font-size:13px}.pcard{border:1px solid #d6e5d8;border-radius:12px;background:#fff;padding:14px;margin-top:12px}.pcard h3{margin:0 0 2px;font-size:17px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}.pcard .acct{font-size:13px;color:var(--muted);margin:0 0 10px}.pcard .acct a{color:#166534;font-weight:600}.pcard textarea{min-height:90px;font-size:14px}.pcard .count{font-size:12px;color:var(--muted);text-align:right}.pcard .count.over{color:#b42318;font-weight:700}.pcard label.sm{font-size:13px;font-weight:700;margin:8px 0 4px;display:block}.posted{display:flex;align-items:center;gap:6px;font-size:13px;color:#475467;margin-top:10px}.posted input{width:auto}.steps{margin:8px 0 0;padding-left:20px;font-size:13px;color:#475467}.badge{font-size:11px;font-weight:700;border-radius:20px;padding:2px 8px;background:#e8f4eb;color:#1d6633}.badge.done{background:#166534;color:#fff}
 @media(max-width:800px){.layout{grid-template-columns:1fr}.previewbox{max-width:100%}.stage{width:min(100%,280px)}}
 </style>
 </head>
@@ -15,7 +15,22 @@
 <div class="field"><label for="script">1. Reel script</label><textarea id="script" maxlength="2500" placeholder="Paste your reel script here. Use short sentences for clear narration.">Want to save more money? Start by tracking one small expense today. Set a realistic weekly goal, automate your savings, and review your progress every Sunday. Small steps can build powerful habits over time.</textarea><small>English voice model. Keep scripts under 2,500 characters for a smoother first run.</small></div>
 <div class="field"><label for="voice">2. AI voice</label><select id="voice"><option value="af_heart">Heart — American female</option><option value="af_bella">Bella — American female</option><option value="af_nicole">Nicole — American female</option><option value="af_sarah">Sarah — American female</option><option value="am_michael">Michael — American male</option><option value="am_adam">Adam — American male</option><option value="bf_emma">Emma — British female</option><option value="bm_george">George — British male</option></select><small>The first time you generate speech, your browser downloads the open voice model (about 90 MB). Later visits may reuse cached files.</small></div>
 <div class="field"><label for="theme">3. Visual style</label><select id="theme"><option value="forest">Fresh green</option><option value="sunrise">Sunrise</option><option value="ocean">Ocean blue</option><option value="midnight">Midnight</option></select></div>
-<div class="field"><label for="bgCategory">4. Automatic background video</label><select id="bgCategory"><option value="river">Natural river / waterfall</option><option value="ocean">Ocean / sea waves</option><option value="architecture">Beautiful architecture / landscape</option></select><div class="actions" style="margin-top:8px"><button id="findBackground" type="button" class="secondary">Find and load free background</button></div><small>When you generate your voiceover, the tool automatically searches Wikimedia Commons for a reusable video in this category and places it behind your captions. The footage is included in the final downloaded reel. A small creator/license credit is added when available. If the automatic search is unavailable, you can still upload your own clip below.</small></div>
+<div class="field"><label for="bgSearch">4. Search real background video</label>
+<input id="bgSearch" type="text" value="clean river flowing through forest" placeholder="e.g. fish swimming underwater, train moving through green countryside">
+<div class="actions" style="margin-top:8px"><button id="findBackground" type="button" class="secondary">🔎 Find Free Videos</button></div>
+<div id="bgSuggestions" style="display:flex;gap:7px;flex-wrap:wrap;margin-top:10px">
+<button type="button" class="secondary bgSuggest" data-term="clean river flowing through forest">🌊 Rivers</button>
+<button type="button" class="secondary bgSuggest" data-term="clean ocean waves">🌴 Ocean</button>
+<button type="button" class="secondary bgSuggest" data-term="fish swimming underwater ocean">🐠 Underwater</button>
+<button type="button" class="secondary bgSuggest" data-term="green forest trees">🌳 Forest</button>
+<button type="button" class="secondary bgSuggest" data-term="green garden flowers">🌺 Garden</button>
+<button type="button" class="secondary bgSuggest" data-term="train moving through green countryside">🚂 Trains</button>
+<button type="button" class="secondary bgSuggest" data-term="birds flying nature">🐦 Birds</button>
+<button type="button" class="secondary bgSuggest" data-term="rain falling in green nature">🌧️ Rain</button>
+<button type="button" class="secondary bgSuggest" data-term="beautiful sunset ocean">🌅 Sunset</button>
+</div>
+<div id="bgResults" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;margin-top:12px"></div>
+<small>Searches Wikimedia Commons for reusable MP4/WebM footage. Choose a suggested search or type your own description. The selected footage is included in the final reel and its creator/license credit is shown when available. If no suitable clip is found, you can upload your own.</small></div>
 <div class="field"><label for="bgVideoFile">Optional: use your own background video</label><input id="bgVideoFile" type="file" accept="video/mp4,video/webm,video/quicktime"><small>Landscape footage is cropped to vertical 9:16.</small></div>
 <div class="field"><label for="music">5. Optional background music</label><input id="music" type="file" accept="audio/*"><small>Use audio you own or have permission to use. Music is mixed quietly under narration.</small></div>
 <div class="field"><label for="voiceSpeed">Voiceover speed: <span id="speedLabel">1.00×</span></label><input id="voiceSpeed" type="range" min="0.75" max="1.25" value="1" step="0.05"><small>Adjust narration speed; captions follow the adjusted timing. Regenerate voiceover after changing the script or voice.</small></div>
@@ -108,11 +123,93 @@ if(bgCredit){ctx.save();ctx.fillStyle='rgba(255,255,255,.78)';ctx.font='400 11px
 }
 function setStatus(s){$('status').textContent=s}function stopPreview(){if(previewRAF)cancelAnimationFrame(previewRAF);previewRAF=null;activeAudioNodes.forEach(n=>{try{n.stop()}catch(e){}});activeAudioNodes=[];$('stop').disabled=true}
 function renderPreview(){stopPreview();if(bgVideo){try{bgVideo.currentTime=0}catch(e){}bgVideo.play().catch(()=>{});}const duration=voiceBuffer?voiceBuffer.duration/getSpeed():Math.max(4,getSlides().length*2.6);previewDuration=duration;previewStart=performance.now();$('stop').disabled=false;const loop=now=>{let t=((now-previewStart)/1000)%duration;drawFrame(t);previewRAF=requestAnimationFrame(loop)};loop(performance.now());if(voiceBuffer){const ac=new (window.AudioContext||window.webkitAudioContext)();const src=ac.createBufferSource();src.buffer=voiceBuffer;src.playbackRate.value=getSpeed();src.connect(ac.destination);src.start();activeAudioNodes.push(src);src.onended=()=>{stopPreview();drawFrame(0)}}}
-const backgroundTerms={river:'river waterfall flowing water',ocean:'ocean sea waves coast',architecture:'beautiful architecture landscape city'};
+const backgroundTerms={
+ river:'clean river flowing water forest waterfall',
+ ocean:'clean ocean sea waves coast',
+ underwater:'fish swimming underwater ocean',
+ forest:'green forest trees nature',
+ garden:'green garden flowers plants',
+ trains:'moving train railway countryside',
+ birds:'birds flying nature',
+ rain:'rain falling nature landscape',
+ sunset:'beautiful sunset ocean landscape',
+ waterfall:'waterfall flowing fresh water nature',
+ coral:'underwater coral reef fish',
+ beach:'tropical beach ocean waves',
+ lake:'clear lake water nature',
+ flowers:'beautiful flowers garden',
+ butterflies:'butterflies flowers garden',
+ mountains:'green mountains landscape',
+ field:'green grass field nature',
+ sunrise:'sunrise nature landscape',
+ ducks:'ducks swimming pond',
+ wildlife:'wild animals nature',
+ railway:'train railway moving',
+ cars:'cars driving road',
+ airplane:'airplane flying sky',
+ boat:'boat sailing ocean',
+ snow:'snow falling landscape',
+ clouds:'moving clouds sky',
+ city:'city street moving traffic',
+ village:'village countryside',
+ park:'green park trees'
+};
 function videoLicenseCredit(page){const meta=page.imageinfo?.[0]?.extmetadata||{};const title=(page.title||'Wikimedia Commons video').replace(/^File:/,'');const artist=(meta.Artist?.value||'').replace(/<[^>]*>/g,'').replace(/&amp;/g,'&').replace(/&#160;/g,' ').trim();const license=(meta.LicenseShortName?.value||'license details').replace(/<[^>]*>/g,'').trim();const url=page.imageinfo?.[0]?.descriptionurl||('https://commons.wikimedia.org/wiki/'+encodeURIComponent(page.title||''));return {title,credit:(artist?artist+' · ':'')+title+' · '+license,source:url,license};}
 function installBackground(url,credit=''){return new Promise((resolve,reject)=>{if(bgVideoUrl&&bgVideoUrl.startsWith('blob:'))URL.revokeObjectURL(bgVideoUrl);bgVideoUrl='';const v=document.createElement('video');v.crossOrigin='anonymous';v.src=url;v.muted=true;v.loop=true;v.playsInline=true;v.preload='auto';v.addEventListener('loadeddata',()=>{bgVideo=v;bgCredit=credit;bgSourceTitle=credit;v.currentTime=0;v.play().catch(()=>{});drawFrame(0);resolve(v)},{once:true});v.addEventListener('error',()=>reject(new Error('The selected video could not be loaded or decoded by this browser.')),{once:true});v.load();setTimeout(()=>{if(v.readyState<2)reject(new Error('Timed out loading the background video.'))},18000);});}
-async function findBackgroundVideo(){const btn=$('findBackground');btn.disabled=true;setStatus('Searching free-to-reuse background videos…');try{const terms=backgroundTerms[$('bgCategory').value]||backgroundTerms.river;const api='https://commons.wikimedia.org/w/api.php?'+new URLSearchParams({action:'query',format:'json',origin:'*',generator:'search',gsrsearch:'filetype:video '+terms,gsrnamespace:'6',gsrlimit:'25',prop:'imageinfo',iiprop:'url|mime|extmetadata'}).toString();const response=await fetch(api,{mode:'cors'});if(!response.ok)throw new Error('Free media search returned HTTP '+response.status);const data=await response.json();const pages=Object.values(data.query?.pages||{});const candidates=pages.filter(p=>{const ii=p.imageinfo?.[0];if(!ii||!/^video\/(mp4|webm)$/i.test(ii.mime||''))return false;const ext=(ii.url||'').split('?')[0].toLowerCase();if(!(ext.endsWith('.mp4')||ext.endsWith('.webm')))return false;const m=ii.extmetadata||{};const lic=(m.LicenseShortName?.value||'').toLowerCase();const url=(m.LicenseUrl?.value||'').toLowerCase();const free=/cc0|public domain|cc by([ -]|$)|cc by-sa/.test(lic)||/creativecommons.org\/licenses\/(by|by-sa|zero)|publicdomain/.test(url);const restricted=/non.?commercial|no derivatives|cc by-nc|cc by-nd/.test(lic+' '+url);return free&&!restricted;});if(!candidates.length)throw new Error('No suitable openly licensed MP4/WebM was found for this category right now. Try the other category or upload your own clip.');const shuffled=candidates.sort(()=>Math.random()-.5);let lastError;for(const page of shuffled.slice(0,5)){const ii=page.imageinfo[0],meta=videoLicenseCredit(page);try{await installBackground(ii.url,meta.credit);setStatus('Free background loaded: '+meta.title+'. License credit is included in the video.');return true}catch(err){lastError=err;console.warn('Could not load background candidate',ii.url,err)}}throw lastError||new Error('Could not load a compatible video.');}catch(err){console.error(err);setStatus('Automatic background search could not find/load a compatible clip: '+(err?.message||err)+' Your reel can still be created without it, or upload your own video.');return false}finally{btn.disabled=false;}}
+async function findBackgroundVideo(){
+ const btn=$('findBackground'),input=$('bgSearch'),results=$('bgResults');
+ btn.disabled=true; results.innerHTML=''; setStatus('Searching free-to-reuse background videos…');
+ try{
+   const query=(input.value||'').trim()||'clean river flowing through forest';
+   const api='https://commons.wikimedia.org/w/api.php?'+new URLSearchParams({
+     action:'query',format:'json',origin:'*',generator:'search',
+     gsrsearch:'filetype:video '+query,gsrnamespace:'6',gsrlimit:'30',
+     prop:'imageinfo',iiprop:'url|mime|extmetadata'
+   }).toString();
+   const response=await fetch(api,{mode:'cors'});
+   if(!response.ok)throw new Error('Free media search returned HTTP '+response.status);
+   const data=await response.json();
+   const pages=Object.values(data.query?.pages||{});
+   const candidates=pages.filter(p=>{
+     const ii=p.imageinfo?.[0]; if(!ii||!/^video\/(mp4|webm)$/i.test(ii.mime||''))return false;
+     const ext=(ii.url||'').split('?')[0].toLowerCase();
+     if(!(ext.endsWith('.mp4')||ext.endsWith('.webm')))return false;
+     const m=ii.extmetadata||{},lic=(m.LicenseShortName?.value||'').toLowerCase(),url=(m.LicenseUrl?.value||'').toLowerCase();
+     const free=/cc0|public domain|cc by([ -]|$)|cc by-sa/.test(lic)||/creativecommons.org\/licenses\/(by|by-sa|zero)|publicdomain/.test(url);
+     const restricted=/non.?commercial|no derivatives|cc by-nc|cc by-nd/.test(lic+' '+url);
+     return free&&!restricted;
+   });
+   if(!candidates.length)throw new Error('No suitable openly licensed MP4/WebM was found. Try a simpler search such as “river”, “ocean”, “fish underwater”, or “train”.');
+   const shuffled=candidates.sort(()=>Math.random()-.5).slice(0,8);
+   results.innerHTML=shuffled.map((page,i)=>{
+     const meta=videoLicenseCredit(page), ii=page.imageinfo[0];
+     return `<div class="bg-result" data-bg-index="${i}" style="border:1px solid #d6e5d8;border-radius:12px;padding:8px;background:#fff">
+       <video muted playsinline preload="metadata" style="width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:8px;background:#111" src="${ii.url}"></video>
+       <div style="font-size:12px;font-weight:700;margin:7px 2px 4px">${htmlEscape(meta.title.slice(0,70))}</div>
+       <div style="font-size:11px;color:#667085;margin:0 2px 7px">${htmlEscape(meta.license)}</div>
+       <button type="button" class="useBg" data-bg-index="${i}" style="width:100%">Use this background</button>
+     </div>`;
+   }).join('');
+   shuffled.forEach((page,i)=>{const v=results.querySelector(`video[src="${CSS.escape(page.imageinfo[0].url)}"]`);if(v)v.addEventListener('mouseenter',()=>v.play().catch(()=>{}));});
+   results.querySelectorAll('.useBg').forEach(b=>b.addEventListener('click',async()=>{
+     const page=shuffled[Number(b.dataset.bgIndex)],ii=page.imageinfo[0],meta=videoLicenseCredit(page);
+     results.querySelectorAll('.useBg').forEach(x=>x.disabled=true);
+     try{await installBackground(ii.url,meta.credit);setStatus('Background loaded: '+meta.title+'. License credit is included in the video.');}
+     catch(err){setStatus('Could not load that clip. Try another result.');results.querySelectorAll('.useBg').forEach(x=>x.disabled=false);}
+   }));
+   setStatus(shuffled.length+' reusable video results found. Choose one to use it.');
+ }catch(err){
+   console.error(err); setStatus('Background search failed: '+(err?.message||err)+' You can still upload your own video.');
+ }finally{btn.disabled=false;}
+}
+function htmlEscape(v){return String(v||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+
 $('findBackground').addEventListener('click',()=>findBackgroundVideo());
+document.querySelectorAll('.bgSuggest').forEach(b=>b.addEventListener('click',()=>{
+ $('bgSearch').value=b.dataset.term; findBackgroundVideo();
+}));
+$('bgSearch').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();findBackgroundVideo();}});
+
 $('bgVideoFile').addEventListener('change',e=>{const f=e.target.files&&e.target.files[0];if(!f)return;if(bgVideoUrl&&bgVideoUrl.startsWith('blob:'))URL.revokeObjectURL(bgVideoUrl);bgVideoUrl=URL.createObjectURL(f);bgCredit='';bgSourceTitle='';bgVideo=document.createElement('video');bgVideo.src=bgVideoUrl;bgVideo.muted=true;bgVideo.loop=true;bgVideo.playsInline=true;bgVideo.preload='auto';bgVideo.onloadeddata=()=>{drawFrame(0);setStatus('Your background footage is loaded and will be included in the exported reel.');};bgVideo.onerror=()=>setStatus('This video could not be decoded. Try an MP4 encoded with H.264 video.');bgVideo.load();});
 $('musicVol').addEventListener('input',()=> $('volLabel').textContent=$('musicVol').value+'%');$('voiceSpeed').addEventListener('input',()=>{ $('speedLabel').textContent=Number($('voiceSpeed').value).toFixed(2)+'×';if($('voiceAudio').src)$('voiceAudio').playbackRate=getSpeed();if(voiceBuffer){previewDuration=voiceBuffer.duration/getSpeed();drawFrame(0)}});$('theme').addEventListener('change',()=>drawFrame(0));$('script').addEventListener('input',()=>drawFrame(0));
 $('generate').addEventListener('click',async()=>{const text=$('script').value.trim();if(!text){setStatus('Please enter a script first.');return}if(text.length>2500){setStatus('Please shorten the script to 2,500 characters or fewer.');return}const btn=$('generate');btn.disabled=true;$('export').disabled=true;$('preview').disabled=true;try{if(!bgVideo){await findBackgroundVideo();}setStatus('Loading the free AI voice model. The first download can take a while…');if(!KokoroTTS){setStatus('Loading the browser-compatible voice library…');const kokoroModule=await import('https://cdn.jsdelivr.net/npm/kokoro-js@1.2.1/+esm');KokoroTTS=kokoroModule.KokoroTTS;if(!KokoroTTS)throw new Error('Browser voice module loaded but KokoroTTS was not exported.');}if(!tts){setStatus('Loading the free AI voice model. The first download can take a while…');tts=await KokoroTTS.from_pretrained('onnx-community/Kokoro-82M-v1.0-ONNX',{dtype:'q8',device:'wasm',progress_callback:p=>{if(p&&p.status==='progress'&&typeof p.progress==='number')setStatus('Downloading the voice model (one time only)… '+Math.round(p.progress)+'%')}});}const sentences=getSlides();if(!sentences.length)throw new Error('Please enter a script before generating narration.');voiceSegments=[];const ac=new (window.AudioContext||window.webkitAudioContext)();const parts=[];for(let i=0;i<sentences.length;i++){setStatus('Generating narration sentence '+(i+1)+' of '+sentences.length+'… Keep this tab open.');const out=await tts.generate(sentences[i],{voice:$('voice').value});const part=out.audio?(()=>{const b=ac.createBuffer(1,out.audio.length,out.sampling_rate||24000);b.copyToChannel(out.audio,0);return b})():await ac.decodeAudioData(await out.toBlob().arrayBuffer());parts.push(part);voiceSegments.push({duration:part.duration});}const sampleRate=parts[0].sampleRate;const channels=parts[0].numberOfChannels;const totalFrames=parts.reduce((n,b)=>n+b.length,0);voiceBuffer=ac.createBuffer(channels,totalFrames,sampleRate);let offset=0;for(const part of parts){for(let ch=0;ch<channels;ch++)voiceBuffer.getChannelData(ch).set(part.getChannelData(Math.min(ch,part.numberOfChannels-1)),offset);offset+=part.length;}const wav=bufferToWav(voiceBuffer);voiceBlob=new Blob([wav],{type:'audio/wav'});if(voiceUrl)URL.revokeObjectURL(voiceUrl);voiceUrl=URL.createObjectURL(voiceBlob);$('voiceAudio').src=voiceUrl;$('audioWrap').hidden=false;$('preview').disabled=false;$('export').disabled=false;previewDuration=voiceBuffer.duration/getSpeed();$('voiceAudio').playbackRate=getSpeed();drawFrame(0);setStatus('Voiceover ready. Preview it, then export your reel with captions and optional music.');}catch(err){console.error(err);setStatus('Voice generation failed. Refresh the page and try again, or use a more powerful browser/device. Details: '+(err?.message||err));}finally{btn.disabled=false}});
