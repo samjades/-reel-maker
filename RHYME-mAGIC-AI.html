@@ -33,7 +33,7 @@ code,pre{font:12px/1.5 ui-monospace,monospace;background:var(--bg);padding:8px;b
 <script>
 const $=s=>document.querySelector(s),esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const ld=(k,d)=>{try{return JSON.parse(localStorage.getItem(k))??d}catch(e){return d}};
-const sv=()=>{try{localStorage.setItem('rm_p',JSON.stringify(S.projects));localStorage.setItem('rm_k',JSON.stringify(S.key));localStorage.setItem('rm_m',JSON.stringify(S.model))}catch(e){}};
+const sv=()=>{try{localStorage.setItem('rm_p',JSON.stringify(S.projects));localStorage.setItem('rm_k',JSON.stringify(S.key));localStorage.setItem('rm_m',JSON.stringify(S.model));localStorage.setItem('rm_vm',JSON.stringify(S.vmodel))}catch(e){}};
 const mk=(t,d,l,e,v,pr)=>({title:t,dur:d,lyrics:l,emoji:e,visual:v,camera:'Medium shot, gentle push-in',imagePrompt:pr,videoPrompt:v+' Smooth cheerful 3D animation.'});
 const DEMO={id:'demo',title:"The Little Duck's Counting Adventure",idea:'A cheerful yellow duckling counts from one to five with pond friends.',ratio:'16:9',secs:60,age:'3-4 years',type:'Counting song',style:'Colorful 3D preschool animation',
 character:{name:'Dippy the Duckling',species:'Yellow baby duck',look:'Round fluffy body, big glossy eyes, coral beak, blue polka-dot bowtie',prompt:'3D Pixar-style round fluffy baby duckling named Dippy, daffodil yellow feathers, tiny blue polka dot bowtie, big sparkling eyes, coral orange beak, soft studio lighting'},
@@ -41,8 +41,8 @@ lyrics:[{label:'Intro',lines:['Quack, quack, splash! Ready to count with Dippy?'
 music:{genre:'Playful preschool pop',bpm:118,prompt:'Bouncy upbeat preschool nursery rhyme, 118 BPM, ukulele, xylophone, handclaps on 2 and 4, warm acoustic bass, friendly vocals'},
 scenes:[mk('Dippy Splashes In',10,'Quack, quack, splash! Ready to count with Dippy? One, two, three, four, five!','🦆','Dippy leaps into a sparkling sunny pond.','3D cartoon baby yellow duck splashing into a sparkling pond with pink lily pads, sunbeams'),mk('One and Two Friends',12,'One little yellow duck swimming in the sun, along came a green frog and now there are TWO!','🐸','A green frog hops onto a lily pad beside Dippy.','3D cartoon yellow duckling and green frog on a giant lily pad, glowing numbers 1 and 2'),mk('Waddle Dance',12,'Waddle, waddle, quack, quack! Tap your little feet!','🎵','Dippy and Freddie dance in rhythm.','3D cartoon duckling and frog dancing on a pebble beach, floating music notes'),mk('Counting to Five',14,'Three butterflies, four bunnies, five ducklings in line! One, two, three, four, five!','🦋','Butterflies, bunnies and ducklings appear as counted.','3D cartoon meadow with 3 butterflies, 4 bunnies and 5 ducklings by a pond'),mk('Goodbye Wave',12,'Five happy friends wave goodbye! Great counting today! Quack quack quack!','👋','Everyone waves at sunset.','3D cartoon duckling waving goodbye at a warm sunset pond with animal friends')],
 publish:{titles:['Count to 5 with Dippy the Duck! 🦆 | Preschool Learning Song','One Little Duck: Easy Counting Rhyme for Toddlers','Quack, Splash, Count! Nursery Rhyme for Kids'],description:'Join Dippy the duckling as we count from 1 to 5 with frogs, butterflies and bunnies! An original sing-along for toddlers and preschoolers.',hashtags:['#NurseryRhymes','#CountingSong','#KidsLearning','#PreschoolSongs'],ideas:['Dippy Learns the Rainbow Colors','Five Little Ducks Bedtime Lullaby','Dippy’s Shape Adventure']}};
-const S={projects:ld('rm_p',[DEMO]),key:ld('rm_k',''),model:ld('rm_m','gemini-3.8-flash'),i:0};if(!S.projects.length)S.projects=[DEMO];
-const cur=()=>S.projects[S.i];let V='home',T='lyrics',IM={},SER=[],P={ctx:null,raf:0,t:0,playing:false,t0:0,from:0},BUSY='';
+const S={projects:ld('rm_p',[DEMO]),key:ld('rm_k',''),model:ld('rm_m','gemini-3.8-flash'),vmodel:ld('rm_vm','veo-3.1-generate-preview'),i:0};if(!S.projects.length)S.projects=[DEMO];
+const cur=()=>S.projects[S.i];let V='home',T='lyrics',IM={},VEL={},VURL={},VST={},EXPORT=false,SER=[],P={ctx:null,raf:0,t:0,playing:false,t0:0,from:0},BUSY='';
 const DIM={'16:9':[1280,720],'9:16':[540,960],'1:1':[800,800]},SECS={'15s':15,'30s':30,'60s':60,'90s':90,'2m':120,'3m':180};
 const total=p=>p.scenes.reduce((a,s)=>a+s.dur,0);
 function msg(t,ms=4500){const m=$('#msg');m.textContent=t;m.style.display='block';clearTimeout(msg.t);msg.t=setTimeout(()=>m.style.display='none',ms)}
@@ -64,10 +64,10 @@ async function listModels(){const k=$('#key').value.trim();if(!k)return msg('Ent
 async function create(){
  const f={idea:$('#idea').value.trim(),type:$('#type').value,age:$('#age').value,ratio:$('#ratio').value,dur:$('#dur').value,style:$('#style').value,mood:$('#mood').value,lang:$('#lang').value||'English',char:$('#char').value};
  if(!f.idea)return msg('Describe your rhyme idea first.');
- const secs=SECS[f.dur],n=Math.max(2,Math.round(secs/11));BUSY='create';render();
+ const secs=SECS[f.dur],n=Math.max(2,Math.round(secs/(/realistic/i.test(f.style)?8:11)));BUSY='create';render();
  try{
   const g=await gem(`You are a children's media producer. Create an ORIGINAL, safe, positive nursery rhyme production plan. No copyrighted characters or lyrics.
-Idea: ${f.idea}. Type: ${f.type}. Age: ${f.age}. Language: ${f.lang}. Visual style: ${f.style}. Music mood: ${f.mood}. Main character: ${f.char||'original cute character'}. Length: ${secs} seconds, exactly ${n} scenes.
+Idea: ${f.idea}. Type: ${f.type}. Age: ${f.age}. Language: ${f.lang}. Visual style: ${f.style}. Music mood: ${f.mood}.${/realistic/i.test(f.style)?' Visual style must be PHOTOREALISTIC live-action footage of real animals and real nature locations, never cartoon or animated; avoid close-ups of realistic children. Each scene at most 8 seconds.':''} Main character: ${f.char||'original cute character'}. Length: ${secs} seconds, exactly ${n} scenes.
 Return JSON: {"title":"","character":{"name":"","species":"","look":"","consistencyPrompt":""},"lyrics":[{"label":"Verse 1","lines":[""]}],"music":{"genre":"","bpm":110,"prompt":""},"scenes":[{"title":"","duration":10,"lyricsPlaying":"","emoji":"one emoji","visualDescription":"","cameraFraming":"","imagePrompt":"","videoPrompt":""}],"publish":{"titles":["x5"],"description":"","hashtags":[""],"ideas":["x5"]}}
 Scene durations must sum to ${secs}. Scene lyrics must follow the lyrics in order. Every imagePrompt must repeat the character's consistencyPrompt.`);
   let sc=(g.scenes||[]).map(s=>({title:s.title||'Scene',dur:+s.duration||10,lyrics:s.lyricsPlaying||'',emoji:s.emoji||'🎵',visual:s.visualDescription||'',camera:s.cameraFraming||'',imagePrompt:s.imagePrompt||'',videoPrompt:s.videoPrompt||''}));
@@ -86,13 +86,32 @@ async function series(){const p=cur();BUSY='series';render();
 /* ---------- Images (free Pollinations service; falls back to drawn scenes) ---------- */
 function genImg(i){const p=cur(),[w,h]=DIM[p.ratio],s=p.scenes[i];
  s.img=`https://image.pollinations.ai/prompt/${encodeURIComponent((s.imagePrompt+', '+p.style).slice(0,400))}?width=${w}&height=${h}&nologo=true&seed=${Math.floor(Math.random()*1e6)}`;sv();render()}
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+async function genAllVid(){const p=cur();if(!confirm('Veo video is a paid Google service billed per second of video ('+total(p)+'s here). Generate '+p.scenes.length+' clips?'))return;for(let i=0;i<p.scenes.length;i++){genVid(i);await sleep(2500)}}
+async function genVid(i){const p=cur(),s=p.scenes[i],k=p.id+i,B='https://generativelanguage.googleapis.com/v1beta/',H={'Content-Type':'application/json','x-goog-api-key':S.key};
+ if(!S.key)return msg('Add your Gemini API key in Settings first.');
+ const up=t=>{VST[k]=t;const e=$('#vs'+i);if(e)e.textContent=t};up('Starting…');
+ try{const real=/realistic/i.test(p.style),pr=s.videoPrompt+'. '+(real?'Photorealistic live-action footage shot on a cinema camera, natural lighting, real textures, no animation, no cartoon, no CGI look.':p.style);
+  let r=await fetch(B+'models/'+encodeURIComponent(S.vmodel)+':predictLongRunning',{method:'POST',headers:H,body:JSON.stringify({instances:[{prompt:pr}],parameters:{aspectRatio:p.ratio==='9:16'?'9:16':'16:9'}})}),j=await r.json();
+  if(!r.ok)throw new Error(j.error?.message||r.status);const op=j.name;
+  for(let n=1;n<=60;n++){await sleep(10000);up('Rendering… '+n*10+'s (usually 1-3 min)');j=await(await fetch(B+op,{headers:H})).json();if(j.error)throw new Error(j.error.message);if(j.done)break}
+  if(!j.done)throw new Error('Timed out waiting for Google.');
+  const uri=j.response?.generateVideoResponse?.generatedSamples?.[0]?.video?.uri||(JSON.stringify(j.response||{}).match(/https:[^"]+/)||[])[0];
+  if(!uri)throw new Error(j.response?.generateVideoResponse?.raiMediaFilteredReasons?.[0]||'No video returned (possibly blocked by safety filters). Try rewording the prompt.');
+  up('Downloading…');const vr=await fetch(uri,{headers:{'x-goog-api-key':S.key}});if(!vr.ok)throw new Error('Download failed ('+vr.status+')');
+  const u=URL.createObjectURL(await vr.blob()),v=document.createElement('video');v.muted=true;v.loop=true;v.playsInline=true;v.onseeked=()=>draw(P.t);v.src=u;
+  await new Promise(x=>{v.onloadeddata=x;v.onerror=x});VEL[k]=v;VURL[k]=u;VST[k]='';render();msg('Clip '+(i+1)+' ready')
+ }catch(e){VST[k]='';render();msg('Video failed: '+e.message,12000)}}
 async function genAll(){const p=cur();for(let i=0;i<p.scenes.length;i++){genImg(i);await new Promise(r=>setTimeout(r,1200))}}
 function img(u){if(!u)return null;if(!IM[u]){const i=new Image();i.crossOrigin='anonymous';i.onload=()=>draw(P.t);i.src=u;IM[u]=i}return IM[u]}
 /* ---------- Canvas renderer ---------- */
 function frame(c,w,h,p,t){
  let a=0,s=p.scenes[p.scenes.length-1],l=0;for(const x of p.scenes){if(t<a+x.dur){s=x;l=t-a;break}a+=x.dur}
- const i=p.scenes.indexOf(s),im=img(s.img),m=Math.min(w,h);
- if(im&&im.complete&&im.naturalWidth){const r=Math.max(w/im.naturalWidth,h/im.naturalHeight)*(1+.06*l/s.dur),iw=im.naturalWidth*r,ih=im.naturalHeight*r;c.drawImage(im,(w-iw)/2,(h-ih)/2,iw,ih)}
+ const i=p.scenes.indexOf(s),im=img(s.img),m=Math.min(w,h),vv=VEL[p.id+i];let src=null,sw=0,sh=0,z=1+.06*l/s.dur;
+ p.scenes.forEach((x,j)=>{const o=VEL[p.id+j];if(o&&j!==i&&!o.paused)o.pause()});
+ if(vv&&vv.readyState>=2&&vv.videoWidth){const want=vv.duration?l%vv.duration:0;if(P.playing||EXPORT){if(vv.paused)vv.play().catch(()=>{});if(Math.abs(vv.currentTime-want)>.6)vv.currentTime=want}else{vv.pause();if(Math.abs(vv.currentTime-want)>.05)vv.currentTime=want}src=vv;sw=vv.videoWidth;sh=vv.videoHeight;z=1}
+ else if(im&&im.complete&&im.naturalWidth){src=im;sw=im.naturalWidth;sh=im.naturalHeight}
+ if(src){const r=Math.max(w/sw,h/sh)*z;c.drawImage(src,(w-sw*r)/2,(h-sh*r)/2,sw*r,sh*r)}
  else{const hu=(i*55+200)%360,g=c.createLinearGradient(0,0,w,h);g.addColorStop(0,`hsl(${hu},85%,72%)`);g.addColorStop(1,`hsl(${hu+50},85%,60%)`);c.fillStyle=g;c.fillRect(0,0,w,h);
   c.textAlign='center';c.textBaseline='middle';c.font=`${m*.36}px serif`;const b=Math.abs(Math.sin(t*Math.PI*(p.music.bpm||110)/60));c.fillText(s.emoji,w/2,h*.4-b*m*.05);
   c.font=`600 ${m*.05}px Fredoka,sans-serif`;c.fillStyle='#fff';c.fillText(s.title,w/2,h*.62)}
@@ -112,10 +131,10 @@ function sched(ac,out,bpm,from,tot,t0){const spb=60/bpm,nb=ac.createBuffer(1,ac.
 function play(){const p=cur(),tot=total(p),from=P.t>=tot-.1?0:P.t;stop();const ac=new AudioContext();P.ctx=ac;const t0=ac.currentTime+.05;
  sched(ac,ac.destination,p.music.bpm||110,from,tot,t0);P.t0=t0;P.from=from;P.playing=true;$('#pp').textContent='⏸ Pause';
  const loop=()=>{if(!P.playing)return;const t=from+ac.currentTime-t0;if(t>=tot){stop();P.t=0;draw(0);upd(0);return}P.t=Math.max(0,t);draw(P.t);upd(P.t);P.raf=requestAnimationFrame(loop)};loop()}
-function stop(){P.playing=false;cancelAnimationFrame(P.raf);if(P.ctx){P.ctx.close();P.ctx=null}const b=$('#pp');if(b)b.textContent='▶ Play'}
+function stop(){Object.values(VEL).forEach(v=>v.pause());P.playing=false;cancelAnimationFrame(P.raf);if(P.ctx){P.ctx.close();P.ctx=null}const b=$('#pp');if(b)b.textContent='▶ Play'}
 function upd(t){const k=$('#sk'),m=$('#tm');if(k)k.value=t;if(m)m.textContent=Math.floor(t)+'s / '+total(cur())+'s'}
 /* ---------- Real video export: canvas + synth audio → MediaRecorder ---------- */
-async function exp(){const p=cur(),tot=total(p),[w,h]=DIM[p.ratio],cv=document.createElement('canvas');cv.width=w;cv.height=h;const c=cv.getContext('2d'),xp=$('#xp');stop();
+async function exp(){const p=cur(),tot=total(p),[w,h]=DIM[p.ratio],cv=document.createElement('canvas');cv.width=w;cv.height=h;const c=cv.getContext('2d'),xp=$('#xp');stop();EXPORT=true;
  xp.textContent='Loading images…';
  await Promise.all(p.scenes.map(s=>new Promise(r=>{const i=img(s.img);if(!i||i.complete)r();else{i.addEventListener('load',r);i.addEventListener('error',r)}})));
  const ac=new AudioContext(),dest=ac.createMediaStreamDestination(),t0=ac.currentTime+.2;sched(ac,dest,p.music.bpm||110,0,tot,t0);
@@ -123,7 +142,7 @@ async function exp(){const p=cur(),tot=total(p),[w,h]=DIM[p.ratio],cv=document.c
  const mime=['video/webm;codecs=vp9,opus','video/webm;codecs=vp8,opus','video/webm','video/mp4'].find(m=>MediaRecorder.isTypeSupported(m));
  if(!mime){msg('This browser cannot record video. Try Chrome, Edge or Firefox.');return}
  const rec=new MediaRecorder(st,{mimeType:mime,videoBitsPerSecond:4e6}),ch=[];rec.ondataavailable=e=>e.data.size&&ch.push(e.data);
- rec.onstop=()=>{ac.close();const b=new Blob(ch,{type:mime.split(';')[0]}),ext=mime.includes('mp4')?'mp4':'webm',u=URL.createObjectURL(b);
+ rec.onstop=()=>{EXPORT=false;Object.values(VEL).forEach(v=>v.pause());ac.close();const b=new Blob(ch,{type:mime.split(';')[0]}),ext=mime.includes('mp4')?'mp4':'webm',u=URL.createObjectURL(b);
   xp.innerHTML=`Done! <a class="btn pri" href="${u}" download="${esc(p.title)}.${ext}">Download video (.${ext})</a>`};
  rec.start(250);
  const loop=()=>{const t=ac.currentTime-t0;if(t>=tot+.3){rec.stop();return}const tt=Math.max(0,Math.min(t,tot-.01));frame(c,w,h,p,tt);xp.textContent=`Rendering in real time… ${Math.round(tt/tot*100)}% (keep this tab open)`;requestAnimationFrame(loop)};loop()}
@@ -138,12 +157,12 @@ function render(){const m=$('#main');
  <div><label>Age</label><select id=age>${opt(['1-2 years','3-4 years','5-6 years','7-8 years'],'3-4 years')}</select></div>
  <div><label>Format</label><select id=ratio>${opt(['16:9','9:16','1:1'])}</select></div>
  <div><label>Length</label><select id=dur>${opt(Object.keys(SECS),'60s')}</select></div>
- <div><label>Visual style</label><select id=style>${opt(['Colorful 3D preschool animation','Cute animal cartoons','Soft pastel storybook','Clay animation','Toy-like 3D world'])}</select></div>
+ <div><label>Visual style</label><select id=style>${opt(['Photorealistic live-action video','Colorful 3D preschool animation','Cute animal cartoons','Soft pastel storybook','Clay animation','Toy-like 3D world'])}</select></div>
  <div><label>Music mood</label><select id=mood>${opt(['Happy and playful','Bouncy and energetic','Gentle bedtime lullaby','Clapping and dancing rhythm','Acoustic preschool pop'])}</select></div>
  <div><label>Lyrics language</label><input id=lang value="English"></div><div><label>Main character (optional)</label><input id=char placeholder="e.g. Barnaby the baby dinosaur"></div></div>
  <button class=pri onclick="create()" ${BUSY?'disabled':''}>${BUSY==='create'?'Writing your rhyme… (20-40s)':'Create my rhyme video'}</button></div>`;
  else if(V==='settings')m.innerHTML=`<div class=card><h2>Settings</h2><label>Google Gemini API key</label><input id=key type=password value="${esc(S.key)}" placeholder="AIza…" autocomplete=off>
- <label>Model</label><input id=model value="${esc(S.model)}" placeholder="gemini-3.8-flash"><div class=row><button class=pri onclick="S.key=$('#key').value.trim();S.model=$('#model').value.trim().replace(/^models\//,'')||'gemini-3.8-flash';sv();msg('Saved in this browser')">Save</button><button onclick="listModels()">Find available models</button></div><p id=ml class=mut></p>
+ <label>Model</label><input id=model value="${esc(S.model)}" placeholder="gemini-3.8-flash"><label>Video model (Veo, paid)</label><input id=vmodel value="${esc(S.vmodel)}"><div class=row><button class=pri onclick="S.key=$('#key').value.trim();S.model=$('#model').value.trim().replace(/^models\//,'')||'gemini-3.8-flash';S.vmodel=$('#vmodel').value.trim()||'veo-3.1-generate-preview';sv();msg('Saved in this browser')">Save</button><button onclick="listModels()">Find available models</button></div><p id=ml class=mut></p>
  <p class=mut>Get a free key at <a href="https://aistudio.google.com/apikey" target=_blank rel=noopener>aistudio.google.com/apikey</a>. It is stored only in this browser and sent only to Google. GitHub Pages has no server, so the key can be seen by anyone using your browser: never put your key in the page's code, and in Google AI Studio restrict it to the website referrer <b>samjades.github.io/*</b> if you plan to share the link.</p></div>`;
  else if(V==='series'){const p=cur();m.innerHTML=`<div class=card><h2>Series planner</h2><p class=mut>Five episode ideas for ${esc(p.character.name)}.</p><button class=pri onclick="series()" ${BUSY?'disabled':''}>${BUSY==='series'?'Planning…':'Plan 5 episodes'}</button></div><div class=grid>${SER.map((e,i)=>`<div class=card><span class=chip>Episode ${i+1}</span><h3>${esc(e.title)}</h3><p>${esc(e.coreIdea)}</p><small>Goal: ${esc(e.educationalObjective)}<br>Activity: ${esc(e.distinctiveActivity)}</small></div>`).join('')}</div>`}
  else proj(m)}
@@ -151,7 +170,7 @@ function proj(m){const p=cur(),tabs=[['lyrics','Lyrics & character'],['board','S
  if(T==='lyrics')h=`<div class=card><h3>${esc(p.character.name)} <small>${esc(p.character.species)}</small></h3><p>${esc(p.character.look)}</p><small>Consistency prompt</small><code>${esc(p.character.prompt)}</code><button onclick="cp(cur().character.prompt)">Copy</button></div>
  <div class=card><h3>Lyrics</h3>${p.lyrics.map((s,i)=>`<b>${esc(s.label)}</b>${s.lines.map((l,j)=>`<input aria-label="line" value="${esc(l)}" oninput="cur().lyrics[${i}].lines[${j}]=this.value;sv()">`).join('')}`).join('')}</div>
  <div class=card><h3>Music · ${p.music.bpm} BPM</h3><p>${esc(p.music.genre)}</p><small>Prompt for Suno / Udio</small><code>${esc(p.music.prompt)}</code><button onclick="cp(cur().music.prompt)">Copy</button></div>`;
- if(T==='board')h=`<div class=row style="margin-bottom:12px"><button class=pri onclick="genAll()">Generate all frames</button><small>Free AI images; if one fails, the preview uses a drawn scene.</small></div>`+p.scenes.map((s,i)=>`<div class="card scene"><div>${s.img?`<img src="${esc(s.img)}" alt="${esc(s.title)}">`:`<div class=ph>${s.emoji}</div>`}<button style="margin-top:8px;width:100%" onclick="genImg(${i})">${s.img?'Regenerate frame':'Generate frame'}</button></div>
+ if(T==='board')h=`<div class=row style="margin-bottom:12px"><button class=pri onclick="genAllVid()">Generate all real video clips</button><button onclick="genAll()">Generate all frames</button><small>Free AI images; if one fails, the preview uses a drawn scene.</small></div>`+p.scenes.map((s,i)=>`<div class="card scene"><div>${VURL[p.id+i]?`<video src="${VURL[p.id+i]}" controls muted loop playsinline style="width:100%;border-radius:12px"></video>`:s.img?`<img src="${esc(s.img)}" alt="${esc(s.title)}">`:`<div class=ph>${s.emoji}</div>`}<button style="margin-top:8px;width:100%" onclick="genImg(${i})">${s.img?'Regenerate frame':'Generate frame'}</button><button class=pri style="margin-top:6px;width:100%" onclick="genVid(${i})">${VURL[p.id+i]?'Regenerate real video clip':'Generate real video clip'}</button>${VURL[p.id+i]?`<a class=btn style="margin-top:6px;width:100%;text-align:center" href="${VURL[p.id+i]}" download="scene-${i+1}.mp4">Download clip</a>`:''}<small id=vs${i}>${esc(VST[p.id+i]||'')}</small></div>
  <div><span class=chip>Scene ${i+1} · ${s.dur}s</span><h3>${esc(s.title)}</h3><label>On-screen caption</label><textarea rows=2 onchange="cur().scenes[${i}].lyrics=this.value;sv()">${esc(s.lyrics)}</textarea><small>${esc(s.visual)}</small><br><small>Video prompt (Runway / Luma / Kling)</small><code>${esc(s.videoPrompt)}</code><button onclick="cp(cur().scenes[${i}].videoPrompt)">Copy prompt</button></div></div>`).join('');
  if(T==='preview')h=`<div class=card><canvas id=cv></canvas><div class=row style="justify-content:center"><button class=pri id=pp onclick="P.playing?stop():play()">▶ Play</button><input id=sk type=range min=0 max=${total(p)} step=.1 value=0 style="width:240px" aria-label="Seek" oninput="P.t=+this.value;P.playing?play():draw(P.t);upd(P.t)"><span id=tm class=mut></span></div></div>
  <div class=card><h3>Render video</h3><p class=mut>Records the preview (picture, captions and music) to a real video file, in real time.</p><button class=pri onclick="exp()">Render &amp; export video</button><p id=xp></p></div>`;
