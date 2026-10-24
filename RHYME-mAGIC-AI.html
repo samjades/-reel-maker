@@ -33,7 +33,7 @@ code,pre{font:12px/1.5 ui-monospace,monospace;background:var(--bg);padding:8px;b
 <script>
 const $=s=>document.querySelector(s),esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const ld=(k,d)=>{try{return JSON.parse(localStorage.getItem(k))??d}catch(e){return d}};
-const sv=()=>{try{localStorage.setItem('rm_p',JSON.stringify(S.projects));localStorage.setItem('rm_k',JSON.stringify(S.key))}catch(e){}};
+const sv=()=>{try{localStorage.setItem('rm_p',JSON.stringify(S.projects));localStorage.setItem('rm_k',JSON.stringify(S.key));localStorage.setItem('rm_m',JSON.stringify(S.model))}catch(e){}};
 const mk=(t,d,l,e,v,pr)=>({title:t,dur:d,lyrics:l,emoji:e,visual:v,camera:'Medium shot, gentle push-in',imagePrompt:pr,videoPrompt:v+' Smooth cheerful 3D animation.'});
 const DEMO={id:'demo',title:"The Little Duck's Counting Adventure",idea:'A cheerful yellow duckling counts from one to five with pond friends.',ratio:'16:9',secs:60,age:'3-4 years',type:'Counting song',style:'Colorful 3D preschool animation',
 character:{name:'Dippy the Duckling',species:'Yellow baby duck',look:'Round fluffy body, big glossy eyes, coral beak, blue polka-dot bowtie',prompt:'3D Pixar-style round fluffy baby duckling named Dippy, daffodil yellow feathers, tiny blue polka dot bowtie, big sparkling eyes, coral orange beak, soft studio lighting'},
@@ -41,7 +41,7 @@ lyrics:[{label:'Intro',lines:['Quack, quack, splash! Ready to count with Dippy?'
 music:{genre:'Playful preschool pop',bpm:118,prompt:'Bouncy upbeat preschool nursery rhyme, 118 BPM, ukulele, xylophone, handclaps on 2 and 4, warm acoustic bass, friendly vocals'},
 scenes:[mk('Dippy Splashes In',10,'Quack, quack, splash! Ready to count with Dippy? One, two, three, four, five!','🦆','Dippy leaps into a sparkling sunny pond.','3D cartoon baby yellow duck splashing into a sparkling pond with pink lily pads, sunbeams'),mk('One and Two Friends',12,'One little yellow duck swimming in the sun, along came a green frog and now there are TWO!','🐸','A green frog hops onto a lily pad beside Dippy.','3D cartoon yellow duckling and green frog on a giant lily pad, glowing numbers 1 and 2'),mk('Waddle Dance',12,'Waddle, waddle, quack, quack! Tap your little feet!','🎵','Dippy and Freddie dance in rhythm.','3D cartoon duckling and frog dancing on a pebble beach, floating music notes'),mk('Counting to Five',14,'Three butterflies, four bunnies, five ducklings in line! One, two, three, four, five!','🦋','Butterflies, bunnies and ducklings appear as counted.','3D cartoon meadow with 3 butterflies, 4 bunnies and 5 ducklings by a pond'),mk('Goodbye Wave',12,'Five happy friends wave goodbye! Great counting today! Quack quack quack!','👋','Everyone waves at sunset.','3D cartoon duckling waving goodbye at a warm sunset pond with animal friends')],
 publish:{titles:['Count to 5 with Dippy the Duck! 🦆 | Preschool Learning Song','One Little Duck: Easy Counting Rhyme for Toddlers','Quack, Splash, Count! Nursery Rhyme for Kids'],description:'Join Dippy the duckling as we count from 1 to 5 with frogs, butterflies and bunnies! An original sing-along for toddlers and preschoolers.',hashtags:['#NurseryRhymes','#CountingSong','#KidsLearning','#PreschoolSongs'],ideas:['Dippy Learns the Rainbow Colors','Five Little Ducks Bedtime Lullaby','Dippy’s Shape Adventure']}};
-const S={projects:ld('rm_p',[DEMO]),key:ld('rm_k',''),i:0};if(!S.projects.length)S.projects=[DEMO];
+const S={projects:ld('rm_p',[DEMO]),key:ld('rm_k',''),model:ld('rm_m','gemini-3.8-flash'),i:0};if(!S.projects.length)S.projects=[DEMO];
 const cur=()=>S.projects[S.i];let V='home',T='lyrics',IM={},SER=[],P={ctx:null,raf:0,t:0,playing:false,t0:0,from:0},BUSY='';
 const DIM={'16:9':[1280,720],'9:16':[540,960],'1:1':[800,800]},SECS={'15s':15,'30s':30,'60s':60,'90s':90,'2m':120,'3m':180};
 const total=p=>p.scenes.reduce((a,s)=>a+s.dur,0);
@@ -52,11 +52,15 @@ const cp=t=>navigator.clipboard.writeText(t).then(()=>msg('Copied'));
 /* ---------- Gemini (browser → Google API, key stays in this browser) ---------- */
 async function gem(prompt){
  if(!S.key)throw new Error('Add your Gemini API key in Settings first.');
- const r=await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent',{method:'POST',headers:{'Content-Type':'application/json','x-goog-api-key':S.key},body:JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{responseMimeType:'application/json',temperature:.8}})});
+ const r=await fetch('https://generativelanguage.googleapis.com/v1beta/models/'+encodeURIComponent(S.model)+':generateContent',{method:'POST',headers:{'Content-Type':'application/json','x-goog-api-key':S.key},body:JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{responseMimeType:'application/json',temperature:.8}})});
  const j=await r.json();if(!r.ok)throw new Error(j.error?.message||'Request failed ('+r.status+')');
  const t=(j.candidates?.[0]?.content?.parts||[]).map(p=>p.text).join('');
  return JSON.parse(t.replace(/^\s*```(json)?/,'').replace(/```\s*$/,'').trim());
 }
+async function listModels(){const k=$('#key').value.trim();if(!k)return msg('Enter your API key first.');
+ try{const r=await fetch('https://generativelanguage.googleapis.com/v1beta/models?pageSize=200',{headers:{'x-goog-api-key':k}}),j=await r.json();if(!r.ok)throw new Error(j.error?.message||r.status);
+  const n=(j.models||[]).filter(m=>(m.supportedGenerationMethods||[]).includes('generateContent')&&/gemini/.test(m.name)).map(m=>m.name.replace('models/',''));
+  $('#ml').innerHTML='Click a model to use it:<br>'+n.map(x=>`<button style="margin:3px" onclick="$('#model').value='${x}'">${x}</button>`).join('')}catch(e){msg(e.message,8000)}}
 async function create(){
  const f={idea:$('#idea').value.trim(),type:$('#type').value,age:$('#age').value,ratio:$('#ratio').value,dur:$('#dur').value,style:$('#style').value,mood:$('#mood').value,lang:$('#lang').value||'English',char:$('#char').value};
  if(!f.idea)return msg('Describe your rhyme idea first.');
@@ -139,7 +143,7 @@ function render(){const m=$('#main');
  <div><label>Lyrics language</label><input id=lang value="English"></div><div><label>Main character (optional)</label><input id=char placeholder="e.g. Barnaby the baby dinosaur"></div></div>
  <button class=pri onclick="create()" ${BUSY?'disabled':''}>${BUSY==='create'?'Writing your rhyme… (20-40s)':'Create my rhyme video'}</button></div>`;
  else if(V==='settings')m.innerHTML=`<div class=card><h2>Settings</h2><label>Google Gemini API key</label><input id=key type=password value="${esc(S.key)}" placeholder="AIza…" autocomplete=off>
- <button class=pri onclick="S.key=$('#key').value.trim();sv();msg('Saved in this browser')">Save key</button>
+ <label>Model</label><input id=model value="${esc(S.model)}" placeholder="gemini-3.8-flash"><div class=row><button class=pri onclick="S.key=$('#key').value.trim();S.model=$('#model').value.trim().replace(/^models\//,'')||'gemini-3.8-flash';sv();msg('Saved in this browser')">Save</button><button onclick="listModels()">Find available models</button></div><p id=ml class=mut></p>
  <p class=mut>Get a free key at <a href="https://aistudio.google.com/apikey" target=_blank rel=noopener>aistudio.google.com/apikey</a>. It is stored only in this browser and sent only to Google. GitHub Pages has no server, so the key can be seen by anyone using your browser: never put your key in the page's code, and in Google AI Studio restrict it to the website referrer <b>samjades.github.io/*</b> if you plan to share the link.</p></div>`;
  else if(V==='series'){const p=cur();m.innerHTML=`<div class=card><h2>Series planner</h2><p class=mut>Five episode ideas for ${esc(p.character.name)}.</p><button class=pri onclick="series()" ${BUSY?'disabled':''}>${BUSY==='series'?'Planning…':'Plan 5 episodes'}</button></div><div class=grid>${SER.map((e,i)=>`<div class=card><span class=chip>Episode ${i+1}</span><h3>${esc(e.title)}</h3><p>${esc(e.coreIdea)}</p><small>Goal: ${esc(e.educationalObjective)}<br>Activity: ${esc(e.distinctiveActivity)}</small></div>`).join('')}</div>`}
  else proj(m)}
