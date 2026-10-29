@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Stickman Success Studio — V2</title>
+<style>
+:root{--ink:#182039;--muted:#65708a;--bg:#f4f6fb;--card:#fff;--line:#e1e6f0;--purple:#5755d9;--navy:#202747;--green:#16845b}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+header{background:linear-gradient(120deg,#171b36,#424aa0);color:#fff;padding:25px 18px}header>div,main,footer{max-width:1200px;margin:auto}h1{font-size:clamp(1.7rem,3vw,2.4rem);line-height:1.12;margin:0 0 8px}header p{margin:0;color:#e4e7ff;max-width:850px}
+main{padding:20px 16px 40px;display:grid;grid-template-columns:350px minmax(0,1fr);gap:18px}.panel{background:var(--card);border:1px solid var(--line);border-radius:15px;padding:17px;box-shadow:0 6px 24px #18203908}
+h2{font-size:1.04rem;margin:0 0 12px}h3{font-size:.94rem;margin:17px 0 8px}label{display:block;font-weight:700;font-size:.86rem;margin:12px 0 5px}
+input,select,textarea,button{font:inherit}input,select,textarea{width:100%;border:1px solid #cbd3e2;border-radius:9px;padding:10px;background:#fff;color:var(--ink)}textarea{min-height:95px;resize:vertical}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:9px}.actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+button{border:0;border-radius:9px;padding:10px 12px;font-weight:750;cursor:pointer}button:disabled{opacity:.55;cursor:wait}.primary{background:var(--purple);color:#fff}.secondary{background:#eef0ff;color:#37377d}.dark{background:var(--navy);color:#fff}.danger{background:#fff0ef;color:#9b302c}
+.hint{color:var(--muted);font-size:.8rem;margin:7px 0}.status{font-size:.83rem;color:var(--muted);min-height:22px;margin-top:10px}.notice{background:#fff8e5;border:1px solid #f0dfa9;border-radius:10px;padding:11px;font-size:.82rem;margin-top:12px}
+.previewtop{display:flex;justify-content:space-between;align-items:center;gap:10px}.badge{background:#e7f7ef;color:#15744f;border-radius:99px;padding:5px 9px;font-size:.75rem;font-weight:800}
+.workspace{display:grid;grid-template-columns:minmax(220px,360px) minmax(0,1fr);gap:17px;margin-top:12px;align-items:start}
+canvas{display:block;width:100%;height:auto;aspect-ratio:9/16;background:#edf0ff;border:1px solid var(--line);border-radius:12px}
+.scene-list{max-height:260px;overflow:auto;border:1px solid var(--line);border-radius:10px;padding:10px}.scene{padding:8px 0;border-bottom:1px solid var(--line)}.scene:last-child{border:0}.scene strong{font-size:.78rem;color:var(--purple);display:block}.scene p{font-size:.85rem;margin:3px 0 0}
+.check{display:flex;align-items:center;gap:8px;font-size:.85rem;margin-top:8px}.check input{width:auto}
+footer{padding:0 16px 25px;color:var(--muted);font-size:.8rem}
+@media(max-width:850px){main{grid-template-columns:1fr}.workspace{grid-template-columns:1fr}.visual canvas{max-width:350px;margin:auto}}
+</style>
+</head>
+<body>
+<header><div><h1>Stickman Success Studio <small style="font-size:.55em">V2</small></h1><p>Create Nigerian comedy, money-saving, motivation, success-mindset and G13 spooky Reels. This version adds character movement, generated sound, narration/audio import, and an MP4 export option.</p></div></header>
+<main>
+<section class="panel">
+<h2>1. Story studio</h2>
+<label for="category">Video category</label><select id="category"><option value="comedy">Funny Nigerian stickman</option><option value="saving">Money-saving education</option><option value="success">Success mindset</option><option value="motivation">Motivational story</option><option value="horror">G13 spooky story</option></select>
+<label for="topic">Topic</label><input id="topic" maxlength="140" value="Stop spending money to impress people">
+<div class="row"><div><label for="duration">Duration</label><select id="duration"><option>15</option><option>30</option><option selected>45</option><option>60</option></select></div><div><label for="language">Dialogue style</label><select id="language"><option value="pidgin">Nigerian Pidgin</option><option value="mix">English + Pidgin</option><option value="english">Clear English</option></select></div></div>
+<div class="row"><div><label for="character">Character</label><select id="character"><option value="man">Young man</option><option value="woman">Young woman</option><option value="student">Student</option><option value="boss">Business owner</option></select></div><div><label for="visual">Visual mood</label><select id="visual"><option value="bright">Bright cartoon</option><option value="comic">Comic book</option><option value="night">Moody night</option></select></div></div>
+<label for="ending">Ending</label><select id="ending"><option value="lesson">Clear lesson</option><option value="question">Ask viewers a question</option><option value="cliffhanger">Cliffhanger</option></select>
+<div class="actions"><button class="primary" id="generate">Generate scenes</button><button class="secondary" id="surprise">Surprise me</button></div>
+<h3>2. Narration and sound</h3>
+<label for="voice">Device voice (available voices vary)</label><select id="voice"><option value="">Default device voice</option></select>
+<div class="actions"><button class="secondary" id="previewVoice">Preview spoken script</button><button class="secondary" id="stopVoice">Stop voice</button></div>
+<label for="audioFile">Optional narration audio file (WAV/MP3)</label><input id="audioFile" type="file" accept="audio/*">
+<p class="hint">For embedded narration, upload a narration audio file. Browser speech preview cannot be captured reliably by web apps. To generate a Nigerian-accented voice without a paid API, use a local TTS engine such as Piper/Kokoro on your own computer and upload its audio output. Device voices may not include a Nigerian accent.</p>
+<div class="row"><div><label for="music">Background sound</label><select id="music"><option value="none">No background sound</option><option value="light">Light upbeat pulse</option><option value="suspense">Suspense ambience</option></select></div><div><label for="effects">Sound effects</label><select id="effects"><option value="on">On</option><option value="off">Off</option></select></div></div>
+<label class="check"><input type="checkbox" id="captions" checked> Include captions in exported video</label>
+<h3>3. Export</h3>
+<div class="actions"><button class="dark" id="play">▶ Preview animation</button><button class="secondary" id="pause">Pause</button></div>
+<div class="actions"><button class="primary" id="exportWebm">Export WebM with audio</button><button class="primary" id="exportMp4">Export MP4</button></div>
+<p class="hint">WebM recording is browser-native. MP4 export loads FFmpeg WebAssembly from a CDN on first use, so it needs internet access and may be slow on mobile. It is not a paid API.</p>
+<div class="status" id="status" aria-live="polite"></div>
+<div class="notice"><b>Optional local AI scenes:</b> This app is ready to be extended with a local image/video model. GitHub Pages cannot run a large AI model itself; the model must run on a compatible computer or GPU server. This MVP uses original vector animation and does not call an AI API.</div>
+</section>
+<section class="panel">
+<div class="previewtop"><h2>4. Preview & edit</h2><span class="badge">Vertical 9:16</span></div>
+<div class="workspace"><div class="visual"><canvas id="canvas" width="540" height="960"></canvas><p class="hint">Animated stickman scenes · 540 × 960 preview</p></div>
+<div><div id="sceneList" class="scene-list"></div><label for="scriptEdit">Edit narration (one scene per line)</label><textarea id="scriptEdit"></textarea><div class="actions"><button class="secondary" id="apply">Apply edits</button><button class="secondary" id="downloadScript">Download script</button></div>
+<div class="notice"><b>Version 2 status:</b> Character movement, scene templates, generated sound effects/music, optional narration-file embedding and MP4 conversion are implemented. Advanced AI-generated cinematic scenes remain an optional local-model integration rather than a hosted feature.</div></div></div>
+</section>
+</main>
+<footer>Use original scripts and properly licensed audio. Review Facebook's current music and monetization rules before publishing.</footer>
+<script>
+(()=> {
+const $=id=>document.getElementById(id), c=$('canvas'), ctx=c.getContext('2d');
+let scenes=[], playing=false, raf=0, started=0, elapsed=0, recorder=null, chunks=[], audioCtx=null, master=null, uploadedBuffer=null, ffmpeg=null;
+const library={
+comedy:[["HOOK","Omo, this guy wants everybody to think say money dey!"],["THE PLAN","He uses his last cash to look like a big spender for one afternoon."],["THE PROBLEM","His friend calls with an emergency. Our guy checks his account."],["THE TWIST","Balance almost zero. Even transport money no dey!"],["ENDING","Looking rich and building wealth are two different things. Which one are you choosing?"]],
+saving:[["HOOK","Small money no be useless money. Make we calculate am."],["THE HABIT","Our character saves a little before spending on extras."],["THE MATH","Save ₦500 daily for 30 days and you put aside ₦15,000 before interest."],["THE CHANGE","That habit can help prepare for bills and unexpected costs."],["ENDING","Start with what you can afford. What can you save daily?"]],
+success:[["HOOK","Your future can change because of one small decision today."],["THE CHOICE","Our character can buy something to impress people or learn a useful skill."],["THE ACTION","They choose learning and practise a little every day."],["THE RESULT","It does not make them rich overnight, but it opens another opportunity."],["ENDING","Progress comes from repeated actions, not magic shortcuts."]],
+motivation:[["HOOK","Motivation is easy when everything is going well."],["THE SETBACK","Our character misses a goal and wants to give up."],["THE DECISION","They make the next step smaller: ten minutes of focused work."],["THE PROGRESS","One small action becomes a routine, and the routine builds momentum."],["ENDING","Do the next useful thing, even when you do not feel ready."]],
+horror:[["HOOK","At 12:07 a.m., somebody knocked on the door three times."],["THE MYSTERY","Our character checked the hallway. Nobody was there."],["THE CLUE","A phone lit up: 'Don't open the door. I'm already inside.'"],["THE TWIST","The same three knocks came from inside the dark cupboard."],["ENDING","The lights went out. Then the phone rang again..."]]};
+const endText={pidgin:{lesson:"No use money take impress people. Build your future small-small.",question:"You go save am or spend am? Tell us for comment.",cliffhanger:"But the next message changed everything..."},mix:{lesson:"No spend to impress people. Build your future one step at a time.",question:"Would you save am or spend it? Tell us in the comments.",cliffhanger:"But the next message changed everything..."},english:{lesson:"Do not spend just to impress people. Build your future step by step.",question:"Would you save it or spend it? Tell us in the comments.",cliffhanger:"But the next message changed everything..."}};
+function esc(s){return String(s).replace(/[&<>"']/g,x=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[x]));}
+function build(){let cat=$('category').value,topic=$('topic').value.trim()||'Build better habits',lang=$('language').value;let a=library[cat].map(([title,text])=>({title,text}));
+if(cat!=='horror'){a[0].text+=' Today’s topic: '+topic+'.';a[a.length-1].text=endText[lang][$('ending').value];}
+let dur=Number($('duration').value);scenes=a.map((s,i)=>({...s,start:i*dur/a.length,end:(i+1)*dur/a.length}));renderList();$('scriptEdit').value=scenes.map(s=>s.text).join('\n');draw(0);$('status').textContent='Scenes generated locally.';}
+function renderList(){$('sceneList').innerHTML=scenes.map((s,i)=>`<div class="scene"><strong>SCENE ${i+1} · ${esc(s.title)}</strong><p>${esc(s.text)}</p></div>`).join('');}
+function wrap(t,n){let lines=[],line='';for(let w of t.split(/\s+/)){if((line+' '+w).trim().length>n){lines.push(line);line=w;}else line=(line+' '+w).trim();}if(line)lines.push(line);return lines;}
+function rr(x,y,w,h,r,col){ctx.fillStyle=col;ctx.beginPath();ctx.roundRect(x,y,w,h,r);ctx.fill();}
+function person(x,y,t,pose){let woman=$('character').value==='woman', night=$('visual').value==='night'||$('category').value==='horror', ink=night?'#d9d9ef':'#222941', cloth=$('visual').value==='comic'?'#ed7058':'#5755d9';let stride=Math.sin(t*7)*14, arm=Math.sin(t*5)*16;
+ctx.save();ctx.translate(x,y);ctx.lineCap='round';ctx.lineJoin='round';ctx.strokeStyle=ink;ctx.lineWidth=9;
+ctx.fillStyle=woman?'#bd8067':'#eab08b';ctx.beginPath();ctx.arc(0,-116,29,0,Math.PI*2);ctx.fill();
+if(woman){ctx.fillStyle='#252139';ctx.beginPath();ctx.arc(0,-132,30,Math.PI,Math.PI*2);ctx.fill();}
+ctx.fillStyle=ink;ctx.beginPath();ctx.arc(-9,-120,3,0,7);ctx.arc(9,-120,3,0,7);ctx.fill();
+ctx.strokeStyle=ink;ctx.lineWidth=3;ctx.beginPath();if(pose==='laugh'){ctx.arc(0,-108,11,0,Math.PI);}else{ctx.arc(0,-108,9,.15,Math.PI-.15);}ctx.stroke();
+ctx.strokeStyle=cloth;ctx.lineWidth=16;ctx.beginPath();ctx.moveTo(0,-84);ctx.lineTo(0,-28);ctx.stroke();
+ctx.strokeStyle=ink;ctx.lineWidth=8;ctx.beginPath();
+let raise=pose==='talk'? -24:pose==='laugh'?-40:0;
+ctx.moveTo(0,-72);ctx.lineTo(-34+arm,-48+raise);ctx.lineTo(-42+arm,-18+raise);
+ctx.moveTo(0,-72);ctx.lineTo(34-arm,-48+raise);ctx.lineTo(42-arm,-18+raise);
+ctx.moveTo(0,-28);ctx.lineTo(-25+stride,20);ctx.lineTo(-30+stride,48);ctx.moveTo(0,-28);ctx.lineTo(25-stride,20);ctx.lineTo(30-stride,48);ctx.stroke();ctx.restore();}
+function draw(sec){let W=c.width,H=c.height,cat=$('category').value,night=$('visual').value==='night'||cat==='horror',comic=$('visual').value==='comic',s=scenes[sceneAt(sec)]||{title:'YOUR STORY',text:'Generate scenes to begin.'};ctx.clearRect(0,0,W,H);
+ctx.fillStyle=night?'#151827':comic?'#fff0dc':'#e9edff';ctx.fillRect(0,0,W,H);
+if(night){ctx.fillStyle='#24283d';for(let i=0;i<8;i++){ctx.fillRect(i*72,390+(i%3)*25,54,340);ctx.fillStyle='#f3d88b';ctx.fillRect(i*72+16,440+(i%3)*25,14,25);ctx.fillStyle='#24283d';}ctx.fillStyle='#33364e';ctx.beginPath();ctx.moveTo(50,410);ctx.lineTo(270,255);ctx.lineTo(490,410);ctx.fill();ctx.fillStyle='#f3d88b';ctx.beginPath();ctx.arc(440,205,42,0,7);ctx.fill();ctx.fillStyle='#151827';ctx.beginPath();ctx.arc(456,190,39,0,7);ctx.fill();}
+else{ctx.fillStyle='#d5e8dc';ctx.fillRect(0,570,W,390);ctx.fillStyle='#c7bcae';ctx.fillRect(45,390,450,240);ctx.fillStyle='#b4d0ec';ctx.fillRect(82,430,70,70);ctx.fillRect(385,430,70,70);}
+rr(30,30,480,70,16,night?'#272c43':'#fff');ctx.fillStyle=night?'#c2baff':comic?'#dc5c43':'#5755d9';ctx.font='bold 25px system-ui';ctx.textAlign='center';ctx.fillText(s.title,270,73);
+let propText=s.text+' '+$('topic').value;if(/money|save|salary|spend|cash|₦|naira/i.test(propText)){rr(365,515,120,65,12,'#23996d');ctx.fillStyle='#fff';ctx.font='bold 24px system-ui';ctx.fillText('₦  ₦',425,555);}
+let pose=cat==='comedy'&&sceneAt(sec)===3?'laugh':(sec%2>.8?'talk':'walk');person(245,660+Math.sin(sec*5)*5,sec,pose);
+if($('captions').checked){rr(28,710,484,195,20,night?'#272b40':'#fff');ctx.fillStyle=night?'#fff':'#182039';ctx.font='bold 24px system-ui';wrap(s.text,31).slice(0,5).forEach((line,i)=>ctx.fillText(line,270,755+i*33));}
+ctx.fillStyle=night?'#42465e':'#d9deef';ctx.fillRect(30,925,480,8);ctx.fillStyle=night?'#b5aaff':'#5755d9';ctx.fillRect(30,925,480*Math.min(1,sec/Number($('duration').value)),8);ctx.fillStyle=night?'#c6c9dd':'#626b83';ctx.font='16px system-ui';ctx.fillText(`SCENE ${sceneAt(sec)+1}/${scenes.length} • ${$('duration').value}s`,270,950);}
+function sceneAt(sec){return Math.min(Math.max(0,scenes.length-1),Math.floor(sec/(Number($('duration').value)/Math.max(1,scenes.length))));}
+function frame(now){if(!playing)return;if(!started)started=now-elapsed*1000;let sec=(now-started)/1000;if(sec>=Number($('duration').value)){playing=false;started=0;elapsed=0;draw(0);if(recorder&&recorder.state==='recording')recorder.stop();$('status').textContent='Playback/export finished.';return;}draw(sec);raf=requestAnimationFrame(frame);}
+function play(){if(!scenes.length)build();playing=true;started=0;elapsed=0;$('status').textContent='Playing animated preview.';raf=requestAnimationFrame(frame);}
+function pause(){playing=false;cancelAnimationFrame(raf);started=0;elapsed=0;if(recorder&&recorder.state==='recording')recorder.stop();$('status').textContent='Paused.';}
+async function getAudioGraph(){if(!audioCtx){audioCtx=new (window.AudioContext||window.webkitAudioContext)();master=audioCtx.createGain();master.gain.value=.23;master.connect(audioCtx.destination);}await audioCtx.resume();return audioCtx;}
+function tone(ctx,dest,freq,start,dur,type='sine',vol=.05){let o=ctx.createOscillator(),g=ctx.createGain();o.type=type;o.frequency.setValueAtTime(freq,start);g.gain.setValueAtTime(.0001,start);g.gain.exponentialRampToValueAtTime(vol,start+.04);g.gain.exponentialRampToValueAtTime(.0001,start+dur);o.connect(g);g.connect(dest);o.start(start);o.stop(start+dur+.03);}
+async function makeAudioStream(){
+ const ac=await getAudioGraph(), dest=ac.createMediaStreamDestination(), mix=ac.createGain();mix.gain.value=.75;mix.connect(dest);master.connect(dest);
+ let nodes=[];
+ if($('music').value!=='none'){let osc=ac.createOscillator(),gain=ac.createGain(),filter=ac.createBiquadFilter();osc.type='triangle';osc.frequency.value=$('music').value==='suspense'?72:110;filter.type='lowpass';filter.frequency.value=240;gain.gain.value=$('music').value==='suspense'?.035:.018;osc.connect(filter);filter.connect(gain);gain.connect(mix);osc.start();nodes.push(()=>{try{osc.stop()}catch(e){}});}
+ if($('effects').value==='on'){let t=ac.currentTime;[440,660,520].forEach((f,i)=>tone(ac,mix,f,t+i*.28,.12,'sine',.025));}
+ let tracks=[...dest.stream.getAudioTracks()];
+ if(uploadedBuffer){let src=ac.createBufferSource();src.buffer=uploadedBuffer;let g=ac.createGain();g.gain.value=.95;src.connect(g);g.connect(mix);src.start();nodes.push(()=>{try{src.stop()}catch(e){}});}
+ return {stream:new MediaStream(tracks),cleanup:()=>{nodes.forEach(fn=>fn());try{master.disconnect(dest)}catch(e){}}};
+}
+async function record(mime='video/webm'){
+ if(!scenes.length)build();if(!c.captureStream||!window.MediaRecorder){$('status').textContent='Video recording is unsupported in this browser. Try a recent desktop Chrome or Edge.';return null;}
+ let audio=await makeAudioStream(), visual=c.captureStream(30), stream=new MediaStream([...visual.getVideoTracks(),...audio.stream.getAudioTracks()]);chunks=[];
+ let actual=mime;if(mime==='video/mp4'&&!MediaRecorder.isTypeSupported('video/mp4'))actual='video/webm';
+ recorder=new MediaRecorder(stream,{mimeType:actual});recorder.ondataavailable=e=>{if(e.data.size)chunks.push(e.data);};let blobPromise=new Promise(resolve=>recorder.onstop=()=>{audio.cleanup();stream.getTracks().forEach(t=>t.stop());resolve(new Blob(chunks,{type:actual}));});
+ recorder.start();playing=true;started=0;elapsed=0;raf=requestAnimationFrame(frame);$('status').textContent='Rendering video in real time. Keep this tab open.';
+ await new Promise(resolve=>setTimeout(resolve,Number($('duration').value)*1000+350));playing=false;cancelAnimationFrame(raf);if(recorder.state==='recording')recorder.stop();return await blobPromise;
+}
+function download(blob,name){let url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),5000);}
+async function webm(){try{let b=await record('video/webm');if(b){download(b,'stickman-success-studio.webm');$('status').textContent='WebM export complete. Includes animation, generated sound and uploaded narration audio if provided.';}}catch(e){$('status').textContent='Export failed: '+e.message;}}
+async function mp4(){try{const b=await record('video/webm');if(!b)return;$('status').textContent='Loading FFmpeg WebAssembly for MP4 conversion. First use needs internet and may take a while.';if(!ffmpeg){const {FFmpeg}=await import('https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.12.10/dist/esm/index.js');const {toBlobURL}=await import('https://cdn.jsdelivr.net/npm/@ffmpeg/util@0.12.1/dist/esm/index.js');ffmpeg=new FFmpeg();const base='https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.6/dist/esm';await ffmpeg.load({coreURL:await toBlobURL(base+'/ffmpeg-core.js','text/javascript'),wasmURL:await toBlobURL(base+'/ffmpeg-core.wasm','application/wasm')});}
+await ffmpeg.writeFile('input.webm',new Uint8Array(await b.arrayBuffer()));await ffmpeg.exec(['-i','input.webm','-c:v','libx264','-pix_fmt','yuv420p','-c:a','aac','-movflags','+faststart','output.mp4']);let data=await ffmpeg.readFile('output.mp4');download(new Blob([data.buffer],{type:'video/mp4'}),'stickman-success-studio.mp4');$('status').textContent='MP4 export complete.';}catch(e){$('status').textContent='MP4 conversion failed. You can still export WebM. Details: '+e.message;}}
+async function loadVoices(){if(!speechSynthesis)return;let fill=()=>{let sel=$('voice'),old=sel.value;sel.innerHTML='<option value="">Default device voice</option>';speechSynthesis.getVoices().forEach((v,i)=>{let o=document.createElement('option');o.value=i;o.textContent=`${v.name} (${v.lang})`;sel.appendChild(o)});if(old)sel.value=old;};fill();speechSynthesis.onvoiceschanged=fill;}
+$('previewVoice').onclick=()=>{if(!speechSynthesis){$('status').textContent='Speech synthesis is not supported.';return;}speechSynthesis.cancel();let u=new SpeechSynthesisUtterance(scenes.map(s=>s.text).join(' '));let voices=speechSynthesis.getVoices();if($('voice').value!==''&&voices[+$('voice').value])u.voice=voices[+$('voice').value];u.rate=.92;u.onstart=()=> $('status').textContent='Voice preview playing. Upload a narration file to embed speech in export.';speechSynthesis.speak(u);};
+$('stopVoice').onclick=()=>speechSynthesis&&speechSynthesis.cancel();
+$('audioFile').onchange=async e=>{let f=e.target.files[0];if(!f)return;try{await getAudioGraph();uploadedBuffer=await audioCtx.decodeAudioData(await f.arrayBuffer());$('status').textContent='Narration loaded. It will be mixed into the exported video.';}catch(err){uploadedBuffer=null;$('status').textContent='Could not read this audio file. Try WAV or MP3.';}};
+$('generate').onclick=build;$('apply').onclick=()=>{let lines=$('scriptEdit').value.split('\n').map(x=>x.trim()).filter(Boolean);if(!lines.length)return;let dur=Number($('duration').value);scenes=lines.map((text,i)=>({title:['HOOK','THE SETUP','THE PROBLEM','THE TWIST','ENDING'][Math.min(i,4)]||`SCENE ${i+1}`,text,start:i*dur/lines.length,end:(i+1)*dur/lines.length}));renderList();draw(0);$('status').textContent='Edits applied.';};
+$('surprise').onclick=()=>{let cats=['comedy','saving','success','motivation','horror'];$('category').value=cats[Math.floor(Math.random()*cats.length)];$('topic').value=['The ₦500 daily savings challenge','Stop trying to impress everybody','A student who learned a useful skill','The friend who spent all his salary','The strange knock at midnight','How to prepare for December expenses'][Math.floor(Math.random()*6)];build();};
+$('play').onclick=play;$('pause').onclick=pause;$('exportWebm').onclick=webm;$('exportMp4').onclick=mp4;
+$('downloadScript').onclick=()=>download(new Blob([scenes.map((s,i)=>`SCENE ${i+1}: ${s.title}\n${s.text}`).join('\n\n')],{type:'text/plain'}),'stickman-script.txt');
+['category','topic','duration','language','character','visual','ending','captions'].forEach(id=>$(id).addEventListener('change',()=>{if(scenes.length)build();}));
+loadVoices();build();
+})();
+</script>
+</body></html>
