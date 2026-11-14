@@ -15,7 +15,7 @@ main{max-width:1250px;margin:auto;padding:14px;display:grid;grid-template-column
 .overlay{position:absolute;left:12px;top:10px;padding:7px 11px;border-radius:12px;background:#07101dcc;font-size:12px}
 #modeText{color:var(--mint);font-weight:700}
 .controls{padding:14px;display:grid;gap:11px}.row{display:flex;flex-wrap:wrap;gap:8px;align-items:end}
-button,select,textarea,input{font:inherit}
+button,select,textarea,input{font:inherit}input[type=checkbox]{width:24px;height:24px;accent-color:var(--mint)}
 button{border:0;border-radius:11px;padding:9px 13px;background:var(--mint);color:#092018;font-weight:750;cursor:pointer}
 button.secondary{background:#263956;color:#f2f6ff;border:1px solid #ffffff20}button.on{outline:2px solid var(--yellow)}
 button.rec{background:#ff6b7a;color:#2a0509}
@@ -34,7 +34,7 @@ textarea{width:100%;height:96px;background:#0b1426;color:#e8f0ff;border:1px soli
  <div class="controls">
   <div class="row">
    <button id="play">▶ Play</button><button class="secondary" id="stop">■ Stop</button><button class="rec" id="rec">● Record</button>
-   <label>Theme<select id="theme"></select></label><label><span>Cartoon crew</span><input type="checkbox" id="crew" checked></label><label>Mode<select id="mode"><option value="concert">Concert (songs)</option><option value="sandbox">Sandbox (build)</option></select></label>
+   <label>Theme<select id="theme"></select></label><label><span>Cartoon crew</span><input type="checkbox" id="crew" checked></label><label>Crew size<input type="range" id="crewS" min="0.8" max="2" step="0.1" value="1.5"></label><label>Mode<select id="mode"><option value="concert">Concert (songs)</option><option value="sandbox">Sandbox (build)</option></select></label>
    <label>Tempo <b id="tv">110 BPM</b><input id="tempo" type="range" min="60" max="180" value="110"></label>
    <button class="secondary" id="sound">Enable sound</button>
   </div>
@@ -119,8 +119,9 @@ function makeChar(x,y,z,ci,kind){
  else if(kind===2)[-1,1].forEach(s=>{const e=add(new THREE.ConeGeometry(.12,.25,4),col,[s*.27,1,0],body);e.rotation.z=-s*.3});
  else{add(new THREE.TorusGeometry(.5,.045,8,24,Math.PI),dark,[0,.55,0],body);[-1,1].forEach(s=>add(new THREE.SphereGeometry(.12,10,8),mt(CC[(ci+2)%6],.2,.4),[s*.5,.55,0],body))}
  g.position.set(x,y,z);g.rotation.y=x>0?-.45:.45;S.add(g);chars.push({g,body,eyes,mouth,arms,legs,off:ci*.9,x})}
-[-1,1].forEach((s,k)=>[-.9,3,6].forEach((y,r)=>{if(y>-.9){const l=mesh(new THREE.BoxGeometry(1.7,.3,1.3),ledgeMat);l.position.set(s*10.5,y-.15,.35);S.add(l);ledges.push(l)}makeChar(s*10.5,y,y<0?.6:.35,(k*3+r)%6,(k*3+r)%4)}));
+[-1,1].forEach((s,k)=>[-.9,3,6].forEach((y,r)=>{if(y>-.9){const l=mesh(new THREE.BoxGeometry(1.7,.3,1.3),ledgeMat);l.position.set(s*10.7,y-.15,.35);S.add(l);ledges.push(l)}makeChar(s*10.7,y,y<0?.6:.35,(k*3+r)%6,(k*3+r)%4)}));
 $('#crew').onchange=e=>{chars.forEach(c=>c.g.visible=e.target.checked);ledges.forEach(l=>l.visible=e.target.checked)};
+const setCrew=v=>{chars.forEach(c=>c.g.scale.setScalar(v));ledges.forEach(l=>l.scale.set(v,1,v))};setCrew(1.5);$('#crewS').oninput=e=>setCrew(+e.target.value);
 function animChars(dt){const act=playing&&mode==='concert'||mar.length>4,ph=simT*(+$('#tempo').value)/60*Math.PI*2,ck=cheer=Math.max(0,cheer-dt*2.2);
  chars.forEach(c=>{const p=ph+c.off,h=act?Math.abs(Math.sin(p/2)):0;
   c.body.position.y=.1+h*.35+ck*.3+(act?0:Math.sin(simT*2+c.off)*.02);c.body.scale.set(1.04-.06*h,.92+.08*h+ck*.08,1);c.g.rotation.z=act?Math.sin(p/2)*.1:0;
@@ -129,7 +130,7 @@ function animChars(dt){const act=playing&&mode==='concert'||mar.length>4,ph=simT
   c.mouth.scale.set(1.2-ck*.2,.5+ck*1.3+(act?.15*h:0),.5);
   c.eyes.forEach(e=>{e.e.scale.setScalar(1+ck*.3);e.pu.position.x=Math.max(-.05,Math.min(.05,(lastX-c.x)*.01))})})}
 
-const mesh=(g,m)=>{const k=new THREE.Mesh(g,m);k.castShadow=k.receiveShadow=true;return k};
+function mesh(g,m){const k=new THREE.Mesh(g,m);k.castShadow=k.receiveShadow=true;return k}
 // ---------- physics (Cannon.js)
 const W=new CANNON.World();W.gravity.set(0,-22,0);W.solver.iterations=12;W.broadphase=new CANNON.SAPBroadphase(W);
 const mM=new CANNON.Material(),mS=new CANNON.Material(),mD=new CANNON.Material(),mB=new CANNON.Material();
