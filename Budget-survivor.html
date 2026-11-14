@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Budget Survivor – Give Every Dollar a Job</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Caveat:wght@600;700&family=Nunito:wght@500;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#FBF7E8;--ink:#0B1F4B;--green:#1B6B2F;--yellow:#FFD60A;--paper:#fff;--line:#cfe0d2;--muted:#4a5a7a;--bad:#C62828;--good:#1B6B2F;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0A1430;--ink:#F4F1E4;--green:#2F8A47;--paper:#12214A;--line:#2a3b6b;--muted:#a9b6d6;--bad:#FF7B7B;--good:#6FD38A}}
+:root[data-theme="dark"]{--bg:#0A1430;--ink:#F4F1E4;--green:#2F8A47;--paper:#12214A;--line:#2a3b6b;--muted:#a9b6d6;--bad:#FF7B7B;--good:#6FD38A}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Nunito",system-ui,-apple-system,"Segoe UI",sans-serif;font-weight:500;line-height:1.5;min-height:100vh}
+main{max-width:560px;margin:0 auto;padding:16px 16px 40px}
+.brand{text-align:center;margin:8px 0 18px}
+.brand small{display:block;font-weight:800;color:var(--muted);font-size:.85rem;margin-bottom:6px}
+.band{display:inline-block;background:var(--green);color:#fff;font-family:"Archivo Black","Arial Black",Impact,sans-serif;font-size:clamp(1.9rem,8vw,2.7rem);line-height:1.05;padding:14px 34px 16px;transform:rotate(-1.5deg);clip-path:polygon(2% 12%,12% 0,40% 6%,70% 0,98% 8%,100% 45%,96% 92%,70% 100%,35% 94%,5% 100%,0 60%)}
+.band b{color:var(--yellow);font-weight:400}
+.meters{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px}
+.m{background:var(--paper);border:2px solid var(--line);border-radius:10px;padding:8px 6px;text-align:center}
+.m span{display:block;font-size:.72rem;font-weight:800;color:var(--muted)}
+.m strong{font-family:"Archivo Black","Arial Black",sans-serif;font-weight:400;font-size:1.05rem;transition:color .3s}
+.m.debt strong{color:var(--bad)}
+.bar{height:8px;border-radius:4px;background:var(--line);margin-top:6px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--yellow);transition:width .4s}
+.pad{position:relative;background:var(--paper);border:2px solid var(--ink);border-radius:6px 6px 14px 14px;padding:34px 20px 22px;background-image:repeating-linear-gradient(transparent 0 31px,var(--line) 31px 32px)}
+.pad::before{content:"";position:absolute;top:-9px;left:14px;right:14px;height:18px;background:radial-gradient(circle at 9px 9px,var(--ink) 0 3px,transparent 4px) 0 0/22px 18px repeat-x}
+.wk{font-family:"Caveat",cursive,sans-serif;font-size:1.5rem;color:var(--green);font-weight:700;line-height:1.1}
+.pad h2{font-family:"Archivo Black","Arial Black",sans-serif;font-weight:400;font-size:1.45rem;line-height:1.2;margin:4px 0 6px}
+.pad p{margin:0 0 12px}
+.note{font-size:.88rem;color:var(--muted);font-weight:700;margin-bottom:10px}
+.opts{display:grid;gap:10px;margin-top:14px}
+.opt{display:flex;gap:12px;align-items:flex-start;text-align:left;width:100%;font:inherit;font-weight:700;font-size:1.02rem;color:var(--ink);background:var(--paper);border:2px solid var(--ink);border-radius:10px;padding:12px 14px;cursor:pointer;transition:transform .12s,background .12s}
+.opt::before{content:"";flex:none;width:22px;height:22px;margin-top:1px;border:2.5px solid var(--green);border-radius:4px;display:grid;place-items:center;font-size:1rem;color:var(--green);font-weight:800}
+.opt:hover::before,.opt:focus-visible::before{content:"✓"}
+.opt:hover{background:var(--yellow);color:#0B1F4B;transform:translateY(-1px)}
+.opt:focus-visible,.btn:focus-visible,.link:focus-visible{outline:3px solid var(--yellow);outline-offset:2px}
+.btn{font-family:"Archivo Black","Arial Black",sans-serif;font-size:1.05rem;background:var(--yellow);color:#0B1F4B;border:2px solid #0B1F4B;border-radius:10px;padding:12px 22px;cursor:pointer;box-shadow:3px 3px 0 #0B1F4B}
+.btn:active{transform:translate(2px,2px);box-shadow:1px 1px 0 #0B1F4B}
+.btn.alt{background:var(--paper);color:var(--ink);border-color:var(--ink);box-shadow:3px 3px 0 var(--ink)}
+.row{display:flex;flex-wrap:wrap;gap:10px;margin-top:16px}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0}
+.chip{font-weight:800;font-size:.9rem;padding:3px 10px;border-radius:99px;border:2px solid currentColor}
+.chip.up{color:var(--good)}.chip.down{color:var(--bad)}
+.lesson{background:var(--bg);border-left:6px solid var(--yellow);padding:10px 14px;border-radius:0 8px 8px 0;margin:10px 0}
+.lesson b{font-family:"Caveat",cursive,sans-serif;font-size:1.3rem;color:var(--green)}
+.title{font-family:"Archivo Black","Arial Black",sans-serif;font-weight:400;font-size:clamp(1.8rem,8vw,2.4rem);line-height:1.1;margin:6px 0 4px}
+.big{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 0}
+.big div{background:var(--bg);border:2px solid var(--line);border-radius:10px;padding:10px;text-align:center}
+.big strong{display:block;font-family:"Archivo Black","Arial Black",sans-serif;font-weight:400;font-size:1.3rem}
+.big span{font-size:.8rem;font-weight:800;color:var(--muted)}
+.foot{text-align:center;margin-top:22px;font-weight:700;color:var(--muted);font-size:.9rem}
+.toast{min-height:1.4em;font-weight:800;color:var(--good);margin-top:8px}
+.tabs{display:flex;gap:8px;justify-content:center;margin-bottom:14px}
+.sw{font:inherit;font-weight:800;border:2px solid var(--ink);background:var(--paper);color:var(--ink);border-radius:99px;padding:5px 14px;cursor:pointer}
+.sw.on{background:var(--yellow);color:#0B1F4B}
+.sw:focus-visible{outline:3px solid var(--yellow);outline-offset:2px}
+.tabs{flex-wrap:wrap}
+.day{border:2px solid var(--line);border-radius:10px;padding:10px 12px;margin:10px 0;background:var(--paper)}
+.day.now{border-color:var(--ink);box-shadow:4px 4px 0 var(--yellow)}
+.day h3{margin:0;font-family:"Archivo Black","Arial Black",sans-serif;font-weight:400;font-size:1.02rem;line-height:1.3}
+.day p{margin:4px 0 8px;font-size:.95rem}
+textarea,input.t{width:100%;font:inherit;font-weight:700;color:var(--ink);background:var(--paper);border:2px solid var(--ink);border-radius:8px;padding:10px;margin-top:10px}
+#out{width:100%;display:block;border-radius:10px;border:2px solid var(--ink);margin-top:14px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<main>
+  <header class="brand">
+    <small>Give Every Dollar a Job presents</small>
+    <h1 class="band" style="margin:0">Budget <b>Survivor</b></h1>
+  </header>
+  <nav class="tabs"><button class="sw on" id="t1">Play the game</button><button class="sw" id="t2">Post cards</button><button class="sw" id="t3">Weekly plan</button></nav>
+  <div id="meters"></div>
+  <div id="app"></div><div id="cards" hidden></div><div id="plan" hidden></div>
+  <p class="foot">Small steps. Big financial freedom.</p>
+</main>
+<script>
+var EVENTS = [
+{ic:"🚗",t:"Your car won’t start",d:"The mechanic quotes you $600 for the repair. You need the car for work.",o:[
+ {l:"Pay from your emergency fund",s:-600,x:"This is exactly what an emergency fund is for. No interest, no panic."},
+ {l:"Put it on a credit card",d:600,x:"Card debt grows every week you carry it. The repair cost you more than $600 in the long run."},
+ {l:"Skip the repair and take the bus",c:-150,j:-15,x:"Cheaper today, but you lose time and comfort. Avoiding the problem is not the same as solving it."}]},
+{ic:"💍",t:"Friend’s wedding invite",d:"Flights, outfit and a gift could easily total $400.",o:[
+ {l:"Go all out: $300 on everything",c:-300,j:15,x:"Memories matter, but $300 was not in your plan."},
+ {l:"Go local: $75 gift, wear what you own",c:-75,j:9,x:"You showed up, celebrated and kept your budget. That is a win."},
+ {l:"Politely decline",j:-10,x:"Your wallet is safe, but relationships are worth some budget. Plan for them next time."}]},
+{ic:"👟",t:"60% off sale!",d:"The $400 sneakers you’ve wanted are now $160… and they’re not on your list.",o:[
+ {l:"Buy them right now",c:-160,j:12,x:"A discount on something you didn’t plan is still money spent."},
+ {l:"Wait 48 hours, then decide",c:-0,j:2,x:"The urge faded. A 48-hour rule saves a lot of money."},
+ {l:"Send the $160 to savings instead",s:160,c:-160,j:3,x:"You turned a temptation into progress. Pay yourself first."}]},
+{ic:"🛠️",t:"Weekend gig offer",d:"A friend offers you $350 for a weekend of freelance work.",o:[
+ {l:"Take it and keep the cash",c:350,j:-8,x:"Extra income helps, especially when it has a plan."},
+ {l:"Take it and save every dollar",s:350,j:-8,x:"Extra income with a job assigned the moment it arrives. This is the habit."},
+ {l:"Say no and rest",j:5,x:"Rest has value too, but side income is a fast way to build a cushion."}]},
+{ic:"🏥",t:"Surprise medical bill",d:"A clinic visit comes with a $400 bill you didn’t expect.",o:[
+ {l:"Ask for an itemized bill and a discount",c:-280,x:"Always ask. Billing errors and cash discounts are common, and you saved $120."},
+ {l:"Pay the full $400 from savings",s:-400,x:"Fine, that is what savings are for, but you could have asked for a discount."},
+ {l:"Ignore it for now",d:400,j:-10,x:"Unpaid bills turn into debt and stress. Call them before the due date."}]},
+{ic:"📺",t:"Subscription audit",d:"You find $45 a month in subscriptions you never use.",o:[
+ {l:"Cancel them and save the difference",s:90,j:-2,x:"Small leaks sink big ships. $45 a month becomes $540 a year."},
+ {l:"Keep them, just in case",c:-45,x:"“Just in case” costs $540 a year. Cancel now, re-subscribe later if you miss them."},
+ {l:"Cancel half",c:25,j:0,x:"A start. Be honest about what you actually use."}]},
+{ic:"🎁",t:"Work bonus: $500",d:"Your boss surprises you with a $500 bonus.",o:[
+ {l:"Spend it all, you earned it",j:15,x:"It felt great, but it’s gone and you’re no further ahead."},
+ {l:"Half to savings, half for fun",s:250,j:8,x:"Balance beats extremes. You grew your future and enjoyed today."},
+ {l:"Everything to savings",s:500,j:2,x:"Strong, but a little reward helps you stick with the plan."}]},
+{ic:"🍕",t:"Friday night dinner plans",d:"Your friends want to eat out again. It’s $60 a person every weekend.",o:[
+ {l:"Go every time",c:-120,j:10,x:"Fun, but two dinners out cost $120 and it adds up fast."},
+ {l:"Host a potluck at your place",c:-30,j:9,x:"Same friends, same fun, a quarter of the price."},
+ {l:"Stay home and cook",c:-10,j:-6,x:"Frugal, but being isolated costs happiness. Find a middle road."}]},
+{ic:"📱",t:"Shiny new phone",d:"A store offers 0% interest for 6 months on a $900 phone.",o:[
+ {l:"Buy it on the card",d:900,j:15,x:"“0% for now” becomes high interest if you miss a payment. This is how debt traps work."},
+ {l:"Keep your phone and save $100",s:100,c:-100,x:"Your phone still works. Spending less on tech is a quiet money move."},
+ {l:"Buy a refurbished one for $300",c:-300,j:8,x:"Almost the same upgrade at a third of the price."}]},
+{ic:"🤝",t:"A friend asks for $200",d:"They promise to pay you back “soon.”",o:[
+ {l:"Lend the full $200",c:-200,j:2,x:"Only lend what you can afford to never see again."},
+ {l:"Give $50 as a gift instead",c:-50,j:3,x:"A clear limit protects your money and the friendship."},
+ {l:"Say no kindly",j:-4,x:"Saying no is hard, but your budget is allowed to have boundaries."}]},
+{ic:"🏠",t:"Rent goes up $60",d:"Your landlord just announced a rent increase.",o:[
+ {l:"Split costs with a roommate",c:-30,j:-3,x:"Sharing housing is one of the biggest savings levers there is."},
+ {l:"Accept it and cut elsewhere",c:-60,x:"Fine, but you now need to find $60 a month to trim."},
+ {l:"Negotiate with a longer lease",c:-20,x:"Landlords often prefer a stable tenant. Asking costs nothing."}]},
+{ic:"🛒",t:"Grocery run",d:"Your fridge is empty and you’re hungry.",o:[
+ {l:"Shop with a list and cook",c:-60,j:2,x:"A list beats impulse. Food is the easiest bill to control."},
+ {l:"Order delivery all week",c:-180,j:6,x:"Convenient, and about three times the price."},
+ {l:"Shop hungry with no list",c:-130,j:4,x:"Hungry shopping is expensive shopping."}]},
+{ic:"💳",t:"Credit card sign-up bonus",d:"A card offers $200 if you spend $1,000 in 3 months.",o:[
+ {l:"Sign up, only buy what you’d buy anyway, pay in full",c:200,x:"Free money when you never carry a balance."},
+ {l:"Sign up and overspend to hit the bonus",d:300,j:5,x:"You spent more than the bonus is worth. Don’t let a reward drive your spending."},
+ {l:"Throw the offer away",x:"Safe. Just be sure you’re choosing, not avoiding."}]},
+{ic:"🏋️",t:"Gym promo",d:"$50 a month on a 12-month contract. “You’ll definitely go.”",o:[
+ {l:"Sign the contract",c:-50,j:3,x:"Most people stop going within weeks. You still pay for a year."},
+ {l:"Work out free at the park",j:4,x:"Free, flexible and nothing to cancel."},
+ {l:"Pay $10 a month at a basic gym",c:-10,j:5,x:"You got the habit at 20% of the cost."}]},
+{ic:"💻",t:"Your laptop dies",d:"You need it for work or school.",o:[
+ {l:"Put a $1,200 premium model on the card",d:1200,j:10,x:"Nice machine, long debt. Match the purchase to the need."},
+ {l:"Buy a solid $450 one",c:-450,j:4,x:"Right-sized for the job."},
+ {l:"Repair it for $120",c:-120,x:"Repair first, replace second. Cheapest fix wins."}]},
+{ic:"🎄",t:"Holiday gift season",d:"Your list has 8 people and no budget.",o:[
+ {l:"Set a $100 limit and make some gifts",c:-100,j:8,x:"Thoughtful beats expensive, and a limit keeps January calm."},
+ {l:"Buy everything you see",c:-400,j:10,x:"Joyful in December, painful in January."},
+ {l:"Skip gifts this year",j:-8,x:"Saves money, costs some connection. Plan a small amount next year."}]},
+{ic:"🐶",t:"Vet emergency",d:"Your dog ate something odd and the vet bill is $350.",o:[
+ {l:"Pay it from your emergency fund",s:-350,x:"Pets and surprises are exactly why the fund exists."},
+ {l:"Put it on a credit card",d:350,x:"You can treat your pet today, but you’ll pay interest tomorrow."},
+ {l:"Ask about a payment plan",c:-120,d:230,x:"Asking is smart, though a plan with interest can still cost extra."}]},
+{ic:"🎓",t:"Online course offer",d:"A $200 course could help you earn more at work.",o:[
+ {l:"Buy it and commit to finishing",c:-200,j:6,x:"Investing in skills can pay you back for years, if you finish."},
+ {l:"Start with free tutorials first",j:3,x:"Test your interest before you spend. Smart and cheap."},
+ {l:"Skip learning for now",j:-3,x:"Zero cost today, but skills are one of the best long-term returns."}]},
+{ic:"✈️",t:"Last-minute trip",d:"Friends are planning a $500 getaway and need an answer today.",o:[
+ {l:"Go and put it on the card",d:500,j:15,x:"Great memories, long payoff. Borrowing for fun is costly."},
+ {l:"Suggest a $150 weekend instead",c:-150,j:10,x:"Same friends, same laughs, a fraction of the cost."},
+ {l:"Skip it and start a travel fund",c:-50,s:50,j:2,x:"Plan the next trip with cash, not credit."}]},
+{ic:"⛽",t:"Gas prices jump",d:"Your weekly fuel bill is about to go up.",o:[
+ {l:"Carpool with a coworker",c:-30,j:-1,x:"Sharing a ride cuts costs and miles on your car."},
+ {l:"Keep driving alone",c:-90,x:"Convenient, but it adds up each week."},
+ {l:"Combine errands into one trip",c:-50,x:"A little planning saves fuel and time."}]},
+{ic:"☕",t:"The daily coffee run",d:"You grab a $5 coffee on the way to work most days.",o:[
+ {l:"Keep the daily habit",c:-70,j:6,x:"It’s a small treat, but small habits are big in a year."},
+ {l:"Brew at home",c:-10,j:2,x:"You keep the coffee and skip most of the cost."},
+ {l:"Treat yourself twice a week",c:-25,j:5,x:"A planned treat feels better than an automatic one."}]},
+{ic:"🧥",t:"Buy now, pay later",d:"A $250 jacket can be split into 4 easy payments.",o:[
+ {l:"Use buy now, pay later",d:250,j:8,x:"‘Easy payments’ still means debt, and they stack up fast."},
+ {l:"Buy a similar one secondhand for $60",c:-60,j:6,x:"Same warmth, a quarter of the price."},
+ {l:"Skip it",j:-2,x:"If you can’t pay for it today, ask if you need it today."}]}
+];
+var PAY = 400, ROUNDS = 8, UNIT = "Week", RATE = 0.05, HARD = false, S, queue, cur, interest;
+var $ = function(id){return document.getElementById(id)};
+function m(n){return "$" + Math.abs(Math.round(n)).toLocaleString("en-US")}
+function shuffle(a){a=a.slice();for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t}return a}
+function meters(){
+  $("meters").innerHTML = '<div class="meters">'+
+  '<div class="m"><span>Cash</span><strong>'+m(S.c)+'</strong></div>'+
+  '<div class="m"><span>Savings</span><strong>'+m(S.s)+'</strong></div>'+
+  '<div class="m debt"><span>Debt</span><strong>'+m(S.d)+'</strong></div>'+
+  '<div class="m"><span>Joy</span><strong>'+Math.round(S.j)+'</strong><div class="bar"><i style="width:'+S.j+'%"></i></div></div></div>';
+}
+function intro(){
+  S={c:800,s:1000,d:0,j:60,r:0};meters();
+  $("app").innerHTML='<div class="pad"><div class="wk">Your money plan</div><h2>8 weeks. $400 a payday. Life has other plans.</h2>'+
+  '<p>You start with $800 cash and $1,000 saved. Every week brings a bill, a temptation or a surprise. Choose wisely and give every dollar a job.</p>'+
+  '<p class="note">Debt grows 5% every week. Keep your joy up too, because money isn’t everything.</p>'+
+  '<div class="row"><button class="btn" id="go">Easy: 8 weeks</button><button class="btn alt" id="hd">Hard mode: 12 months</button></div><p class="note" style="margin-top:12px">Hard mode: $350 a month, 8% card interest, and you start with only $300 cash and $500 savings.</p></div>';
+  $("go").onclick=function(){setMode(false)};$("hd").onclick=function(){setMode(true)};
+}
+function setMode(h){HARD=h;PAY=h?350:400;ROUNDS=h?12:8;UNIT=h?"Month":"Week";RATE=h?0.08:0.05;start()}
+function start(){S=HARD?{c:300,s:500,d:0,j:60,r:0}:{c:800,s:1000,d:0,j:60,r:0};queue=shuffle(EVENTS).slice(0,ROUNDS);round()}
+function round(){
+  interest=Math.round(S.d*RATE);S.d+=interest;S.c+=PAY;meters();
+  cur=queue[S.r];
+  var h='<div class="pad"><div class="wk">'+UNIT+' '+(S.r+1)+' of '+ROUNDS+'</div>'+
+  '<p class="note">Payday: +'+m(PAY)+(interest?'  •  Card interest: +'+m(interest)+' debt':'')+'</p>'+
+  '<h2>'+cur.ic+' '+cur.t+'</h2><p>'+cur.d+'</p><div class="opts">';
+  cur.o.forEach(function(o,i){h+='<button class="opt" data-i="'+i+'">'+o.l+'</button>'});
+  $("app").innerHTML=h+'</div></div>';
+  document.querySelectorAll(".opt").forEach(function(b){b.onclick=function(){pick(+b.dataset.i)}});
+}
+function pick(i){
+  var o=cur.o[i],c=o.c||0,s=o.s||0,d=o.d||0,j=o.j||0,note="";
+  var before={c:S.c,s:S.s,d:S.d,j:S.j};
+  S.c+=c;S.s+=s;S.d+=d;S.j=Math.max(0,Math.min(100,S.j+j));
+  if(S.s<0){S.c+=S.s;S.s=0}
+  if(S.c<0){S.d+=-S.c;note="You ran out of cash, so the shortfall went on a credit card.";S.c=0}
+  meters();
+  var ch=[["Cash",S.c-before.c,1],["Savings",S.s-before.s,1],["Debt",S.d-before.d,-1],["Joy",S.j-before.j,1,1]].filter(function(x){return x[1]!==0});
+  var chips=ch.map(function(x){var up=x[1]*x[2]>0;var v=x[3]?Math.abs(Math.round(x[1])):m(x[1]);return '<span class="chip '+(up?'up':'down')+'">'+x[0]+' '+(x[1]>0?'+':'−')+v+'</span>'}).join("");
+  var last=S.r+1>=ROUNDS;
+  $("app").innerHTML='<div class="pad"><div class="wk">You chose</div><h2>'+o.l+'</h2><div class="chips">'+chips+'</div>'+
+  (note?'<p class="note">'+note+'</p>':'')+'<div class="lesson"><b>Lesson:</b> '+o.x+'</div>'+
+  '<div class="row"><button class="btn" id="nx">'+(last?'See my result':'Start '+UNIT.toLowerCase()+' '+(S.r+2))+'</button></div></div>';
+  $("nx").onclick=function(){S.r++;last?end():round()};
+}
+function rank(nw,j){
+  if(nw>=4500&&j>=55)return["Every Dollar Has a Job","You saved, you enjoyed life and you stayed out of debt. Nicely done."];
+  if(nw>=4500)return["Savings Ninja","Your money is safe, but remember to enjoy some of it."];
+  if(nw>=3500)return["Steady Builder","Solid choices. A few small leaks to fix and you’re there."];
+  if(nw>=2200)return["Paycheck Juggler","You survived, but your money kept slipping through your fingers."];
+  return["Broke by Friday","Tough run. Debt and impulse spending won this round."];
+}
+function end(){
+  var nw=S.c+S.s-S.d,r=rank(nw,S.j);meters();
+  var txt="I played Budget Survivor and got “"+r[0]+"”. Net worth "+(nw<0?"−":"")+m(nw)+", joy "+Math.round(S.j)+"/100. Can you beat me? 💵";
+  $("app").innerHTML='<div class="pad"><div class="wk">Your result</div><div class="title">'+r[0]+'</div><p>'+r[1]+'</p>'+
+  '<div class="big"><div><strong>'+(nw<0?"−":"")+m(nw)+'</strong><span>Net worth</span></div><div><strong>'+Math.round(S.j)+'/100</strong><span>Joy</span></div>'+
+  '<div><strong>'+m(S.s)+'</strong><span>Savings</span></div><div><strong>'+m(S.d)+'</strong><span>Debt</span></div></div>'+
+  '<div class="row"><button class="btn" id="again">Play again</button><button class="btn alt" id="cp">Copy my result</button></div><div class="toast" id="toast" role="status"></div></div>';
+  $("again").onclick=start;
+  $("cp").onclick=function(){
+    var done=function(){$("toast").textContent="Copied! Paste it in the comments."};
+    try{navigator.clipboard.writeText(txt).then(done,function(){$("toast").textContent=txt})}catch(e){$("toast").textContent=txt}
+  };
+}
+var TIPS={"Tip":["Pay yourself first. Move money to savings the day you get paid, then spend what is left.","Wait 48 hours before any purchase over $50. Most urges fade by day two.","Name every dollar before the month starts: rent, food, savings, fun. Unassigned money disappears.","Start with a $1,000 emergency fund. It stops one surprise bill from becoming debt.","Cancel one subscription you forgot about today. That is money back every single month.","Use 50/30/20 as a starting point: 50% needs, 30% wants, 20% savings and debt.","Check your bank account once a week. Five minutes beats a month of surprises.","Make a list before you shop for groceries and stick to it. It is the easiest budget win.","Pay off your highest-interest debt first. It saves you the most money.","Give every raise a job. Send half to savings before your lifestyle grows."],
+"Myth":["MYTH: You need a high income to build wealth. FACT: Your savings habit matters more than your salary.","MYTH: Budgeting means no fun. FACT: A good budget plans your fun so you can enjoy it guilt-free.","MYTH: Paying the minimum on a card is fine. FACT: Interest can make a small balance last for years.","MYTH: Investing is only for the rich. FACT: Small, regular amounts add up over time.","MYTH: Getting out of debt means giving up everything. FACT: Small, steady payments beat a perfect plan you quit.","MYTH: A budget is a punishment. FACT: A budget is permission to spend on what matters to you.","MYTH: Checking your balance just stresses you out. FACT: Not looking is what leads to surprises.","MYTH: You can start saving once you earn more. FACT: Starting small now builds the habit you will need later.","MYTH: All debt is the same. FACT: High-interest card debt costs far more than most other loans.","MYTH: Sales always save you money. FACT: A discount on something you did not need is still spending."],
+"Challenge":["7-day challenge: write down every dollar you spend. Awareness is the first step to control.","No-spend weekend: cook at home and find free fun. How much did you keep?","Move $5 to savings every day this week. Tiny steps build the habit.","Check your last 3 bank statements and circle every subscription. Cancel at least one.","Sell one thing you no longer use this week and send every dollar to savings.","Pack lunch for 5 days and see how much you save. Share your total in the comments.","Unsubscribe from 5 store emails today. Fewer sale alerts means fewer impulse buys.","Find $10 to cut this week and send it to savings or debt.","Call one provider and ask for a lower rate. A 5-minute call can save real money.","List your three biggest spending categories. Which one could you trim by 10%?"],
+"Did you know":["$20 a week saved for 10 years is $10,400, before any interest.","Paying your card’s full balance each month means you never pay interest.","Automating your savings makes you far more likely to keep saving.","Eating out twice a week at $15 each costs $1,560 a year.","An extra $50 a month on a debt can cut months off the payoff.","A $5 coffee every day adds up to about $1,825 a year.","The earlier you start investing, the more time compounding has to work for you.","Paying a bill a few days early costs nothing and can prevent late fees.","Many credit cards charge interest only when you carry a balance past the due date.","A $1,000 emergency fund can cover many common surprises, from car repairs to vet bills."]};
+var KS=["Tip","Myth","Challenge","Did you know"],LBL={"Tip":"Money tip","Myth":"Myth vs fact","Challenge":"Challenge","Did you know":"Did you know?"},
+PAL=[{bg:"#FBF7E8",ink:"#0B1F4B",band:"#1B6B2F",bi:"#fff",hi:"#FFD60A"},{bg:"#0B1F4B",ink:"#fff",band:"#FFD60A",bi:"#0B1F4B",hi:"#FFD60A"},{bg:"#1B6B2F",ink:"#fff",band:"#FFD60A",bi:"#0B1F4B",hi:"#FFD60A"}],
+K="Tip",pi=0,SZ="s",built=0,cv=document.createElement("canvas"),FF='"Archivo Black","Arial Black",Impact,sans-serif';
+function sw(id,items){return '<div class="chips" id="'+id+'">'+items.map(function(v,i){return '<button class="sw'+(i?'':' on')+'" data-v="'+i+'">'+v+'</button>'}).join("")+'</div>'}
+function grp(id,fn){$(id).onclick=function(e){var b=e.target.closest("button");if(!b)return;[].forEach.call($(id).children,function(c){c.classList.toggle("on",c===b)});fn(+b.dataset.v)}}
+function tab(n){$("app").hidden=$("meters").hidden=n!==1;$("cards").hidden=n!==2;$("plan").hidden=n!==3;[1,2,3].forEach(function(i){$("t"+i).classList.toggle("on",i===n)});if(n===2&&!built)build();if(n===3)plan()}
+function wrap(x,t,w){var l=[],c="";t.split(/\s+/).forEach(function(s){var n=c?c+" "+s:s;if(c&&x.measureText(n).width>w){l.push(c);c=s}else c=n});if(c)l.push(c);return l}
+function draw(){
+ var W=1080,H=SZ==="p"?1350:1080,P=PAL[pi],x=cv.getContext("2d");cv.width=W;cv.height=H;
+ x.fillStyle=P.bg;x.fillRect(0,0,W,H);x.textAlign="center";x.textBaseline="middle";
+ x.globalAlpha=.07;x.fillStyle=P.ink;x.font=(H*.85)+"px "+FF;x.fillText("$",W/2,H/2+30);x.globalAlpha=1;
+ x.save();x.translate(W/2,150);x.rotate(-.03);x.font="60px "+FF;var lw=x.measureText(LBL[K]).width+110;
+ x.fillStyle=P.band;x.fillRect(-lw/2,-50,lw,100);x.fillStyle=P.bi;x.fillText(LBL[K],0,4);x.restore();
+ var t=$("tx").value.trim()||"Type your tip",s=90,L,mh=H-620,mw=W-170;
+ for(;s>32;s-=4){x.font=s+"px "+FF;L=wrap(x,t,mw);if(L.length*s*1.25<=mh)break}
+ var lh=s*1.25,y=(H-20)/2-(L.length*lh)/2+lh/2;x.fillStyle=P.ink;
+ L.forEach(function(l,i){x.fillText(l,W/2,y+i*lh)});
+ x.strokeStyle=P.hi;x.lineWidth=14;x.lineCap="round";x.beginPath();x.moveTo(W/2-230,H-250);x.lineTo(W/2+230,H-256);x.stroke();
+ x.fillStyle=P.ink;x.font="700 64px Caveat,cursive";x.fillText($("hn").value||" ",W/2,H-165);
+ x.globalAlpha=.85;x.font="800 32px Nunito,sans-serif";x.fillText("Save smart. Spend wisely. Build wealth.",W/2,H-95);x.globalAlpha=1;
+ $("out").src=cv.toDataURL("image/png");
+}
+function newTip(){var a=TIPS[K];$("tx").value=a[Math.floor(Math.random()*a.length)];draw()}
+function build(){
+ built=1;var d=new Date().getDate();K=KS[d%4];
+ $("cards").innerHTML='<div class="pad"><div class="wk">Daily post maker</div><h2>Make today’s money-tip card</h2>'+
+ sw("kd",["Tip","Myth vs fact","Challenge","Did you know"])+'<textarea id="tx" rows="4" aria-label="Card text"></textarea>'+
+ '<div class="row" style="margin-top:8px"><button class="btn alt" id="sh">New idea</button></div>'+
+ '<p class="note" style="margin-top:14px">Colors</p>'+sw("pl",["Cream","Navy","Green"])+'<p class="note">Size</p>'+sw("sz",["Square","Portrait 4:5"])+
+ '<input class="t" id="hn" value="Give Every Dollar a Job" aria-label="Page name on card">'+
+ '<img id="out" alt="Your money tip card"><div class="row"><button class="btn" id="dl">Download card</button><button class="btn alt" id="cc">Copy caption</button></div><div class="toast" id="ct" role="status"></div></div>';
+ var ci=d%4;[].forEach.call($("kd").children,function(b,i){b.classList.toggle("on",i===ci)});
+ $("tx").value=TIPS[K][d%TIPS[K].length];
+ grp("kd",function(v){K=KS[v];newTip()});grp("pl",function(v){pi=v;draw()});grp("sz",function(v){SZ=v?"p":"s";draw()});
+ $("sh").onclick=newTip;$("tx").oninput=draw;$("hn").oninput=draw;
+ $("dl").onclick=function(){try{var a=document.createElement("a");a.href=$("out").src;a.download="money-tip.png";a.click()}catch(e){}$("ct").textContent="If nothing downloads, press and hold (or right-click) the card, then choose Save image."};
+ $("cc").onclick=function(){var c=$("tx").value+"\n\n"+$("hn").value+"\n#budgeting #moneytips #savemoney";
+  try{navigator.clipboard.writeText(c).then(function(){$("ct").textContent="Caption copied!"},function(){$("ct").textContent=c})}catch(e){$("ct").textContent=c}};
+ try{Promise.all(['64px "Archivo Black"','700 60px Caveat','800 32px Nunito'].map(function(f){return document.fonts.load(f)})).then(draw,draw)}catch(e){draw()}
+}
+var DAYS=[
+{d:"Monday",f:"Money tip card",i:"Start the week with one simple habit. Ask followers to comment “done” when they try it.",a:0},
+{d:"Tuesday",f:"Myth vs fact card",i:"Myths get shares and debate. Ask: “Which myth did you believe?”",a:1},
+{d:"Wednesday",f:"Game Reel",i:"Screen-record one round of Budget Survivor. Pause on the choices and ask what they would pick.",a:"g"},
+{d:"Thursday",f:"Challenge card",i:"Give a small challenge and ask people to report back in the comments.",a:2},
+{d:"Friday",f:"Did you know card",i:"Share a number that surprises people. Keep the caption short and end with a question.",a:3},
+{d:"Saturday",f:"What would you do? poll",i:"Turn a game event into a comment poll. People answer A, B or C.",a:"p"},
+{d:"Sunday",f:"Recap and reply day",i:"Share the best comments, reveal the lesson from Saturday’s poll and tease next week.",a:"r"}];
+var RECAP="This week’s recap 🧾\nTop answer on Saturday’s poll: ___\nThe lesson: ___\nNext week: ___\nWhat’s one money win you had this week? Tell us below.";
+var HOOKS=["Watch what $20 a week does in 10 years. | Open the $20 a week card, then show the math on screen.",
+"I got $800 and 8 weeks. Here’s how I went broke. | Play easy mode and react to your worst choice.",
+"3 money myths that cost you thousands. | Flip through three Myth vs fact cards, one every two seconds.",
+"Would you fix the car or put it on a card? | Show the car event and pause on the three options.",
+"Stop scrolling if you pay for subscriptions you forgot. | Scroll your own subscription list on screen and blur private details.",
+"Hard mode: can I survive 12 months? | Play hard mode and narrate every choice.",
+"This one habit beats a bigger salary. | Show the Pay yourself first card and explain it in 15 seconds.",
+"Guess the title I got in Budget Survivor. | Save the result screen for last and ask followers to guess.",
+"A $5 coffee costs $1,825 a year. | Count the total up on screen, day by day.",
+"Name every dollar: my 3-step plan. | Write the plan on paper like your cover notepad.",
+"Your friend asks to borrow $200. What do you say? | Show the loan event and read the options aloud.",
+"A 5-minute money reset you can do tonight. | Screen-record checking your balance, subscriptions and savings.",
+"Rate my budget choices. Comment A, B or C. | Play one round, hide your pick and ask for votes.",
+"Sneakers are 60% off. Do you buy? | Show the sale event, then reveal the 48-hour rule.",
+"Watch debt snowball in 8 weeks. | Pick the card options on purpose and show the debt meter climb."],HK={t:""};
+function newHook(){var x=HOOKS[Math.floor(Math.random()*HOOKS.length)].split(" | ");HK.t=x[0];HK.s=x[1];HK.r="";$("rs").textContent="";$("hk").textContent=x[0];$("hs").textContent="Film it: "+x[1]}
+var CTAS=["Comment A, B or C and I’ll reply to every one.","What would you do? Tell me below.","Save this for payday.","Send this to a friend who needs it.","Which one got you? Comment below."];
+function script(){var ks=KS[Math.floor(Math.random()*4)],tp=TIPS[ks][Math.floor(Math.random()*TIPS[ks].length)],ct=CTAS[Math.floor(Math.random()*CTAS.length)];
+ HK.r="0–2s HOOK (big text on screen, say it out loud)\n"+HK.t+"\n\n2–6s SHOW IT\n"+HK.s+"\n\n6–12s PAYOFF (say this)\n"+tp+"\n\n12–15s CALL TO ACTION\n"+ct+"\n\nCaption: "+HK.t+" Follow Give Every Dollar a Job for more.\n#budgeting #moneytips #savemoney";
+ $("rs").textContent=HK.r}
+function cp(t,el){try{navigator.clipboard.writeText(t).then(function(){el.textContent="Copied! Paste it into your post."},function(){el.textContent=t})}catch(e){el.textContent=t}}
+function goCard(i){tab(2);K=KS[i];[].forEach.call($("kd").children,function(b,j){b.classList.toggle("on",j===i)});newTip();window.scrollTo(0,0)}
+function plan(){
+ var t=(new Date().getDay()+6)%7,h='<div class="pad"><div class="wk">Weekly content plan</div><h2>One post a day, seven days</h2><p class="note">Post when your followers are most active. Meta Business Suite Insights shows your best times.</p>';
+ DAYS.forEach(function(x,i){var lab=typeof x.a==="number"?"Make this card":x.a==="g"?"Open the game":x.a==="p"?"Make a poll post":"Copy recap caption";
+  h+='<div class="day'+(i===t?' now':'')+'"><h3>'+x.d+(i===t?' (today)':'')+': '+x.f+'</h3><p>'+x.i+'</p><button class="sw" data-a="'+x.a+'">'+lab+'</button></div>'});
+ $("plan").innerHTML=h+'<div class="day"><h3>Reel hook bank</h3><p id="hk" style="font-weight:800;font-size:1.1rem"></p><p id="hs"></p><button class="sw" data-a="n">New hook</button> <button class="sw" data-a="k">Copy hook</button> <button class="sw" data-a="s">Make 15-second script</button><p id="rs" style="white-space:pre-wrap;margin:10px 0 6px"></p><button class="sw" data-a="c">Copy script</button><div class="toast" id="hkt" role="status" style="white-space:pre-wrap"></div></div><div class="toast" id="pt" role="status" style="white-space:pre-wrap"></div></div>';newHook();
+ $("plan").onclick=function(e){var b=e.target.closest("button");if(!b)return;var a=b.dataset.a;
+  if(a==="g")tab(1);
+  else if(a==="p"){var ev=EVENTS[Math.floor(Math.random()*EVENTS.length)];cp(ev.ic+" "+ev.t+"\n"+ev.d+"\n\n"+ev.o.map(function(o,i){return String.fromCharCode(65+i)+") "+o.l}).join("\n")+"\n\nComment A, B or C. I’ll reveal the lesson on Sunday!",$("pt"))}
+  else if(a==="r")cp(RECAP,$("pt"));
+  else if(a==="n")newHook();
+  else if(a==="k")cp(HK.t,$("hkt"));
+  else if(a==="s")script();
+  else if(a==="c"){if(HK.r)cp(HK.r,$("hkt"));else $("hkt").textContent="Make a script first."}
+  else goCard(+a)}
+}
+$("t1").onclick=function(){tab(1)};$("t2").onclick=function(){tab(2)};$("t3").onclick=function(){tab(3)};
+intro();
+</script>
+</body>
+</html>
