@@ -19,10 +19,11 @@ select,textarea{font:inherit;background:#0b1426;color:#fff;border:1px solid #fff
 label{display:grid;gap:3px;color:var(--muted);font-size:12px}input[type=checkbox]{width:22px;height:22px;accent-color:var(--mint)}
 textarea{width:100%;height:70px;font:12px ui-monospace,Consolas,monospace}
 #msg{color:var(--yellow);font-size:13px;min-height:20px}
+.kn{position:absolute;bottom:6px;padding:3px 10px;border-radius:99px;background:#07101dcc;font-size:12px;font-weight:700;color:#fff;pointer-events:none}.kn.l{left:8px}.kn.r{right:8px}
 </style></head><body>
 <header><div><h1>MARBLE <span>CASCADE</span></h1><small>One ball. One melody. Bounce by bounce.</small></div></header>
 <main><section class="card">
-<div id="stage"><canvas id="c"></canvas><div class="ov" id="ov">Ready</div></div>
+<div id="stage"><canvas id="c"></canvas><div class="ov" id="ov">Ready</div><div class="kn l" id="kl"></div><div class="kn r" id="kr"></div></div>
 <div class="ctl">
  <div class="row">
   <button id="play">▶ Play</button><button class="s" id="stop">■ Stop</button><button class="r" id="rec">● Record</button>
@@ -39,6 +40,7 @@ textarea{width:100%;height:70px;font:12px ui-monospace,Consolas,monospace}
   <label>Bounce height <b id="bv">1</b>×<input id="bh" type="range" min="0.5" max="2.5" step="0.1" value="1"></label>
   <label>Platform length <b id="lv">2</b>×<input id="len" type="range" min="1" max="3" step="0.1" value="2"></label>
   <label><span>Follow ball</span><input type="checkbox" id="follow" checked></label>
+  <label><span>Kiki &amp; Bobo</span><input type="checkbox" id="kids" checked></label>
   <label><span>Next song when done</span><input type="checkbox" id="auto" checked></label>
   <label>Play time<select id="dur"><option value="full">Full song</option><option value="20">20 sec</option><option value="30">30 sec</option><option value="40" selected>40 sec</option><option value="60">60 sec</option><option value="90">90 sec</option><option value="120">2 min</option></select></label>
  </div>
@@ -56,7 +58,7 @@ const S=new THREE.Scene();S.background=new THREE.Color(0x0c1226);
 {const pm=new THREE.PMREMGenerator(R),es=new THREE.Scene();es.background=new THREE.Color(0x1a2244);
 [[0,9,0,12,.5,12,0xffffff],[-9,3,2,.5,8,8,0xffd9a8],[9,3,2,.5,8,8,0x9ec8ff],[0,3,10,14,6,.5,0xc9b8ff]].forEach(([x,y,z,w,h,d,c])=>{const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),new THREE.MeshBasicMaterial({color:c}));m.position.set(x,y,z);es.add(m)});
 S.environment=pm.fromScene(es,.03).texture}
-const cam=new THREE.PerspectiveCamera(40,1,.1,100);
+const cam=new THREE.PerspectiveCamera(40,1,.1,100);S.add(cam);
 const hemi=new THREE.HemisphereLight(0xcfe0ff,0x2a2250,1.2);S.add(hemi);
 const sun=new THREE.DirectionalLight(0xffffff,2.4);sun.position.set(-6,14,12);sun.target.position.set(0,6,0);sun.castShadow=true;
 Object.assign(sun.shadow.camera,{left:-16,right:16,top:14,bottom:-10,far:50});sun.shadow.mapSize.set(1024,1024);sun.shadow.radius=6;S.add(sun,sun.target);
@@ -146,9 +148,11 @@ const BL={
  galaxy:{n:'Galaxy',m:{color:0xffffff,map:galTex,emissive:0x221155,roughness:.1,clearcoat:1,envMapIntensity:1.2}},
  fire:{n:'Fireball',m:{color:0xff5a10,emissive:0xff4400,emissiveIntensity:1.6,roughness:.4}},
  rainbow:{n:'Color-cycling',m:{color:0xff0000,roughness:.05,clearcoat:1,envMapIntensity:1.6,emissive:0x220000}},
- disco:{n:'Disco ball',m:{color:0xffffff,metalness:1,roughness:.05,flatShading:true,envMapIntensity:2.5}}};
+ disco:{n:'Disco ball',m:{color:0xffffff,metalness:1,roughness:.05,flatShading:true,envMapIntensity:2.5}},
+ kiki:{n:'Kiki jumping 🎀 (kid)',kid:0},
+ bobo:{n:'Bobo jumping ⭐ (kid)',kid:1}};
 $('#ball').innerHTML=Object.keys(BL).map(k=>`<option value="${k}">${BL[k].n}</option>`).join('');
-function setBall(k){bt=k;ball.material.dispose();ball.geometry.dispose();ball.geometry=k==='disco'?new THREE.IcosahedronGeometry(BR*1.05,2):new THREE.SphereGeometry(BR,32,24);ball.material=new THREE.MeshPhysicalMaterial(BL[k].m)}
+function setBall(k){bt=k;const kd=BL[k].kid;if(kd!==undefined){ball.visible=false;jk=JK[kd];JK.forEach(j=>j.g.visible=j===jk);KD.forEach((q,i)=>q.g.visible=i!==kd);return}ball.visible=true;jk=null;JK.forEach(j=>j.g.visible=false);KD.forEach(q=>q.g.visible=true);ball.material.dispose();ball.geometry.dispose();ball.geometry=k==='disco'?new THREE.IcosahedronGeometry(BR*1.05,2):new THREE.SphereGeometry(BR,32,24);ball.material=new THREE.MeshPhysicalMaterial(BL[k].m)}
 $('#ball').onchange=e=>setBall(e.target.value);
 const VP=['#9b30e8','#2f6fb0','#2a9aa8','#c026d3','#7b4a2e','#d04f95','#6a3fd0','#3a86c8','#1fa89a','#e0509a','#8a5a3a','#b030d8'];let vc=0;
 function mk(type,x,y,m,step,dir,b){const col=$('#plat').value==='video'?new THREE.Color(VP[m%12]):new THREE.Color().setHSL((m%12)/12,.75,.58),[mat,eb]=PM(col),g=new THREE.Group();g.position.set(x,y,0);let top=.1,tilt=-dir*.12;
@@ -199,7 +203,7 @@ $('#rec').onclick=()=>{if(rec){rec.stop();return}
   const ch=[];rec=new MediaRecorder(cs,{mimeType:mime,videoBitsPerSecond:8e6});rec.ondataavailable=e=>e.data.size&&ch.push(e.data);
   rec.onstop=()=>{const ext=mime.includes('mp4')?'mp4':'webm',a=document.createElement('a');a.href=URL.createObjectURL(new Blob(ch,{type:mime}));a.download='marble-cascade.'+ext;a.click();rec=null;$('#rec').textContent='● Record';msg('Saved as '+ext.toUpperCase()+'.')};
   rec.start(250);$('#rec').textContent='■ Stop & save';msg('Recording… press ▶ Play to perform.')}catch(e){rec=null;msg('Recording failed in this browser.')}};
-function resize(){const w=stage.clientWidth,h=stage.clientHeight;cam.aspect=w/h;cam.updateProjectionMatrix();R.setSize(w,h,false);fitZ=Math.max(10.5/(cam.aspect*Math.tan(cam.fov*Math.PI/360)),7.5/Math.tan(cam.fov*Math.PI/360))}
+function resize(){const w=stage.clientWidth,h=stage.clientHeight;cam.aspect=w/h;cam.updateProjectionMatrix();R.setSize(w,h,false);fitZ=Math.max(10.5/(cam.aspect*Math.tan(cam.fov*Math.PI/360)),7.5/Math.tan(cam.fov*Math.PI/360));layoutK()}
 addEventListener('resize',resize);
 // ---- loop
 // ---- endless ladder
@@ -220,7 +224,7 @@ function eDrop(p){G.remove(p.g);p.g.traverse(o=>{if(o.isMesh){o.geometry.dispose
 function eReset(aud){while(G.children.length)G.remove(G.children[0]);pts=[];ecur=null;off=0;G.position.y=0;tex.offset.y=0;eInit(aud);eFill(0)}
 function buildE(){eReset(false);idle();msg('Endless ladder ready — press ▶ Play. Songs will chain non-stop.');return true}
 function playE(){PG=AC.createGain();PG.connect(MG);t0=AC.currentTime+.2;eReset(true);notes=0;running=true;msg('Endless ladder: '+eg.name)}
-function eLand(p){p.flash=1;pulse=1;notes++;if(p.song){msg('Now playing: '+p.song);if(SONGS[p.key])pick(p.key);else $('#song').value='custom'}}
+function eLand(p){p.flash=1;pulse=1;notes++;kidHit(p.col);if(p.song){msg('Now playing: '+p.song);if(SONGS[p.key])pick(p.key);else $('#song').value='custom'}}
 function endFrame(dt){const tn=AC.currentTime-t0;eFill(tn);let x,y,by,sq=0;const f0=pts[0];
  if(!ecur&&tn>=f0.t){ecur=f0;eLand(f0)}
  if(!ecur){const tt=Math.max(0,tn);x=f0.x;y=f0.ly+DROP-11*tt*tt;by=f0.ly}
@@ -231,11 +235,51 @@ function endFrame(dt){const tn=AC.currentTime-t0;eFill(tn);let x,y,by,sq=0;const
  while(ecur&&pts.length>3&&pts[0]!==ecur&&pts[0].y>ecur.y+11)eDrop(pts.shift());
  off+=(7.6-by-off)*Math.min(1,dt*3.5);G.position.y=off;tex.offset.y=-off*.02;
  ball.position.set(x,y+off-BR*.3*sq,0);ball.scale.set(1+.25*sq,1-.3*sq,1+.25*sq);ball.rotation.z-=dt*3;$('#ov').textContent='Endless · '+notes+' notes'}
+// ---- Kiki & Bobo (screen-corner dancers)
+const K=new THREE.Group();K.position.z=-10;cam.add(K);
+const km=(g,m,p,par)=>{const k=new THREE.Mesh(g,m);k.position.set(...p);par.add(k);return k},sm=(c,r=.45)=>new THREE.MeshStandardMaterial({color:c,roughness:r,metalness:0,envMapIntensity:.5});
+function kid(girl){const g=new THREE.Group(),skin=sm(0xffd2b0),cl=sm(girl?0xff6fae:0x3d9bff),sh=sm(girl?0xffd166:0xff5a4d),hair=sm(girl?0x4a2412:0x2a1a10),dk=sm(0x1a1226),wh=sm(0xffffff,.3),pk=sm(0xff8fa0,.6),bow=sm(0xffd166,.3),body=new THREE.Group(),head=new THREE.Group();
+ body.position.y=.55;g.add(body);head.position.y=.95;body.add(head);
+ if(girl){km(new THREE.CylinderGeometry(.28,.5,.6,18),cl,[0,.15,0],body);km(new THREE.SphereGeometry(.3,14,10),cl,[0,.4,0],body)}else km(new THREE.SphereGeometry(.4,18,14),cl,[0,.25,0],body).scale.set(1,1.1,.9);
+ km(new THREE.SphereGeometry(.5,24,18),skin,[0,.1,0],head);
+ km(new THREE.SphereGeometry(.53,24,16,0,Math.PI*2,0,Math.PI*.4),hair,[0,.14,-.04],head);
+ if(girl)[-1,1].forEach(s=>{km(new THREE.SphereGeometry(.17,12,10),hair,[s*.55,-.05,-.02],head);km(new THREE.SphereGeometry(.12,10,8),bow,[s*.45,.32,.1],head)});
+ else[-.2,0,.2].forEach(x=>{const c=km(new THREE.ConeGeometry(.1,.28,8),hair,[x,.66,0],head);c.rotation.z=-x*1.5});
+ [-1,1].forEach(s=>{const e=km(new THREE.SphereGeometry(.11,14,10),wh,[s*.18,.17,.4],head);km(new THREE.SphereGeometry(.06,10,8),dk,[0,0,.08],e);km(new THREE.SphereGeometry(.09,10,8),pk,[s*.3,-.02,.38],head).scale.set(1,.6,.4)});
+ const mouth=km(new THREE.TorusGeometry(.1,.025,8,14,Math.PI),dk,[0,-.02,.5],head);mouth.rotation.z=Math.PI;
+ const arms=[-1,1].map(s=>{const a=new THREE.Group();a.position.set(s*.36,.5,0);body.add(a);km(new THREE.CylinderGeometry(.07,.07,.45,10),skin,[0,-.22,0],a);km(new THREE.SphereGeometry(.1,10,8),skin,[0,-.47,0],a);return{a,s}});
+ const legs=[-1,1].map(s=>{const l=new THREE.Group();l.position.set(s*.17,.5,0);g.add(l);km(new THREE.CylinderGeometry(.075,.075,.4,8),skin,[0,-.2,0],l);km(new THREE.SphereGeometry(.13,10,8),sh,[0,-.43,.04],l).scale.set(1,.7,1.3);return{l,s}});
+ K.add(g);return{g,body,head,arms,legs,mouth,base:0,act:-1}}
+const KD=[kid(true),kid(false)];KD[0].tag='🎀 Kiki';KD[1].tag='⭐ Bobo';KD[0].el=$('#kl');KD[1].el=$('#kr');
+const ACTS=['dancing 💃','clapping 👏','waving 👋','spinning 🌀','jumping 🦘'];
+const ST=[];for(let i=0;i<16;i++){const m=new THREE.Mesh(new THREE.OctahedronGeometry(.15),new THREE.MeshBasicMaterial({color:0xffffff}));m.visible=false;K.add(m);ST.push({m,v:new THREE.Vector3(),l:0})}
+let kc=0,sti=0;
+function kidHit(c){kc=1;KD.forEach(k=>{for(let n=0;n<2;n++){const s=ST[sti++%16];s.m.visible=true;s.m.material.color.copy(c).lerp(new THREE.Color(1,1,1),.4);s.m.position.copy(k.g.position);s.m.position.y+=k.g.scale.x*2.2;s.v.set((Math.random()-.5)*1.6,1+Math.random()*1.4,0);s.l=1}})}
+function layoutK(){const hh=Math.tan(cam.fov*Math.PI/360)*10,hw=hh*cam.aspect,s=Math.min(hh*.2,hw*.28);KD.forEach((k,i)=>{k.g.scale.setScalar(s);k.base=-hh*.86;k.g.position.set((i?1:-1)*(hw-.8*s),k.base,0)})}
+function animK(dt){const on=$('#kids').checked;K.visible=on;KD.forEach(k=>k.el.style.display=on?'':'none');if(!on)return;
+ const ph=simT*(+$('#tempo').value)/60*Math.PI*2;kc=Math.max(0,kc-dt*2.2);
+ KD.forEach((k,i)=>{const p=ph+i*1.7,bob=Math.abs(Math.sin(p/2)),ai=(Math.floor(simT/5)+i*2)%5;let jump=0,A=1.6,B=1.6;
+  if(ai===0){A=1.6+Math.sin(p)*.9;B=1.6+Math.sin(p+Math.PI)*.9}else if(ai===1){A=B=-.2-.5*Math.abs(Math.sin(p))}else if(ai===2){A=.25;B=2.7+Math.sin(simT*9)*.35}else if(ai===3){A=B=1.4}else{A=B=2.8;jump=bob*.9}
+  k.g.rotation.y=ai===3?(simT*5)%(Math.PI*2):Math.sin(p/2)*.25*(i?-1:1);
+  A=Math.min(3.1,A+kc);B=Math.min(3.1,B+kc);k.arms[0].a.rotation.z=-A;k.arms[1].a.rotation.z=B;
+  k.legs.forEach(l=>l.l.rotation.z=ai===4?0:l.s*Math.sin(p)*.4);
+  k.body.position.y=.55+bob*.1+kc*.12;k.body.scale.set(1.03-.05*bob,.94+.06*bob+kc*.06,1);k.head.rotation.z=Math.sin(p/2)*.12;k.mouth.scale.y=1+kc*1.2;
+  k.g.position.y=k.base+k.g.scale.x*(jump+kc*.4);
+  if(k.act!==ai){k.act=ai;k.el.textContent=k.tag+' is '+ACTS[ai]}});
+ ST.forEach(s=>{if(s.l>0){s.l-=dt*1.1;s.v.y-=1.6*dt;s.m.position.addScaledVector(s.v,dt);s.m.rotation.y+=dt*5;s.m.rotation.z+=dt*3;s.m.scale.setScalar(Math.max(.01,s.l));if(s.l<=0)s.m.visible=false}})}
+// ---- jumping kid (replaces the ball)
+let jk=null,jpx=0;const JK=[kid(true),kid(false)];JK.forEach(j=>{S.add(j.g);j.g.visible=false;j.q=0});
+function jumpK(dt){if(!jk)return;const p=ball.position,vx=(p.x-jpx)/Math.max(dt,.001);jpx=p.x;
+ const air=ball.scale.y>.999;jk.q+=((air?1:0)-jk.q)*Math.min(1,dt*18);const q=jk.q;
+ jk.g.position.set(p.x,p.y-BR,.15);jk.g.scale.set(.42*ball.scale.x,.42*ball.scale.y,.42*ball.scale.z);
+ jk.g.rotation.z=Math.max(-.35,Math.min(.35,-vx*.02));jk.g.rotation.y=Math.max(-.5,Math.min(.5,vx*.03));
+ jk.arms[0].a.rotation.z=-(1+1.7*q);jk.arms[1].a.rotation.z=1+1.7*q;
+ jk.legs.forEach(l=>l.l.rotation.z=l.s*.5*q);jk.head.rotation.z=Math.sin(simT*8)*.1;jk.mouth.scale.y=1+q*1.2}
 const clock=new THREE.Clock();let simT=0;
 function frame(){requestAnimationFrame(frame);const dt=Math.min(clock.getDelta(),.05);simT+=dt;
  if(E&&running)endFrame(dt);
  if(running&&!E&&pts.length){const N=pts.length,tg=AC.currentTime-t0,r=Math.min(Math.floor(Math.max(0,tg)/L),reps-1),t=tg-r*L;if(r!==rep){rep=r;idx=0}
-  while(idx<N&&t>=land[idx]){pts[idx].flash=1;pulse=1;notes++;idx++}
+  while(idx<N&&t>=land[idx]){pts[idx].flash=1;pulse=1;notes++;kidHit(pts[idx].col);idx++}
   let x,y,sq=0;const p0=pts[0];
   if(t<land[0]){const tt=Math.max(0,t);x=p0.x;y=p0.ly+DROP-11*tt*tt}
   else if(t<land[N-1]){const i=idx-1,h=hops[i],A=pts[i],B=pts[i+1],T=land[i+1]-land[i],u=t-land[i];x=A.x+(B.x-A.x)*u/T;y=A.ly+h.vy*u-.5*h.g*u*u;sq=Math.max(0,1-u/.1)}
@@ -249,7 +293,7 @@ function frame(){requestAnimationFrame(frame);const dt=Math.min(clock.getDelta()
  pulse=Math.max(0,pulse-dt*4);glow.position.set(ball.position.x,ball.position.y,2);glow.intensity=LT[li].gb+pulse*60;if(LT[li].fx){const a=simT*.8,h=(simT*.08)%1;L1.position.set(Math.cos(a)*9,6+Math.sin(a*1.3)*4,5);L2.position.set(Math.cos(a+3)*9,6+Math.sin(a*1.1+2)*4,5);if(LT[li].fx===2){L1.color.setHSL(h,1,.55);L2.color.setHSL((h+.5)%1,1,.55)}}
  const f=$('#follow').checked,ty=f?ball.position.y-.3:6.2,tz=f?fitZ*.62:fitZ,tx=f?ball.position.x*.5:0;
  camY+=(ty-camY)*Math.min(1,dt*5);camZ+=(tz-camZ)*Math.min(1,dt*3);cam.position.x+=(tx-cam.position.x)*Math.min(1,dt*4);cam.position.set(cam.position.x,camY,camZ);cam.lookAt(cam.position.x,camY,0);
- R.render(S,cam)}
+ animK(dt);jumpK(dt);R.render(S,cam)}
 pick('jingle');paint(0);setLit(0);sun.shadow.radius=14;resize();build();frame();
 })();
 </script></body></html>
