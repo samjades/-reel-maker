@@ -35,6 +35,8 @@ textarea{width:100%;height:70px;font:12px ui-monospace,Consolas,monospace}
   <label>Platform<select id="plat"><option value="video" selected>Glossy slabs (video style)</option><option value="classic">Wood xylophone</option><option value="glass">Glass (tinted)</option><option value="clear">Transparent glass</option><option value="gold">Gold metal</option><option value="neon">Neon glow</option><option value="candy">Candy gloss</option><option value="ivory">Ivory keys</option></select></label>
   <label>Lighting<select id="lit"></select></label>
   <label>Ball<select id="ball"></select></label>
+  <label>Step glow<select id="fx"><option value="mix" selected>Different on every step</option><option value="halo">Glow halo</option><option value="ring">Shockwave ring</option><option value="burst">Sparkle burst</option><option value="beam">Light beam</option><option value="light">Real light pop</option><option value="party">Rainbow party (all)</option><option value="off">Off</option></select></label>
+  <label>Step lighting<select id="sl"><option value="under" selected>Bright glow + underglow</option><option value="bright">Bright glow</option><option value="rainbow">Rainbow color cycle</option><option value="trail">Trail (steps stay lit)</option><option value="lamp">Real lamp (light spills)</option><option value="soft">Soft flash (old)</option></select></label>
  </div>
  <div class="row">
   <label>Tempo <b id="tv">125</b> BPM<input id="tempo" type="range" min="60" max="180" value="125"></label>
@@ -173,7 +175,8 @@ function mk(type,x,y,m,step,dir,b){const col=$('#plat').value==='video'?new THRE
   if(v==='ivory'){const st=me(new THREE.BoxGeometry(hw*2,.03,.7),new THREE.MeshStandardMaterial({color:col,roughness:.4}));st.position.y=.115;g.add(st)}
   if(v==='clear')g.traverse(o=>{if(o.isMesh&&o.material===mat)o.castShadow=false});
   g.rotation.z=tilt}
- G.add(g);return{x,y,m,b,dir,g,mat,col,eb,type,flash:0,tilt,ly:y+top+BR}}
+ G.add(g);const gl=new THREE.Sprite(new THREE.SpriteMaterial({map:hal,color:col,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false,opacity:0}));gl.scale.set(type==='bell'?2.2:Math.min(.6*(+$('#len').value),step*.46)*2.8+.6,1.7,1);gl.position.set(0,-.05,-.3);g.add(gl);
+ return{x,y,m,b,dir,g,mat,col,eb,gl,type,flash:0,tilt,ly:y+top+BR}}
 function build(){if(E)return buildE();G.position.set(0,0,0);wall.position.z=-1;wall.scale.setScalar(1);tex.offset.y=0;while(G.children.length)G.remove(G.children[0]);
  const s=parse($('#txt').value);if(!s.notes.length){msg('No valid notes found — try: E5 E5 E5:2');return false}
  const nt=s.notes.slice(0,64),N=nt.length,lm=+$('#len').value,kf=Math.max(3,Math.floor(17.6/(1.2*lm+.3))),rows=Math.min(10,Math.max(2,Math.ceil(N/Math.min(kf,12)))),k=Math.ceil(N/rows),step=Math.min(2.2*lm,17.6/k),rh=(YT-YB)/rows,inst=$('#inst').value;
@@ -225,7 +228,7 @@ function eDrop(p){G.remove(p.g);p.g.traverse(o=>{if(o.isMesh){o.geometry.dispose
 function eReset(aud){while(G.children.length)G.remove(G.children[0]);pts=[];ecur=null;off=0;offX=0;G.position.set(0,0,0);tex.offset.set(0,0);const l3=['spiral','ring'].includes($('#lay').value);wall.position.z=l3?-16:-1;wall.scale.setScalar(l3?2.6:1);eInit(aud);eFill(0)}
 function buildE(){eReset(false);idle();ball.position.z=pts[0].z;msg('Endless ladder ready — press ▶ Play. Songs will chain non-stop.');return true}
 function playE(){PG=AC.createGain();PG.connect(MG);t0=AC.currentTime+.2;eReset(true);notes=0;running=true;msg('Endless ladder: '+eg.name)}
-function eLand(p){p.flash=1;pulse=1;notes++;kidHit(p.col);if(p.song){msg('Now playing: '+p.song);if(SONGS[p.key])pick(p.key);else $('#song').value='custom'}}
+function eLand(p){p.flash=1;pulse=1;notes++;kidHit(p.col);stepFx(p);if(p.song){msg('Now playing: '+p.song);if(SONGS[p.key])pick(p.key);else $('#song').value='custom'}}
 function endFrame(dt){const tn=AC.currentTime-t0;eFill(tn);let x,y,by,sq=0;const f0=pts[0];
  if(!ecur&&tn>=f0.t){ecur=f0;eLand(f0)}
  if(!ecur){const tt=Math.max(0,tn);x=f0.x;y=f0.ly+DROP-11*tt*tt;by=f0.ly}
@@ -291,6 +294,32 @@ function endFrame2(dt){const tn=AC.currentTime-t0;eFill(tn);let x,y,z,bx,by,sq=0
  off+=(7.6-by-off)*Math.min(1,dt*3.5);offX+=((eg.ly==='straight'?-bx:0)-offX)*Math.min(1,dt*3);G.position.set(offX,off,0);tex.offset.set(-offX*.01,-off*.02);
  ball.position.set(x+offX,y+off-BR*.3*sq,z);ball.scale.set(1+.25*sq,1-.3*sq,1+.25*sq);ball.rotation.z-=dt*3;$('#ov').textContent='Endless · '+notes+' notes'}
 $('#lay').onchange=()=>{E=true;$('#mode').value='endless';tok++;running=false;if(PG){PG.gain.value=0;PG.disconnect()}build();msg('Layout changed — press ▶ Play.')};
+// ---- each step's own lighting when the ball lands
+const SL=[0,1,2,3,4].map(()=>{const l=new THREE.PointLight(0xffffff,0,8);S.add(l);return l}),tmpC=new THREE.Color();let sli=0;
+function stepL(p,sl,dt){const f=p.flash,c=p.col,hit=f>(p.pf||0)+.2;p.pf=f;let k=f*.9,col=c;
+ if(sl==='bright'||sl==='under'||sl==='lamp')k=f*2.2;
+ if(sl==='rainbow'){col=tmpC.setHSL((simT*.8+p.m/12)%1,1,.55);k=f*1.8}
+ if(sl==='trail'){if(hit)p.hold=1;k=f*2+(p.hold||0)*.5}
+ p.mat.emissive.copy(col).multiplyScalar(p.eb+k);
+ if(p.gl){p.gl.material.opacity=(sl==='under'||sl==='lamp')?Math.min(1,f*1.1):sl==='trail'?Math.min(1,f*.8+(p.hold||0)*.35):sl==='rainbow'?Math.min(1,f*.9):0;p.gl.material.color.copy(col)}
+ if(sl==='lamp'){if(hit){const l=SL[sli++%5];l.owner=p;l.color.copy(c);p.lamp=l}if(p.lamp&&p.lamp.owner===p){p.lamp.intensity=f*30;p.lamp.position.set(p.x+G.position.x,p.y+G.position.y+.7,(p.z||0)+1.5)}}
+ else if(p.lamp){if(p.lamp.owner===p)p.lamp.intensity=0;p.lamp=null}}
+// ---- step glow effects (when the ball hits a step)
+const FXL=[],hal=(()=>{const c=document.createElement('canvas');c.width=c.height=128;const x=c.getContext('2d'),g=x.createRadialGradient(64,64,0,64,64,64);g.addColorStop(0,'rgba(255,255,255,1)');g.addColorStop(.35,'rgba(255,255,255,.4)');g.addColorStop(1,'rgba(255,255,255,0)');x.fillStyle=g;x.fillRect(0,0,128,128);return new THREE.CanvasTexture(c)})();
+const PL=[0,1,2,3].map(()=>{const l=new THREE.PointLight(0xffffff,0,7);S.add(l);return l});let pli=0;
+const fxm=(c,map)=>new THREE.MeshBasicMaterial({color:c,map,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false});
+function mkFx(k,p,c){const z=p.z||0,pos=new THREE.Vector3(p.x,p.y+.15,z+.3),e={d:.9};let o;
+ if(k==='halo'){o=new THREE.Sprite(new THREE.SpriteMaterial({map:hal,color:c,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false}));o.position.copy(pos);e.u=t=>{o.material.opacity=t;o.scale.setScalar(2.5+(1-t)*2.5)}}
+ else if(k==='ring'){o=new THREE.Mesh(new THREE.TorusGeometry(.5,.05,8,36),fxm(c));o.position.copy(pos);e.u=t=>{o.material.opacity=t;o.scale.setScalar(1+(1-t)*4.5)}}
+ else if(k==='beam'){o=new THREE.Mesh(new THREE.PlaneGeometry(.9,9),fxm(c,hal));o.position.set(p.x,p.y+4.6,z+.3);e.d=.7;e.u=t=>{o.material.opacity=t*.9;o.scale.x=.5+t*.7}}
+ else if(k==='burst'){o=new THREE.Group();o.position.copy(pos);const vs=[];for(let i=0;i<14;i++){o.add(new THREE.Mesh(new THREE.OctahedronGeometry(.09),fxm(i%3?c:0xffffff)));const a=Math.random()*6.28,s=1.5+Math.random()*2.5;vs.push([Math.cos(a)*s,Math.sin(a)*s+1.5,(Math.random()-.5)*1.5])}
+  e.d=1.1;e.u=(t,dt)=>{o.children.forEach((m,i)=>{const v=vs[i];v[1]-=7*dt;m.position.x+=v[0]*dt;m.position.y+=v[1]*dt;m.position.z+=v[2]*dt;m.rotation.y+=dt*6;m.material.opacity=t;m.scale.setScalar(.4+t*.8)})}}
+ else{const l=PL[pli++%4];l.color.copy(c);e.d=.5;e.u=t=>{l.intensity=t*22;l.position.set(p.x+G.position.x,p.y+G.position.y+.6,z+1.4)};e.x=()=>{l.intensity=0};FXL.push(e);return}
+ G.add(o);e.x=()=>{G.remove(o);o.traverse(m=>{if(m.material)m.material.dispose();if(m.geometry&&!m.isSprite)m.geometry.dispose()})};FXL.push(e)}
+function stepFx(p){let v=$('#fx').value;if(v==='off')return;const c=p.col.clone().lerp(new THREE.Color(1,1,1),.2);
+ if(v==='mix')v=['halo','ring','burst','beam','light'][p.m%5];
+ if(v==='party'){c.setHSL(Math.random(),1,.6);['halo','ring','burst','beam','light'].forEach(k=>mkFx(k,p,c))}else mkFx(v,p,c)}
+function fxTick(dt){for(let i=FXL.length-1;i>=0;i--){const e=FXL[i];e.life=(e.life===undefined?1:e.life)-dt/e.d;e.u(Math.max(0,e.life),dt);if(e.life<=0){e.x();FXL.splice(i,1)}}}
 // ---- jumping kid (replaces the ball)
 let jk=null,jpx=0;const JK=[kid(true),kid(false)];JK.forEach(j=>{S.add(j.g);j.g.visible=false;j.q=0});
 function jumpK(dt){if(!jk)return;const p=ball.position,vx=(p.x-jpx)/Math.max(dt,.001);jpx=p.x;
@@ -303,7 +332,7 @@ const clock=new THREE.Clock();let simT=0;
 function frame(){requestAnimationFrame(frame);const dt=Math.min(clock.getDelta(),.05);simT+=dt;
  if(E&&running)endFrame2(dt);
  if(running&&!E&&pts.length){const N=pts.length,tg=AC.currentTime-t0,r=Math.min(Math.floor(Math.max(0,tg)/L),reps-1),t=tg-r*L;if(r!==rep){rep=r;idx=0}
-  while(idx<N&&t>=land[idx]){pts[idx].flash=1;pulse=1;notes++;kidHit(pts[idx].col);idx++}
+  while(idx<N&&t>=land[idx]){pts[idx].flash=1;pulse=1;notes++;kidHit(pts[idx].col);stepFx(pts[idx]);idx++}
   let x,y,sq=0;const p0=pts[0];
   if(t<land[0]){const tt=Math.max(0,t);x=p0.x;y=p0.ly+DROP-11*tt*tt}
   else if(t<land[N-1]){const i=idx-1,h=hops[i],A=pts[i],B=pts[i+1],T=land[i+1]-land[i],u=t-land[i];x=A.x+(B.x-A.x)*u/T;y=A.ly+h.vy*u-.5*h.g*u*u;sq=Math.max(0,1-u/.1)}
@@ -313,11 +342,12 @@ function frame(){requestAnimationFrame(frame);const dt=Math.min(clock.getDelta()
   if(lim?tg>=lim+.3:t>land[N-1]+1.8)finish()}
  else if(!running)$('#ov').textContent='Ready';
  if(bt==='rainbow'){const h=(simT*.25)%1;ball.material.color.setHSL(h,.9,.55);ball.material.emissive.setHSL(h,.9,.15)}
- pts.forEach(p=>{p.flash=Math.max(0,p.flash-dt*3);p.mat.emissive.copy(p.col).multiplyScalar(p.eb+p.flash*.9);if(p.type==='bell'){const s=1+p.flash*.12;p.g.scale.set(s,s,s)}else p.g.rotation.z=p.tilt+p.flash*.07*p.dir});
+ const sl=$('#sl').value,SR=sl==='soft'?3:(sl==='bright'||sl==='under')?1.1:sl==='rainbow'?1.4:sl==='trail'?1.6:.9;SL.forEach(l=>{if(l.owner&&pts.indexOf(l.owner)<0){l.intensity=0;l.owner=null}});
+ pts.forEach(p=>{p.flash=Math.max(0,p.flash-dt*SR);stepL(p,sl,dt);if(p.type==='bell'){const s=1+p.flash*.12;p.g.scale.set(s,s,s)}else p.g.rotation.z=p.tilt+p.flash*.07*p.dir});
  pulse=Math.max(0,pulse-dt*4);glow.position.set(ball.position.x,ball.position.y,2);glow.intensity=LT[li].gb+pulse*60;if(LT[li].fx){const a=simT*.8,h=(simT*.08)%1;L1.position.set(Math.cos(a)*9,6+Math.sin(a*1.3)*4,5);L2.position.set(Math.cos(a+3)*9,6+Math.sin(a*1.1+2)*4,5);if(LT[li].fx===2){L1.color.setHSL(h,1,.55);L2.color.setHSL((h+.5)%1,1,.55)}}
  const f=$('#follow').checked,ty=f?ball.position.y-.3:6.2,tz=f?fitZ*.62:fitZ,tx=f?ball.position.x*.5:0;
  camY+=(ty-camY)*Math.min(1,dt*5);camZ+=(tz-camZ)*Math.min(1,dt*3);cam.position.x+=(tx-cam.position.x)*Math.min(1,dt*4);cam.position.set(cam.position.x,camY,camZ);cam.lookAt(cam.position.x,camY,0);
- animK(dt);jumpK(dt);R.render(S,cam)}
+ animK(dt);jumpK(dt);fxTick(dt);R.render(S,cam)}
 pick('jingle');paint(0);setLit(0);sun.shadow.radius=14;resize();build();frame();
 })();
 </script></body></html>
