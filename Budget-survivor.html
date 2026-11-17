@@ -175,7 +175,215 @@ var EVENTS = [
 {ic:"🧥",t:"Buy now, pay later",d:"A $250 jacket can be split into 4 easy payments.",o:[
  {l:"Use buy now, pay later",d:250,j:8,x:"‘Easy payments’ still means debt, and they stack up fast."},
  {l:"Buy a similar one secondhand for $60",c:-60,j:6,x:"Same warmth, a quarter of the price."},
- {l:"Skip it",j:-2,x:"If you can’t pay for it today, ask if you need it today."}]}
+ {l:"Skip it",j:-2,x:"If you can’t pay for it today, ask if you need it today."}]},
+{ic:"📱",t:"Cracked phone screen",d:"Your screen is cracked and the official repair is $150.",o:[
+ {l:"Use a trusted local repair shop",c:-90,x:"Comparing prices saved you $60."},
+ {l:"Pay the official repair",c:-150,j:2,x:"Safe, but you paid the highest price."},
+ {l:"Live with the crack",j:-5,x:"Free today, but a worse crack could cost more later."}]},
+{ic:"🍳",t:"Your oven dies",d:"You need a working oven or stove for cooking.",o:[
+ {l:"Buy a used one for $50",c:-50,x:"Used works fine for basics."},
+ {l:"Buy a new basic one for $120",c:-120,j:2,x:"Reasonable, though used was cheaper."},
+ {l:"Buy a premium $400 one on credit",d:400,j:5,x:"You paid for features you may never use, plus interest."}]},
+{ic:"🏦",t:"Surprise bank fee",d:"Your bank charged a $30 fee you didn’t notice.",o:[
+ {l:"Call and ask them to waive it",j:2,x:"Many banks refund a first-time fee if you ask."},
+ {l:"Pay it and move on",c:-30,x:"Paid, but you didn’t ask."},
+ {l:"Switch to a fee-free account",c:-10,j:1,x:"A small switching cost stops the fees for good."}]},
+{ic:"🎒",t:"School trip money",d:"A child’s school trip costs $80.",o:[
+ {l:"Pay it in full",c:-80,j:4,x:"A good memory for your child, planned or not."},
+ {l:"Offer to volunteer to cut the cost",c:-30,j:3,x:"Asking about discounts or volunteering can lower the bill."},
+ {l:"Say no",j:-5,x:"Saves money, but the cost to your child is real. Plan ahead next time."}]},
+{ic:"🎂",t:"Friend’s birthday",d:"A group gift is $40 and the dinner is $60.",o:[
+ {l:"Do both",c:-100,j:8,x:"Fun, but you spent $100 on one night."},
+ {l:"Join the dinner, share a cheaper meal",c:-45,j:6,x:"You were there, and you spent less."},
+ {l:"Send a message and a $15 gift",c:-15,j:3,x:"Thoughtful and cheap."}]},
+{ic:"🧹",t:"Free weekend",d:"Your home is full of things you no longer use.",o:[
+ {l:"Sell the best items online",c:120,j:-2,x:"Clutter became cash."},
+ {l:"Donate everything",j:3,x:"Feels good, though you could have earned something."},
+ {l:"Keep it all",x:"No gain, no loss. The clutter stays."}]},
+{ic:"🚌",t:"Transport pass",d:"A monthly pass costs $40, or you can pay about $66 daily.",o:[
+ {l:"Buy the monthly pass",c:-40,x:"If you use it often, bundles are cheaper."},
+ {l:"Pay daily",c:-66,x:"Flexible, but it costs $26 more."},
+ {l:"Walk or cycle part of the trips",c:-20,j:-2,x:"Cheaper and healthy, but it takes time."}]},
+{ic:"💡",t:"Electricity bill jumps",d:"Your bill is $50 higher than usual.",o:[
+ {l:"Find the cause and cut usage",c:-20,j:-1,x:"Unplugging and switching off saves real money."},
+ {l:"Pay it and ignore it",c:-50,x:"Paid, but next month may be the same."},
+ {l:"Put it on the card",d:50,x:"Small bills on a card turn into debt."}]},
+{ic:"🥗",t:"Lunch plan",d:"You have a busy week ahead.",o:[
+ {l:"Meal prep on Sunday",c:-40,j:1,x:"Cooking in bulk saves money and time."},
+ {l:"Buy lunch every day",c:-90,x:"Convenient, and it costs more than double."},
+ {l:"Mix: prep a few, buy a few",c:-60,x:"A fair middle road."}]},
+{ic:"💳",t:"Cashback offer",d:"An app offers cashback if you spend $100 this week.",o:[
+ {l:"Use it only on groceries you need",c:20,x:"Cashback is great on planned buys."},
+ {l:"Spend extra to reach the limit",c:-40,j:3,x:"Spending $40 more to earn $10 back is a loss."},
+ {l:"Ignore it",x:"Fine. Never chase rewards."}]},
+{ic:"💇",t:"Haircut",d:"You need a trim before an event.",o:[
+ {l:"Basic haircut for $10",c:-10,x:"It does the job."},
+ {l:"Fancy salon for $60",c:-60,j:6,x:"A treat, but six times the price."},
+ {l:"Do it yourself",j:-2,x:"Free, with a risk."}]},
+{ic:"🎮",t:"In-game purchase",d:"A $25 skin is on sale in your favorite game.",o:[
+ {l:"Buy it",c:-25,j:6,x:"Fun for a moment, gone for good."},
+ {l:"Wait for a free event",j:1,x:"Patience is free."},
+ {l:"Put $25 in savings instead",c:-25,s:25,j:2,x:"You paid yourself first."}]},
+{ic:"🛋️",t:"New sofa",d:"Your old sofa is falling apart. A new one is $500 on credit, a used one is $120.",o:[
+ {l:"Buy new on credit",d:500,j:8,x:"Comfortable now, expensive over time."},
+ {l:"Buy a used one",c:-120,j:4,x:"Good furniture, quarter of the price."},
+ {l:"Wait and cover it with a throw",j:-3,x:"Free, and it buys time to save."}]},
+{ic:"💵",t:"Refund arrives",d:"You get an unexpected $300 refund.",o:[
+ {l:"Spend it all on fun",j:12,x:"Great day, nothing left."},
+ {l:"Save every dollar",s:300,j:1,x:"Strong. Your cushion grew."},
+ {l:"Half to savings, half to fun",s:150,j:6,x:"Balanced. This works for most people."}]},
+{ic:"🏠",t:"Roommate moves out",d:"Your share of the rent jumps by $100.",o:[
+ {l:"Find a new roommate",c:-30,j:-3,x:"Takes effort, saves the most."},
+ {l:"Cover the full rent",c:-100,x:"Stable, but costly."},
+ {l:"Move to a cheaper place",c:-60,j:-2,x:"A moving cost today, savings every month."}]},
+{ic:"🤒",t:"Flu week",d:"You feel sick and may lose work hours.",o:[
+ {l:"Rest and recover",c:-60,j:-2,x:"You lose some pay, but you get better fast."},
+ {l:"Work sick",j:-8,x:"You earn, but you feel worse and may spread it."},
+ {l:"Buy every expensive remedy",c:-90,j:-1,x:"Rest and basics help more than pricey extras."}]},
+{ic:"📶",t:"Internet upsell",d:"Your provider offers faster internet for $20 more.",o:[
+ {l:"Upgrade",c:-20,j:2,x:"Only if you need it."},
+ {l:"Keep your current plan",x:"Good. You use what you have."},
+ {l:"Call and ask for a discount",c:10,x:"Asking often earns a lower bill."}]},
+{ic:"📜",t:"Exam fee",d:"A certificate exam that could help your career costs $90.",o:[
+ {l:"Pay it",c:-90,j:3,x:"Investing in skills can raise your income."},
+ {l:"Ask your employer to sponsor it",j:1,x:"Many employers will help. Ask."},
+ {l:"Skip it",j:-3,x:"Free today, but opportunities can pass."}]},
+{ic:"🎟️",t:"Raffle ticket",d:"A $20 raffle ticket could win a phone.",o:[
+ {l:"Buy the ticket",c:-20,j:2,x:"The odds are low. Treat it as a donation."},
+ {l:"Skip it",x:"Odds rarely beat habits."},
+ {l:"Put the $20 in savings",c:-20,s:20,j:1,x:"A sure thing beats a lottery."}]},
+{ic:"🧠",t:"Money workshop",d:"A free workshop on budgeting runs near you. A ‘guru’ also offers a $300 program.",o:[
+ {l:"Attend the free workshop",j:3,x:"Free learning is the best value."},
+ {l:"Skip learning",x:"You miss a free chance."},
+ {l:"Buy the $300 program",c:-300,j:2,x:"Be careful with expensive gurus. Learn free first."}]},
+{ic:"🚨",t:"Phone stolen",d:"Someone took your phone and you need a replacement.",o:[
+ {l:"Buy a basic one for $120",c:-120,j:-2,x:"It works, and the cost stays small."},
+ {l:"Buy a premium one on credit",d:800,j:6,x:"Nice, but you pay interest on a replacement."},
+ {l:"Use your old phone",c:-20,j:-4,x:"Cheapest, if it still works."}]},
+{ic:"🥂",t:"Colleague’s promotion",d:"The team collects $30 for a gift.",o:[
+ {l:"Chip in $30",c:-30,j:3,x:"A kind gesture."},
+ {l:"Skip it",j:-3,x:"Saves money, costs some goodwill."},
+ {l:"Offer a card and $5",c:-5,j:2,x:"Thoughtful and affordable."}]},
+{ic:"🛍️",t:"Big sale weekend",d:"Everything is cheap. You came for one thing.",o:[
+ {l:"Buy only the planned item",c:-80,j:3,x:"A list wins again."},
+ {l:"Browse and add 3 extras",c:-220,j:9,x:"Sales are made to make you spend more."},
+ {l:"Skip the sale entirely",j:-1,x:"Safe, though you may miss a real deal."}]},
+{ic:"📺",t:"Streaming price hike",d:"Your streaming service is $5 more a month.",o:[
+ {l:"Cancel it",j:-3,x:"Cancel and re-subscribe when you want it."},
+ {l:"Keep paying",c:-5,x:"Small, but it adds up."},
+ {l:"Rotate services month by month",c:-2,j:1,x:"Smart: pay only for what you watch now."}]},
+{ic:"🧵",t:"Torn jacket",d:"Your favorite jacket has a rip.",o:[
+ {l:"Mend it",c:-5,x:"A few dollars saved a jacket."},
+ {l:"Buy a new one for $60",c:-60,j:3,x:"Replacing is the costly option."},
+ {l:"Swap with a friend",j:2,x:"Swapping is free and fun."}]},
+{ic:"🏦",t:"Savings plan offer",d:"Your bank offers a savings plan with a higher interest rate.",o:[
+ {l:"Move $200 into it",c:-200,s:200,j:1,x:"Your savings now grow faster."},
+ {l:"Move $100 to start small",c:-100,s:100,x:"A good start."},
+ {l:"Ignore it",x:"Missed an easy chance."}]},
+{ic:"📅",t:"Annual card fee",d:"Your credit card charges a $60 yearly fee.",o:[
+ {l:"Call and ask them to waive it",j:1,x:"Many issuers waive it if you ask."},
+ {l:"Pay it",c:-60,x:"Paid, but you could have asked."},
+ {l:"Cancel the unused card",x:"If you don’t use it, close it."}]},
+{ic:"🎁",t:"A gift you don’t want",d:"You received a $40 gift you will never use.",o:[
+ {l:"Return it for cash",c:40,x:"Unused gifts become useful money."},
+ {l:"Keep it",j:2,x:"Nice, but it sits unused."},
+ {l:"Pass it on to someone who wants it",j:3,x:"A gift that finds a home."}]},
+{ic:"🛒",t:"Market or supermarket?",d:"You need fresh food for the week.",o:[
+ {l:"Shop at the local market",c:-30,x:"Fresh, local and usually cheaper."},
+ {l:"Shop at the premium supermarket",c:-55,j:2,x:"Convenient, with a higher bill."},
+ {l:"Buy frozen basics",c:-25,x:"Frozen is cheap, lasts long and wastes little."}]},
+{ic:"🔥",t:"Extra shifts offered",d:"Your employer offers $150 per extra shift this week.",o:[
+ {l:"Take one shift",c:150,j:-8,x:"A sensible boost."},
+ {l:"Take two shifts",c:300,j:-18,x:"More money, but burnout is costly."},
+ {l:"Decline and rest",j:4,x:"Rest matters too. Say yes only when it helps your plan."}]},
+{ic:"👨‍👩‍👧",t:"Family visit",d:"Relatives are staying with you for the weekend.",o:[
+ {l:"Cook big simple meals at home",c:-60,j:6,x:"Warm and affordable."},
+ {l:"Eat out every meal",c:-200,j:8,x:"Fun, but your wallet pays."},
+ {l:"Ask everyone to bring a dish",c:-40,j:5,x:"Sharing costs makes hosting easy."}]},
+{ic:"💐",t:"Anniversary",d:"You want to mark a special day.",o:[
+ {l:"A planned $50 dinner",c:-50,j:8,x:"A budgeted treat is guilt-free."},
+ {l:"A $250 extravagant night",c:-250,j:12,x:"A lovely night, a heavy bill."},
+ {l:"A thoughtful free gesture",j:6,x:"A handwritten note can mean more than a gift."}]},
+{ic:"🛞",t:"Flat tyre",d:"Your tyre is punctured.",o:[
+ {l:"Patch it for $15",c:-15,x:"A cheap fix beats a new tyre."},
+ {l:"Buy a new tyre for $60",c:-60,x:"Sometimes needed, but patch first if you can."},
+ {l:"Keep driving on it",c:-120,j:-5,x:"A flat tyre can lead to towing and more damage."}]},
+{ic:"🧴",t:"Bulk toiletries sale",d:"A store has a bulk sale on items you use every month.",o:[
+ {l:"Buy 3 months of what you use",c:-60,x:"Bulk only helps for things you will really use."},
+ {l:"Buy brand extras you don’t need",c:-90,j:3,x:"A sale isn’t a saving if it isn’t needed."},
+ {l:"Buy just one",c:-20,x:"Safe, though you pay full price each time."}]},
+{ic:"📚",t:"Books to read",d:"You want a few new books.",o:[
+ {l:"Borrow from the library",j:2,x:"Free is the best price."},
+ {l:"Buy new books for $40",c:-40,j:3,x:"Fine, but not the cheapest way."},
+ {l:"Buy used for $10",c:-10,j:2,x:"Great value."}]},
+{ic:"🧑‍💻",t:"A client pays late",d:"You are owed $200 and bills are due.",o:[
+ {l:"Send a polite reminder",c:200,j:1,x:"A clear, kind reminder often works."},
+ {l:"Chase them angrily",j:-3,x:"It rarely helps and can hurt your relationship."},
+ {l:"Write it off",j:-6,x:"You lost money you earned. Always follow up."}]},
+{ic:"📉",t:"Work hours cut",d:"Your income drops by $100 this period.",o:[
+ {l:"Trim wants for now",c:-100,j:-4,x:"Cutting wants first protects your needs."},
+ {l:"Take it from savings",s:-100,x:"That is what savings are for, but plan to rebuild them."},
+ {l:"Put the gap on the card",d:100,x:"Debt can make the gap grow."}]},
+{ic:"🏷️",t:"Price drop after you bought",d:"A store cut the price of something you bought last week by $30.",o:[
+ {l:"Ask for a price adjustment",c:30,x:"Many stores will refund the difference if you ask."},
+ {l:"Ignore it",x:"Money left on the table."},
+ {l:"Return it and buy again",c:30,j:-1,x:"Works, but it takes effort."}]},
+{ic:"🥘",t:"Cooking class",d:"A cooking class costs $60.",o:[
+ {l:"Join the class",c:-60,j:6,x:"A skill that can cut costs for years."},
+ {l:"Watch free videos",j:3,x:"Free learning is great value."},
+ {l:"Skip it",j:-1,x:"Nothing lost, nothing gained."}]},
+{ic:"🚗",t:"Insurance renewal",d:"Your cover renews at $200, up 20%.",o:[
+ {l:"Compare quotes",c:-160,j:1,x:"Shopping around saved you $40."},
+ {l:"Auto-renew",c:-200,x:"Easy, but loyalty is rarely rewarded."},
+ {l:"Drop the cover",j:-8,x:"One accident could cost far more than the premium."}]},
+{ic:"🧥",t:"$50 in an old jacket",d:"You find $50 you forgot about.",o:[
+ {l:"Spend it on a treat",j:5,x:"A fun surprise, but it was a chance to save."},
+ {l:"Save it",s:50,j:1,x:"Found money works best when it has a job."},
+ {l:"Half to savings, half to fun",s:25,j:3,x:"A balanced choice."}]},
+{ic:"📓",t:"Budget app subscription",d:"A budget app asks for $5 a month for premium features.",o:[
+ {l:"Use the free version",x:"Tools are only as good as your habits."},
+ {l:"Pay for premium",c:-5,j:1,x:"Fine if you use it every week."},
+ {l:"Use a notebook",j:1,x:"A pen and paper work well."}]},
+{ic:"🧒",t:"Pocket money for a child",d:"A child asks for money to spend.",o:[
+ {l:"Give $20 and teach them to save half",c:-20,j:3,x:"Early habits last a lifetime."},
+ {l:"Say no",j:-1,x:"No cost, but no lesson either."},
+ {l:"Give $40 with no rules",c:-40,j:2,x:"Money with no lesson teaches little."}]},
+{ic:"🏖️",t:"Holiday choice",d:"You have time off. A trip costs $600, a staycation $80.",o:[
+ {l:"Take the trip on the card",d:600,j:15,x:"A great week, a long debt."},
+ {l:"Enjoy a staycation",c:-80,j:8,x:"Rest and fun at a fraction of the cost."},
+ {l:"Save toward a trip next year",c:-100,s:100,j:3,x:"A trip paid for in advance feels better."}]},
+{ic:"💊",t:"Pharmacy choice",d:"Your prescription has a brand and a generic option.",o:[
+ {l:"Choose the generic",c:-10,x:"Generics often work the same for less."},
+ {l:"Choose the brand",c:-30,x:"Sometimes needed, often not."},
+ {l:"Ask the pharmacist for options",c:-15,x:"Pharmacists can help you save safely."}]},
+{ic:"🚰",t:"Leaking tap",d:"A tap in your home is dripping.",o:[
+ {l:"Hire someone for $80",c:-80,x:"It’s fixed, but at a high price."},
+ {l:"Ignore it",c:-150,j:-2,x:"A drip becomes a bigger bill."},
+ {l:"Fix it yourself for $15",c:-15,j:1,x:"A few dollars and a short video saved you money."}]},
+{ic:"📦",t:"Subscription box",d:"A subscription box costs $30 a month.",o:[
+ {l:"Cancel it",x:"Cancel what you don’t need."},
+ {l:"Keep it",c:-30,j:4,x:"A small joy, a steady cost."},
+ {l:"Pause it",j:1,x:"A good middle step."}]},
+{ic:"🚕",t:"Getting around",d:"You need to get across town several times this week.",o:[
+ {l:"Taxi every time",c:-80,j:3,x:"Fast and comfortable, but costly."},
+ {l:"Take the bus",c:-20,x:"Cheap and reliable."},
+ {l:"Share a ride with a friend",c:-40,j:2,x:"Sharing halves the cost."}]},
+{ic:"🧾",t:"Gadget breaks early",d:"Your headphones broke 3 months after you bought them.",o:[
+ {l:"Claim the warranty",j:3,x:"Free repair or replacement. Keep your receipts."},
+ {l:"Buy new ones",c:-150,x:"You paid for what the warranty covers."},
+ {l:"Ignore it",j:-3,x:"You lose music and money."}]},
+{ic:"🏃",t:"Running shoes",d:"You need new running shoes.",o:[
+ {l:"Last season’s pair for $50",c:-50,j:3,x:"Same quality, lower price."},
+ {l:"The latest pair for $150",c:-150,j:5,x:"You paid $100 for the ‘new’ label."},
+ {l:"Keep wearing your old ones",j:-1,x:"Wear them until they’re really done."}]},
+{ic:"🎲",t:"A ‘sure-win’ pool",d:"Friends push you to join a $50 pool that ‘can’t lose’.",o:[
+ {l:"Join",c:-50,j:3,x:"If it can’t lose, ask why they need your money."},
+ {l:"Say no",j:-2,x:"You protected your money."},
+ {l:"Suggest a free game night",j:4,x:"You kept the fun and skipped the risk."}]},
+{ic:"🏧",t:"ATM fees",d:"You need cash and the nearest ATM charges $5.",o:[
+ {l:"Walk to your bank’s ATM",x:"A short walk saves a fee."},
+ {l:"Use the nearest ATM",c:-5,x:"Small fees add up."},
+ {l:"Withdraw a weekly amount at once",c:-2,j:1,x:"Fewer visits mean fewer fees."}]}
 ];
 var PAY = 400, ROUNDS = 8, UNIT = "Week", RATE = 0.05, HARD = false, S, queue, cur, interest;
 var $ = function(id){return document.getElementById(id)};
