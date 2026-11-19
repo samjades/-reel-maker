@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Budget Marbles — Give Every Naira a Job</title>
+<style>
+:root{--bg:#07131f;--card:#0f2234;--text:#f2f7ff;--muted:#9fb3c8;--gold:#ffd166;--mint:#5eead4;--line:#ffffff22;--field:#0a1826;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);color-scheme:dark}
+@media(prefers-color-scheme:light){:root:not([data-theme="dark"]){--bg:#eef3f9;--card:#ffffff;--text:#13243a;--muted:#52667c;--line:#0b1f3a22;--field:#f1f5fa;color-scheme:light}}
+:root[data-theme="dark"]{--bg:#07131f;--card:#0f2234;--text:#f2f7ff;--muted:#9fb3c8;--line:#ffffff22;--field:#0a1826}
+*{box-sizing:border-box}html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--text);font:15px/1.45 system-ui,Segoe UI,Arial}
+header{padding:12px 16px}h1{margin:0;font-size:clamp(19px,3.2vw,26px)}h1 span{color:var(--gold)}small{color:var(--muted)}
+main{max-width:1100px;margin:auto;padding:0 12px 18px;display:grid;gap:12px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;overflow:hidden}
+#stage{position:relative;height:min(74vh,720px);min-height:400px;background:#07131f}#c{width:100%;height:100%;display:block}
+#hud{position:absolute;left:10px;top:10px;padding:9px 14px;border-radius:14px;background:#07131fcc;color:#f2f7ff;min-width:170px}
+#hud .k{font-size:11px;letter-spacing:.14em;color:#9fb3c8}#dist{font-size:clamp(22px,4.6vw,34px);font-weight:800;color:#ffd166;line-height:1.1}
+.pb{height:7px;border-radius:9px;background:#ffffff22;margin:6px 0 4px;overflow:hidden}.pb i{display:block;height:100%;width:0;background:linear-gradient(90deg,#5eead4,#ffd166)}#of{font-size:12px;color:#9fb3c8}
+#ban{position:absolute;left:50%;top:16%;transform:translateX(-50%);padding:10px 20px;border-radius:99px;background:#ffd166;color:#3a2a00;font-weight:800;font-size:clamp(14px,2.8vw,21px);opacity:0;pointer-events:none;text-align:center;max-width:94%}
+#ban.show{animation:bn 4s ease-out forwards}
+@keyframes bn{0%{opacity:0;transform:translateX(-50%) scale(.6)}8%{opacity:1;transform:translateX(-50%) scale(1.08)}85%{opacity:1;transform:translateX(-50%) scale(1)}100%{opacity:0}}
+#legend{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;padding:10px}
+.cd{border:1px solid var(--line);border-radius:12px;padding:8px 10px;background:var(--field)}.cd b{display:block;font-size:15px;font-weight:800}.cd .pc{font-size:12px;font-weight:600;color:var(--text)}
+.cd .am{font-size:22px;font-weight:900;color:var(--gold)}.bb{height:5px;border-radius:5px;background:#ffffff22;margin-top:4px;overflow:hidden}.bb u{display:block;height:100%;width:0}
+.cd.hot{animation:hot .6s}@keyframes hot{0%{box-shadow:0 0 0 0 #5eead4}100%{box-shadow:0 0 0 14px #5eead400}}
+.ctl{padding:12px;display:grid;gap:10px}.row{display:flex;flex-wrap:wrap;gap:10px;align-items:end}
+label{display:grid;gap:3px;color:var(--muted);font-size:12px}
+button,select,input{font:inherit}
+button{border:0;border-radius:10px;padding:9px 15px;background:var(--mint);color:#06221e;font-weight:700;cursor:pointer}button.s{background:#2a4561;color:#fff}button.r{background:#ff6b7a;color:#2a0509}
+select,input[type=number],input[type=text]{background:var(--field);color:var(--text);border:1px solid var(--line);border-radius:9px;padding:7px;width:130px}
+input[type=checkbox]{width:22px;height:22px;accent-color:#5eead4}
+#cats{display:flex;flex-wrap:wrap;gap:8px}.cr{display:flex;align-items:center;gap:5px;color:var(--muted)}.cr input[type=text]{width:130px}.cr input[type=number]{width:70px}
+#sum{align-self:center;color:var(--gold);font-size:13px}#msg{color:var(--muted);font-size:12px}
+</style></head><body>
+<header><h1>BUDGET <span>MARBLES</span></h1><small>Your paycheck falls as marbles. Watch every one find its job.</small></header>
+<main>
+<section class="card">
+<div id="stage"><canvas id="c"></canvas>
+ <div id="hud"><div class="k">PAYCHECK GIVEN A JOB</div><div id="dist">0</div><div class="pb"><i id="bar"></i></div><div id="of"></div></div>
+ <div id="ban"></div></div>
+<div id="legend"></div>
+</section>
+<section class="card ctl">
+ <div class="row">
+  <label>Budget style<select id="pre"><option value="detailed">Detailed (6 bins)</option><option value="n532">Needs / Wants / Savings</option><option value="debt">Debt-payoff focus</option><option value="first">Pay yourself first (4 bins)</option></select></label>
+  <label>Paycheck<input type="number" id="pay" value="3000" min="1" step="any"></label>
+  <label>Currency<select id="cur"><option>$</option><option>€</option><option>£</option><option selected>₦</option><option>₹</option></select></label>
+  <label>Marbles<select id="mc"><option value="30">30</option><option value="60" selected>60</option><option value="100">100</option><option value="150">150</option></select></label>
+  <label>Drop speed <b id="gv">0.14</b>s<input type="range" id="gap" min="0.06" max="0.35" step="0.01" value="0.14" style="width:140px"></label>
+ </div>
+ <div class="row">
+  <label>Sound<select id="sm"><option value="cats" selected>Each bin has its own sound (Savings = cha-ching)</option><option value="cash">Cha-ching on every landing</option><option value="music">Musical notes by bin</option><option value="off">Silent</option></select></label>
+  <label><span>Peg ticks</span><input type="checkbox" id="tk" checked></label>
+  <label><span>Pay yourself first</span><input type="checkbox" id="pf"></label>
+  <button id="play">▶ Pay day!</button><button class="s" id="stop">■ Reset</button><button class="r" id="rec">● Record</button>
+ </div>
+ <div class="row"><div id="cats"></div><div id="sum"></div></div>
+ <div id="msg">Percentages are examples, not advice. Change the names and numbers to match your own budget.</div>
+</section>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+<script>
+(()=>{
+const $=s=>document.querySelector(s),msg=t=>$('#msg').textContent=t;
+const R0=new THREE.WebGLRenderer({canvas:$('#c'),antialias:true,preserveDrawingBuffer:true});R0.setPixelRatio(Math.min(devicePixelRatio,2));
+const S=new THREE.Scene();
+{const c=document.createElement('canvas');c.width=256;c.height=512;const x=c.getContext('2d'),g=x.createLinearGradient(0,0,0,512);g.addColorStop(0,'#10324a');g.addColorStop(1,'#07131f');x.fillStyle=g;x.fillRect(0,0,256,512);
+ for(let i=0;i<60;i++){x.fillStyle=`rgba(255,215,120,${.04+Math.random()*.12})`;x.beginPath();x.arc(Math.random()*256,Math.random()*512,2+Math.random()*14,0,7);x.fill()}
+ const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;S.background=t}
+{const pm=new THREE.PMREMGenerator(R0),es=new THREE.Scene();es.background=new THREE.Color(0x1a2a44);
+ [[0,9,0,12,.5,12,0xffffff],[-9,3,2,.5,8,8,0xffe0a8],[9,3,2,.5,8,8,0x9ec8ff],[0,3,10,14,6,.5,0xc9f0ff]].forEach(([x,y,z,w,h,d,c])=>{const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),new THREE.MeshBasicMaterial({color:c}));m.position.set(x,y,z);es.add(m)});
+ S.environment=pm.fromScene(es,.03).texture}
+const cam=new THREE.PerspectiveCamera(40,1,.1,100);
+S.add(new THREE.HemisphereLight(0xdfe9ff,0x203040,1.1));
+const sun=new THREE.DirectionalLight(0xffffff,2.2);sun.position.set(-6,14,12);S.add(sun);
+const G=new THREE.Group();S.add(G);
+const mt=(c,m=.3,r=.35)=>new THREE.MeshStandardMaterial({color:c,metalness:m,roughness:r,envMapIntensity:.8});
+// ---------- audio
+let AC,MG,REC,PG,NB;const hz=m=>440*2**((m-69)/12),PEN=[0,2,4,7,9];
+function audioOn(){if(!AC){AC=new(window.AudioContext||window.webkitAudioContext)();MG=AC.createGain();MG.gain.value=.55;const c=AC.createDynamicsCompressor();MG.connect(c);c.connect(AC.destination);REC=AC.createMediaStreamDestination();c.connect(REC)}AC.resume()}
+function osc(ty,f,t,d,v,f2){const o=AC.createOscillator(),g=AC.createGain();o.type=ty;o.frequency.setValueAtTime(f,t);if(f2)o.frequency.exponentialRampToValueAtTime(f2,t+d);g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(v,t+.006);g.gain.exponentialRampToValueAtTime(.0008,t+d);o.connect(g);g.connect(PG);o.start(t);o.stop(t+d+.05)}
+function nz(t,d,v,hp){if(!NB){NB=AC.createBuffer(1,AC.sampleRate*.3|0,AC.sampleRate);const a=NB.getChannelData(0);for(let i=0;i<a.length;i++)a[i]=Math.random()*2-1}const s=AC.createBufferSource(),g=AC.createGain(),f=AC.createBiquadFilter();f.type='highpass';f.frequency.value=hp;s.buffer=NB;g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(.001,t+d);s.connect(f);f.connect(g);g.connect(PG);s.start(t);s.stop(t+d+.02)}
+const bell=(f,t,d,v)=>[[1,1,1],[2.76,.35,.6],[5.4,.15,.35]].forEach(([k,a,l])=>osc('sine',f*k,t,d*l,v*a));
+const ching=(t,v=.5)=>{nz(t,.05,v*.5,2500);bell(1318.5,t+.02,.7,v);bell(1975.5,t+.11,1.1,v)};
+function binSound(kind,t,j){const v=.4;
+ if(kind==='cash')ching(t,v);else if(kind==='thud')osc('sine',150,t,.28,v*1.2,45);else if(kind==='pop')osc('sine',650,t,.12,v,260);
+ else if(kind==='blip')osc('square',880,t,.08,v*.25);else if(kind==='chime')bell(988,t,.8,v*.8);
+ else if(kind==='sparkle')[1760,2349,2794].forEach((f,q)=>osc('sine',f,t+q*.05,.3,v*.5));else osc('sawtooth',700,t,.16,v*.25,160)}
+// ---------- sparkles
+const NP=260,pp=new Float32Array(NP*3).fill(-99),pv=new Float32Array(NP*3),pl=new Float32Array(NP),pc=new Float32Array(NP*3);let pi=0;
+const pg=new THREE.BufferGeometry();pg.setAttribute('position',new THREE.BufferAttribute(pp,3));pg.setAttribute('color',new THREE.BufferAttribute(pc,3));
+const pts=new THREE.Points(pg,new THREE.PointsMaterial({size:.22,vertexColors:true,transparent:true,depthWrite:false,blending:THREE.AdditiveBlending}));pts.frustumCulled=false;S.add(pts);
+function burst(x,y,n,col){const c=new THREE.Color(col);for(let k=0;k<n;k++){const i=pi++%NP,a=Math.random()*6.28,s=2+Math.random()*4;pp.set([x,y,.5],i*3);pv.set([Math.cos(a)*s,Math.sin(a)*s+3,(Math.random()-.5)*2],i*3);pl[i]=1+Math.random()*.8;const w=Math.random()<.35?new THREE.Color(1,1,1):c;pc.set([w.r,w.g,w.b],i*3)}}
+// ---------- budget data
+const PRE={detailed:[['🏠','Rent / Housing',35,'#ff7e86','thud'],['🍎','Food',15,'#ffb454','pop'],['🚌','Transport',10,'#8eb8ff','blip'],['💡','Bills',10,'#c28aff','chime'],['🎉','Fun',10,'#ff91d2','sparkle'],['💰','Savings',20,'#5eead4','cash']],
+ n532:[['🏠','Needs',50,'#ff7e86','thud'],['🎉','Wants',30,'#ff91d2','sparkle'],['💰','Savings',20,'#5eead4','cash']],
+ debt:[['🏠','Housing',30,'#ff7e86','thud'],['🍎','Food',12,'#ffb454','pop'],['💡','Bills',13,'#c28aff','chime'],['💳','Debt payoff',20,'#8eb8ff','zap'],['💰','Savings',15,'#5eead4','cash'],['🎉','Fun',10,'#ff91d2','sparkle']],
+ first:[['💰','Savings',30,'#5eead4','cash'],['🏠','Needs',50,'#ff7e86','thud'],['🎉','Fun',10,'#ff91d2','sparkle'],['🎁','Giving',10,'#ffd166','chime']]};
+let cats=[];
+const fmt=v=>{const s=$('#cur').value;return s+(Math.abs(v-Math.round(v))<.005?Math.round(v).toLocaleString():v.toFixed(2))};
+function loadPre(){cats=PRE[$('#pre').value].map(a=>({e:a[0],n:a[1],p:a[2],c:a[3],s:a[4]}));
+ $('#cats').innerHTML=cats.map((c,i)=>`<div class="cr"><span style="color:${c.c}">●</span><input type="text" class="cn" data-i="${i}" value="${c.n}" maxlength="18"><input type="number" class="cp" data-i="${i}" min="0" max="100" value="${c.p}">%</div>`).join('');
+ document.querySelectorAll('.cn').forEach(e=>e.oninput=()=>{cats[+e.dataset.i].n=e.value;if(!run)build()});
+ document.querySelectorAll('.cp').forEach(e=>e.oninput=()=>{cats[+e.dataset.i].p=Math.max(0,+e.value||0);if(!run)build()})}
+function counts(){const M=+$('#mc').value,tp=cats.reduce((a,c)=>a+c.p,0),s=tp||cats.length,raw=cats.map(c=>(tp?c.p:1)/s*M),n=raw.map(Math.floor);let rem=M-n.reduce((a,b)=>a+b,0);raw.map((r,i)=>[r-Math.floor(r),i]).sort((a,b)=>b[0]-a[0]).forEach(([,i])=>{if(rem>0){n[i]++;rem--}});return n}
+// ---------- board
+const MAXM=160,BRD=.2,PR=.09,YP=12.2,BY=.3;
+const im=new THREE.InstancedMesh(new THREE.SphereGeometry(BRD,20,14),new THREE.MeshStandardMaterial({metalness:.3,roughness:.08,envMapIntensity:1.5}),MAXM);im.instanceMatrix.setUsage(THREE.DynamicDrawUsage);im.frustumCulled=false;im.count=0;
+for(let i=0;i<MAXM;i++)im.setColorAt(i,new THREE.Color(1,1,1));S.add(im);
+let pegM=null,pegIdx=new Map(),pegF=[],bins=[],mar=[],Rr=0,h=.6,rh=.7,Tp=.19,hv={vy:0,g:0},fitZ=20,unit=0,goalN=0,landedN=0,pay=0;
+const ty=r=>YP-r*rh+PR+BRD,sprite=(w,hh,draw,cw=256,ch=96)=>{const c=document.createElement('canvas');c.width=cw;c.height=ch;draw(c.getContext('2d'));const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;const s=new THREE.Sprite(new THREE.SpriteMaterial({map:t,transparent:true,depthWrite:false}));s.scale.set(w,hh,1);return s};
+function build(){while(G.children.length)G.remove(G.children[0]);if(pegM){S.remove(pegM);pegM=null}mar=[];im.count=0;landedN=0;
+ const k=cats.length,Pn=k*Math.ceil(12/k);Rr=Pn-1;h=Math.min(.62,8.6/Rr);rh=Math.min(.72,8.2/Rr);const grp=Pn/k;
+ {const a=.18,dy=-rh,s=(Math.sqrt(2*a)+Math.sqrt(2*(a-dy)))/Tp;hv={vy:s*Math.sqrt(2*a),g:s*s}}
+ // pegs
+ const pl=[];for(let r=0;r<Rr;r++)for(let m=-r;m<=r;m+=2)pl.push([r,m]);
+ pegM=new THREE.InstancedMesh(new THREE.CylinderGeometry(PR,PR,.5,10).rotateX(Math.PI/2),mt(0xffffff,.9,.25),pl.length);pegIdx=new Map();pegF=new Float32Array(pl.length);
+ const d=new THREE.Object3D();pl.forEach(([r,m],i)=>{d.position.set(m*h,YP-r*rh,0);d.updateMatrix();pegM.setMatrixAt(i,d.matrix);pegM.setColorAt(i,new THREE.Color(.8,.86,.95));pegIdx.set(r*64+m+32,i)});S.add(pegM);
+ // back panel
+ const bp=new THREE.Mesh(new THREE.PlaneGeometry(Rr*2*h+3,YP-BY+4),new THREE.MeshBasicMaterial({color:0x0a2236,transparent:true,opacity:.55}));bp.position.set(0,(YP+BY)/2+1,-.5);G.add(bp);
+ // bins
+ const n=counts(),binTop=YP-Rr*rh-.35,binH=binTop-BY;pay=Math.max(1,+$('#pay').value||1);unit=pay/(+$('#mc').value);goalN=+$('#mc').value;
+ bins=cats.map((c,j)=>{const pLo=j*grp,pHi=(j+1)*grp-1,xl=(-Rr+2*pLo-1)*h,xr=(-Rr+2*pHi+1)*h,xc=(xl+xr)/2,w=xr-xl,cols=Math.max(1,Math.floor(w/.44)),rowsN=Math.ceil(n[j]/cols),b={j,xl,xr,xc,w,cols,cnt:0,n:n[j],amt:0,fl:0,pLo,rowSp:Math.min(.4,(binH-.5)/Math.max(1,rowsN)),col:c.c};
+  const fl=new THREE.Mesh(new THREE.BoxGeometry(w-.1,.14,.6),mt(c.c,.2,.4));fl.position.set(xc,BY-.07,0);G.add(fl);b.mesh=fl;
+  const wl=new THREE.Mesh(new THREE.BoxGeometry(.07,binH,.6),mt(0x6b819a,.4,.4));wl.position.set(xl,BY+binH/2,0);G.add(wl);
+  if(j===k-1){const w2=wl.clone();w2.position.x=xr;G.add(w2)}
+  const tint=new THREE.Mesh(new THREE.PlaneGeometry(w-.1,binH),new THREE.MeshBasicMaterial({color:c.c,transparent:true,opacity:.09}));tint.position.set(xc,BY+binH/2,-.2);G.add(tint);
+  const pct=Math.round(n[j]/goalN*100),lb=sprite(Math.min(w*1.04,2.9),Math.min(w*1.04,2.9)*.375,x=>{x.fillStyle='#07131fdd';x.beginPath();(x.roundRect||x.rect).call(x,6,6,500,180,26);x.fill();x.strokeStyle=c.c;x.lineWidth=6;x.stroke();x.textAlign='center';x.fillStyle='#fff';x.font='56px system-ui,Arial';x.fillText(c.e,256,62);let fs=50;x.font='900 '+fs+'px system-ui,Arial';while(x.measureText(c.n).width>470&&fs>24){fs-=2;x.font='900 '+fs+'px system-ui,Arial'}x.lineWidth=7;x.lineJoin='round';x.strokeStyle='#000';x.strokeText(c.n,256,118);x.fillStyle='#fff';x.fillText(c.n,256,118);x.font='900 40px system-ui,Arial';x.strokeText(pct+'%',256,166);x.fillStyle='#ffd166';x.fillText(pct+'%',256,166)},512,192);lb.position.set(xc,-.8,0);G.add(lb);return b});
+ const ptx='💵 PAYCHECK '+fmt(pay),ps=sprite(6.4,1.2,x=>{x.textAlign='center';let fs=50;x.font='900 '+fs+'px system-ui,Arial';while(x.measureText(ptx).width>480&&fs>24){fs-=2;x.font='900 '+fs+'px system-ui,Arial'}x.lineWidth=9;x.lineJoin='round';x.strokeStyle='#000';x.strokeText(ptx,256,66);x.fillStyle='#ffd166';x.fillText(ptx,256,66)},512,96);ps.position.set(0,YP+2.7,0);G.add(ps);
+ const nz2=new THREE.Mesh(new THREE.CylinderGeometry(.35,.18,.7,16),mt(0xffc85a,.9,.2));nz2.position.set(0,YP+1.55,0);G.add(nz2);
+ // legend + hud
+ const tot=cats.reduce((a,c)=>a+c.p,0);$('#sum').textContent='Total '+tot+'%'+(tot!==100?' (scaled to 100%)':'');
+ $('#legend').innerHTML=cats.map((c,j)=>`<div class="cd" id="cd${j}"><b>${c.e} ${c.n}</b><span class="pc">${Math.round(n[j]/goalN*100)}% · target ${fmt(n[j]*unit)}</span><div class="am" id="am${j}">${fmt(0)}</div><div class="bb"><u id="bb${j}" style="background:${c.c}"></u></div></div>`).join('');
+ $('#dist').textContent=fmt(0);$('#bar').style.width='0';$('#of').textContent='of '+fmt(pay)+' · each marble = '+fmt(unit)}
+// ---------- run
+let run=false,t0=0,simT=0,rec=null,fin=false;const F=Math.sqrt(2*1.3/22);
+function plan(){const n=counts(),gap=+$('#gap').value,T0=.6,grp=(Rr+1)/cats.length;let order=[];n.forEach((c,j)=>{for(let i=0;i<c;i++)order.push(j)});
+ for(let i=order.length-1;i>0;i--){const q=Math.random()*(i+1)|0;[order[i],order[q]]=[order[q],order[i]]}
+ if($('#pf').checked)order=[...order.filter(j=>cats[j].s==='cash'),...order.filter(j=>cats[j].s!=='cash')];
+ bins.forEach(b=>{b.cnt=0;b.amt=0;b.fl=0});
+ mar=order.map((b,i)=>{const B=bins[b],p=B.pLo+(Math.random()*grp|0),ar=[...Array(Rr).keys()];for(let q=ar.length-1;q>0;q--){const z=Math.random()*(q+1)|0;[ar[q],ar[z]]=[ar[z],ar[q]]}
+  const rt=new Set(ar.slice(0,p)),mx=[0];for(let r=0;r<Rr;r++)mx.push(mx[r]+(rt.has(r)?1:-1));
+  const idx=B.cnt++,sp=Math.min(.46,(B.w-.3)/B.cols),sx=B.xc+((idx%B.cols)-(B.cols-1)/2)*sp+(Math.random()-.5)*.04,sy=BY+.25+Math.floor(idx/B.cols)*B.rowSp,xR=mx[Rr]*h,yR=ty(Rr),vyE=hv.vy-hv.g*Tp,dl=yR-sy,fb=(vyE+Math.sqrt(vyE*vyE+44*dl))/22,st=T0+i*gap;
+  im.setColorAt(i,new THREE.Color(B.col));return{b:B,mx,sx,sy,xR,yR,vyE,fb,st,tl:st+F+Rr*Tp+fb,landed:false,sch:false}});
+ if(im.instanceColor)im.instanceColor.needsUpdate=true}
+function sched(m){const mode=$('#sm').value,tk=$('#tk').checked,base=t0+m.st+F;
+ if(tk)for(let r=0;r<Rr;r++)osc('sine',hz(84+PEN[((m.mx[r]+Rr)/2|0)%5]),base+r*Tp,.07,.05);
+ const c=cats[m.b.j],tl=t0+m.tl;
+ if(mode==='cats')binSound(c.s,tl,m.b.j);else if(mode==='cash')ching(tl,.35);else if(mode==='music')bell(hz(60+12*(m.b.j/5|0)+PEN[m.b.j%5]),tl,1,.4)}
+function play(){audioOn();if(PG){PG.gain.value=0;PG.disconnect()}build();plan();PG=AC.createGain();PG.connect(MG);t0=AC.currentTime+.25;run=true;fin=false;msg('Pay day! Press ● Record first if you want to save a video.')}
+function land(m){const b=m.b;b.cnt;b.amt+=unit;b.fl=1;landedN++;const j=b.j,el=$('#am'+j);el.textContent=fmt(Math.round(b.amt*100)/100);$('#bb'+j).style.width=Math.min(100,b.amt/Math.max(unit,b.n*unit)*100)+'%';
+ const cd=$('#cd'+j);cd.classList.remove('hot');void cd.offsetWidth;cd.classList.add('hot');
+ const d=landedN*unit;$('#dist').textContent=fmt(Math.round(d*100)/100);$('#bar').style.width=(landedN/goalN*100)+'%';
+ if(cats[j].s==='cash')burst(b.xc,BY+1.2,14,b.col);else burst(b.xc,BY+.8,5,b.col);
+ if(landedN===goalN)finish()}
+function finish(){run=false;fin=true;const sv=cats.map((c,j)=>c.s==='cash'?bins[j].amt:0).reduce((a,b)=>a+b,0),sc=cats.findIndex(c=>c.s==='cash'),rate=Math.round(sv/pay*100);
+ const t=sc>=0?`✅ Every ${$('#cur').value} has a job! Savings: ${fmt(Math.round(sv*100)/100)} (${rate}%)`:`✅ Every ${$('#cur').value} has a job!`;
+ const bn=$('#ban');bn.textContent=t;bn.classList.remove('show');void bn.offsetWidth;bn.classList.add('show');
+ if(sc>=0){burst(bins[sc].xc,BY+2,120,'#5eead4');burst(bins[sc].xc,BY+2.5,80,'#ffd166');if(AC){PG=AC.createGain();PG.connect(MG);const t1=AC.currentTime+.05;if($('#sm').value!=='off')[0,1,2].forEach(q=>ching(t1+q*.2,.4))}}
+ msg(sc>=0?`Savings rate: ${rate}%. Tip: try raising it by 1% each month.`:'Done! Edit the bins and run it again.')}
+$('#play').onclick=play;
+$('#stop').onclick=()=>{run=false;fin=false;if(PG){PG.gain.value=0;PG.disconnect()}build();msg('Reset. Press ▶ Pay day!')};
+$('#pre').onchange=()=>{loadPre();if(!run)build()};
+['pay','cur','mc'].forEach(id=>$('#'+id).oninput=()=>{if(!run)build()});
+$('#gap').oninput=e=>$('#gv').textContent=e.target.value;
+$('#rec').onclick=()=>{if(rec){rec.stop();return}
+ try{audioOn();const cs=$('#c').captureStream(60);REC.stream.getAudioTracks().forEach(t=>cs.addTrack(t));
+  const mime=['video/mp4;codecs=avc1,mp4a.40.2','video/mp4','video/webm;codecs=vp9,opus','video/webm'].find(t=>MediaRecorder.isTypeSupported(t));if(!mime)return msg('Video recording is not supported in this browser.');
+  const ch=[];rec=new MediaRecorder(cs,{mimeType:mime,videoBitsPerSecond:8e6});rec.ondataavailable=e=>e.data.size&&ch.push(e.data);
+  rec.onstop=()=>{const ext=mime.includes('mp4')?'mp4':'webm',a=document.createElement('a');a.href=URL.createObjectURL(new Blob(ch,{type:mime}));a.download='budget-marbles.'+ext;a.click();rec=null;$('#rec').textContent='● Record';msg('Saved as '+ext.toUpperCase()+'.')};
+  rec.start(250);$('#rec').textContent='■ Stop & save';msg('Recording… press ▶ Pay day!, then ■ Stop & save when it ends.')}catch(e){rec=null;msg('Recording failed in this browser.')}};
+function resize(){const w=$('#stage').clientWidth,hh=$('#stage').clientHeight,t=Math.tan(cam.fov*Math.PI/360);cam.aspect=w/hh;cam.updateProjectionMatrix();R0.setSize(w,hh,false);fitZ=Math.max(10/(cam.aspect*t),8.2/t);cam.position.set(0,6.6,fitZ);cam.lookAt(0,6.6,0)}
+addEventListener('resize',resize);
+// ---------- loop
+const clock=new THREE.Clock(),dm=new THREE.Object3D(),pc0=new THREE.Color(.8,.86,.95),gc=new THREE.Color(1,.82,.3);
+function frame(){requestAnimationFrame(frame);const dt=Math.min(clock.getDelta(),.05);simT+=dt;
+ if(run||fin||mar.length){const t=run?AC.currentTime-t0:1e9;let cnt=0;
+  mar.forEach((m,i)=>{if(!m.sch&&run&&t>=m.st-.5){m.sch=true;sched(m)}
+   const tt=t-m.st;if(tt<0)return;cnt=i+1;let x,y;
+   if(tt<F){x=0;y=ty(0)+1.3-11*tt*tt}
+   else{const u=tt-F;if(u<Rr*Tp){const r=Math.floor(u/Tp),w=u-r*Tp,a=m.mx[r];x=(a+(m.mx[r+1]-a)*w/Tp)*h;y=ty(r)+hv.vy*w-.5*hv.g*w*w;if(w<.1){const id=pegIdx.get(r*64+a+32);if(id!==undefined)pegF[id]=Math.max(pegF[id],1-w/.1)}}
+    else{const v=u-Rr*Tp;if(v<m.fb){x=m.xR+(m.sx-m.xR)*v/m.fb;y=m.yR+m.vyE*v-11*v*v}else{x=m.sx;y=m.sy;if(!m.landed&&run){m.landed=true;land(m)}}}}
+   dm.position.set(x,y,0);dm.updateMatrix();im.setMatrixAt(i,dm.matrix)});
+  im.count=cnt;im.instanceMatrix.needsUpdate=true}
+ if(pegM){for(let i=0;i<pegF.length;i++)pegF[i]=Math.max(0,pegF[i]-dt*5);
+  const c=new THREE.Color();for(let i=0;i<pegF.length;i++){c.copy(pc0).lerp(gc,pegF[i]);pegM.setColorAt(i,c)}pegM.instanceColor.needsUpdate=true}
+ bins.forEach(b=>{b.fl=Math.max(0,b.fl-dt*3);b.mesh.material.emissive.set(b.col).multiplyScalar(b.fl*.9)});
+ for(let i=0;i<NP;i++)if(pl[i]>0){pl[i]-=dt;pv[i*3+1]-=9*dt;for(let k=0;k<3;k++)pp[i*3+k]+=pv[i*3+k]*dt;for(let k=0;k<3;k++)pc[i*3+k]*=1-dt*.9;if(pl[i]<=0)pp[i*3+1]=-99}
+ pg.attributes.position.needsUpdate=pg.attributes.color.needsUpdate=true;R0.render(S,cam)}
+loadPre();resize();build();frame();
+})();
+</script></body></html>
