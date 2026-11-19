@@ -1,0 +1,1650 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Follow the Capital</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@600;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* Layout: one column, phone first. HUD on top, square shuffle stage in the middle, status, tip and controls below. */
+:root {
+  --bg: #05131a;
+  --panel: #0a212b;
+  --ink: #e4f6f1;
+  --muted: #7ea3a1;
+  --teal: #1fa88f;
+  --teal-hi: #c4f6ea;
+  --gold: #f2b84b;
+  --gain: #4be3a8;
+  --loss: #ff6b5e;
+  --line: #15394a;
+  --f-display: 'Unbounded', 'Arial Black', 'Helvetica Neue', sans-serif;
+  --f-body: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { min-height: 100%; }
+body {
+  background: radial-gradient(120% 70% at 50% 28%, #0b2a35 0%, var(--bg) 62%) no-repeat, var(--bg);
+  background-color: var(--bg);
+  color: var(--ink);
+  font-family: var(--f-body);
+  font-size: 15px;
+  line-height: 1.45;
+  padding-block: 18px 28px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.app { max-width: 540px; margin: 0 auto; display: flex; flex-direction: column; gap: 14px; }
+
+header { display: flex; justify-content: space-between; align-items: flex-end; gap: 12px; flex-wrap: wrap; }
+h1 {
+  font-family: var(--f-display); font-weight: 800; font-size: clamp(22px, 7vw, 32px);
+  line-height: 1.05; letter-spacing: .01em; margin: 0; text-transform: uppercase; text-wrap: balance;
+}
+.badge {
+  font-family: var(--f-display); font-weight: 600; font-size: 11px; letter-spacing: .14em; text-transform: uppercase;
+  color: var(--gold); border: 1px solid var(--gold); padding: 5px 9px; border-radius: 4px; white-space: nowrap;
+}
+.badge[hidden] { display: none; }
+
+.hud { display: grid; grid-template-columns: 1fr auto; gap: 12px; align-items: center; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; }
+.hud .lbl { font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+.value { font-family: var(--f-display); font-weight: 600; font-size: clamp(22px, 7vw, 30px); font-variant-numeric: tabular-nums; margin-top: 2px; }
+.value.up { color: var(--gain); } .value.down { color: var(--loss); }
+.side { display: flex; flex-direction: column; gap: 8px; align-items: flex-end; }
+.pips { display: flex; gap: 6px; }
+.pip { width: 14px; height: 14px; border-radius: 50%; background: var(--teal); border: 2px solid var(--teal-hi); }
+.pip.gone { background: transparent; border-color: var(--loss); position: relative; }
+.pip.gone::after { content: ""; position: absolute; left: 1px; right: 1px; top: 4px; height: 2px; background: var(--loss); transform: rotate(-45deg); }
+.streak { font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.streak b { color: var(--gold); font-weight: 600; }
+
+.modes { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.mode {
+  font: inherit; color: var(--ink); background: transparent; border: 1px solid var(--line); border-radius: 8px;
+  padding: 9px 6px; cursor: pointer; display: flex; flex-direction: column; gap: 2px; align-items: center; min-width: 0;
+}
+.mode strong { font-family: var(--f-display); font-size: 12px; letter-spacing: .06em; text-transform: uppercase; }
+.mode span { font-size: 11px; color: var(--muted); }
+.mode[aria-pressed="true"] { border-color: var(--teal); background: rgba(31,168,143,.14); }
+.mode[aria-pressed="true"] strong { color: var(--teal-hi); }
+.mode.insane[aria-pressed="true"] { border-color: var(--loss); background: rgba(255,107,94,.12); }
+.mode.insane[aria-pressed="true"] strong { color: var(--loss); }
+.mode:disabled { opacity: .45; cursor: not-allowed; }
+:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+
+.stage { position: relative; width: 100%; aspect-ratio: 1 / 1.04; margin-inline: auto; }
+.cup {
+  position: absolute; transform: translate(-50%, -50%); aspect-ratio: 100 / 130;
+  padding: 0; border: 0; background: none; font: inherit; color: inherit; cursor: default;
+  transition: left var(--sd, .5s) cubic-bezier(.45,.05,.3,1), top var(--sd, .5s) cubic-bezier(.45,.05,.3,1);
+  z-index: 1;
+}
+.cup.moving { z-index: 5; }
+.cup::after {
+  content: ""; position: absolute; left: 6%; right: 6%; bottom: -7%; height: 14%;
+  background: radial-gradient(closest-side, rgba(0,0,0,.55), transparent); z-index: -1;
+}
+.cup .body { position: absolute; inset: 0; transition: transform .38s cubic-bezier(.3,.1,.25,1); z-index: 2; }
+.cup .body svg { width: 100%; height: 100%; display: block; overflow: visible; }
+.cup.lift .body { transform: translateY(-52%); }
+.cup.pickable { cursor: pointer; }
+.cup.pickable:hover .body, .cup.pickable:focus-visible .body { transform: translateY(-6%); }
+.cup.wrong .body { animation: shake .4s; }
+.coin {
+  position: absolute; left: 50%; bottom: 3%; width: 46%; aspect-ratio: 1; transform: translateX(-50%) scale(.6); opacity: 0;
+  border-radius: 50%; z-index: 1; display: grid; place-items: center;
+  background: radial-gradient(circle at 35% 30%, #fff0b8, var(--gold) 55%, #b07a1d);
+  box-shadow: 0 0 0 3px #8a5d12 inset, 0 0 18px rgba(242,184,75,.55);
+  font-family: var(--f-display); font-weight: 800; color: #6b4608; font-size: clamp(10px, 4.2vw, 22px);
+  transition: opacity .2s .15s, transform .3s .15s;
+}
+.cup.has .coin.on { opacity: 1; transform: translateX(-50%) scale(1); }
+@keyframes shake { 0%,100% { translate: 0 0; } 25% { translate: -5px 0; } 75% { translate: 5px 0; } }
+
+.status { min-height: 48px; text-align: center; display: flex; flex-direction: column; justify-content: center; gap: 2px; }
+.status .main { font-weight: 600; font-size: 16px; }
+.status .sub { color: var(--muted); font-size: 13px; }
+.status.good .main { color: var(--gain); } .status.bad .main { color: var(--loss); }
+
+.tip { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 11px 14px; font-size: 13px; color: var(--muted); }
+.tip b { display: block; color: var(--gold); font-size: 11px; letter-spacing: .12em; text-transform: uppercase; font-weight: 600; margin-bottom: 2px; }
+.tip[hidden] { display: none; }
+
+.controls { display: flex; gap: 10px; align-items: stretch; }
+.go {
+  flex: 1; font-family: var(--f-display); font-weight: 800; font-size: 14px; letter-spacing: .08em; text-transform: uppercase;
+  background: var(--gold); color: #2b1c02; border: 0; border-radius: 10px; padding: 15px 14px; cursor: pointer;
+}
+.go:disabled { opacity: .4; cursor: not-allowed; }
+select {
+  font: inherit; color: var(--ink); background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 0 10px; min-width: 76px;
+}
+.fine { font-size: 11px; color: var(--muted); text-align: center; }
+.hdr-r { display: flex; gap: 8px; align-items: center; }
+.hdr-r select { min-height: 38px; min-width: 68px; }
+.snd { font: inherit; font-size: 12px; font-weight: 600; color: var(--ink); background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 0 12px; min-height: 38px; cursor: pointer; white-space: nowrap; }
+.snd[aria-pressed="false"] { color: var(--muted); }
+.tabs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 4px; }
+.tab { font: inherit; font-size: 12px; font-weight: 600; color: var(--muted); background: transparent; border: 0; border-radius: 7px; padding: 10px 2px; cursor: pointer; min-width: 0; }
+.tab[aria-pressed="true"] { background: var(--teal); color: #032019; }
+.game { display: flex; flex-direction: column; gap: 14px; }
+.panel { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 14px; }
+.duo { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.choice { font-family: var(--f-display); font-weight: 800; font-size: 13px; letter-spacing: .06em; text-transform: uppercase; border: 0; border-radius: 10px; padding: 17px 8px; cursor: pointer; }
+.choice.up { background: var(--gain); color: #06261a; }
+.choice.down { background: var(--loss); color: #2c0a07; }
+.choice:disabled { opacity: .4; cursor: not-allowed; }
+.tickrow { display: flex; align-items: baseline; gap: 10px; margin-bottom: 6px; }
+.tick { font-family: var(--f-display); font-weight: 800; letter-spacing: .08em; color: var(--teal-hi); }
+.price { font-family: var(--f-display); font-weight: 600; font-size: 22px; font-variant-numeric: tabular-nums; margin-left: auto; }
+.chg { font-size: 13px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.chg.up { color: var(--gain); } .chg.down { color: var(--loss); }
+.chart svg { width: 100%; height: auto; display: block; }
+.chart .grid line { stroke: var(--line); stroke-width: 1; }
+#hl-line { fill: none; stroke: var(--teal-hi); stroke-width: 2.5; stroke-linejoin: round; stroke-linecap: round; }
+#hl-area { fill: rgba(31,168,143,.14); }
+#hl-dot { fill: var(--gold); }
+#hl-svg.up #hl-line { stroke: var(--gain); } #hl-svg.down #hl-line { stroke: var(--loss); }
+.bar { height: 6px; background: var(--line); border-radius: 3px; overflow: hidden; margin-bottom: 12px; }
+.bar i { display: block; height: 100%; width: 100%; background: var(--gold); }
+.card { font-family: var(--f-display); font-weight: 800; font-size: clamp(20px, 6.5vw, 30px); text-align: center; padding: 38px 12px; border: 1px solid var(--line); border-radius: 12px; background: var(--bg); text-wrap: balance; }
+.card.good { border-color: var(--gain); } .card.bad { border-color: var(--loss); }
+.mgrid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.mcard { position: relative; aspect-ratio: 3 / 4; perspective: 700px; background: none; border: 0; padding: 0; cursor: pointer; font: inherit; color: inherit; min-width: 0; }
+.mcard .inner { position: absolute; inset: 0; transform-style: preserve-3d; transition: transform .35s; }
+.mcard.open .inner { transform: rotateY(180deg); }
+.mcard .f, .mcard .b { position: absolute; inset: 0; backface-visibility: hidden; -webkit-backface-visibility: hidden; border-radius: 8px; display: grid; place-items: center; padding: 4px; text-align: center; }
+.mcard .f { background: linear-gradient(160deg, #1fa88f, #0d6b5b); font-family: var(--f-display); font-weight: 800; font-size: 22px; color: var(--teal-hi); }
+.mcard .b { transform: rotateY(180deg); background: var(--panel); border: 1px solid var(--line); font-size: 12px; font-weight: 600; line-height: 1.2; overflow-wrap: anywhere; }
+.mcard .b.term { color: var(--gold); font-family: var(--f-display); font-size: 11px; text-transform: uppercase; letter-spacing: .04em; }
+.mcard.done .b { border-color: var(--gain); background: rgba(75,227,168,.12); }
+[hidden] { display: none !important; }
+@media (min-width: 520px) { .tabs { grid-template-columns: repeat(6, 1fr); } }
+.idtitle { font-family: var(--f-display); font-weight: 800; font-size: clamp(18px, 5.5vw, 24px); margin: 4px 0 8px; line-height: 1.15; text-wrap: balance; }
+.idmeta { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+.chip { font-size: 11px; border: 1px solid var(--line); border-radius: 999px; padding: 3px 9px; color: var(--muted); }
+.chip.gold { color: var(--gold); border-color: var(--gold); }
+.idf { margin: 0; display: grid; gap: 10px; }
+.idf dt { font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--gold); font-weight: 600; }
+.idf dd { margin: 2px 0 0; }
+.gate .gtitle { font-family: var(--f-display); font-weight: 600; font-size: 13px; letter-spacing: .06em; text-transform: uppercase; }
+.gate p { margin: 6px 0 10px; color: var(--muted); font-size: 13px; }
+.gate p:last-child { margin-bottom: 0; }
+.grow { display: flex; gap: 8px; }
+input[type="text"], input[type="search"] { font: inherit; color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 10px; padding: 0 12px; min-height: 38px; min-width: 0; flex: 1; }
+.mini { font-family: var(--f-display); font-weight: 600; font-size: 12px; letter-spacing: .06em; text-transform: uppercase; background: var(--gold); color: #2b1c02; border: 0; border-radius: 10px; padding: 0 16px; min-height: 38px; cursor: pointer; }
+.mini.ghost { background: transparent; color: var(--ink); border: 1px solid var(--line); }
+.idlist { display: flex; flex-direction: column; gap: 8px; }
+.idea { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; }
+.idea summary { list-style: none; cursor: pointer; padding: 12px 14px; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 12px; align-items: baseline; }
+.idea summary::-webkit-details-marker { display: none; }
+.idea .it { font-weight: 600; min-width: 0; }
+.idea .ic { grid-column: 1; color: var(--muted); font-size: 12px; }
+.idea .iv { grid-row: 1 / span 2; grid-column: 2; color: var(--gold); font-size: 12px; text-align: right; max-width: 11em; }
+.idea[open] summary { border-bottom: 1px solid var(--line); }
+.idea .ib { padding: 12px 14px 14px; display: flex; flex-direction: column; gap: 12px; }
+.idea .acts { display: flex; gap: 8px; flex-wrap: wrap; }
+.lock { color: var(--muted); font-size: 13px; margin: 0; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.opts label.chk { display: flex; align-items: center; gap: 6px; text-transform: none; letter-spacing: 0; font-size: 13px; color: var(--ink); }
+.opts input[type="search"] { min-width: 140px; }
+.notep { margin: 6px 0 0; color: var(--muted); font-size: 13px; }
+.pc-head { display: flex; flex-direction: column; gap: 10px; margin-bottom: 12px; }
+.pc-days { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+.pc-day { font: inherit; display: flex; flex-direction: column; align-items: center; gap: 1px; padding: 6px 0; background: transparent; color: var(--ink); border: 1px solid var(--line); border-radius: 8px; cursor: pointer; min-width: 0; }
+.pc-day .pc-dw { font-size: 10px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.pc-day .pc-dn { font-family: var(--f-display); font-weight: 600; font-size: 14px; }
+.pc-day[aria-pressed="true"] { border-color: var(--gold); background: rgba(242,184,75,.12); }
+.pc-day.lk { border-style: dashed; opacity: .75; }
+.pcard { aspect-ratio: 4 / 5; display: flex; flex-direction: column; gap: 12px; padding: 18px; border-radius: 16px; border: 1px solid #1f5666; background: linear-gradient(160deg, #0f3a46 0%, #071c25 72%); color: var(--ink); }
+.pc-top { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; }
+.pc-kick { font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+.pc-band { font-size: 12px; font-weight: 600; color: #2b1c02; background: var(--gold); border-radius: 999px; padding: 3px 10px; }
+.pc-title { font-family: var(--f-display); font-weight: 800; font-size: clamp(20px, 6.2vw, 28px); line-height: 1.12; margin: 0; text-wrap: balance; }
+.pc-hook { margin: 0; color: var(--teal-hi); font-size: 15px; }
+.pc-row { font-size: 13px; line-height: 1.45; }
+.pc-row b { color: var(--gold); font-weight: 600; letter-spacing: .06em; text-transform: uppercase; font-size: 11px; }
+.pc-steps, .idsteps { margin: 0; padding-left: 20px; display: grid; gap: 6px; font-size: 13px; }
+.pc-lock { margin: 0; color: var(--muted); font-size: 13px; }
+.pc-foot { margin-top: auto; font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+.pc-acts { margin-top: 12px; }
+.pc-msg { margin: 8px 0 0; min-height: 18px; font-size: 13px; color: var(--gold); }
+.app[data-ratio="916"] .pcard { aspect-ratio: 9 / 16; }
+.app[data-ratio="916"] .pcard { justify-content: center; gap: 16px; }
+.app[data-ratio="916"] .pc-foot { margin-top: 16px; }
+.app[data-ratio="916"] .pc-title { font-size: clamp(24px, 7vw, 34px); }
+.app[data-ratio="916"] .pc-hook { font-size: 17px; }
+.app[data-ratio="916"] .pc-row, .app[data-ratio="916"] .pc-steps { font-size: 15px; }
+.app[data-ratio="169"] .pcard { aspect-ratio: 16 / 9; }
+@media (min-width: 720px) {
+  .app[data-ratio="169"] .pcard { padding: 34px 40px; gap: 20px; justify-content: center; }
+  .app[data-ratio="169"] .pc-foot { margin-top: 12px; font-size: 12px; }
+  .app[data-ratio="169"] .pc-kick { font-size: 13px; }
+  .app[data-ratio="169"] .pc-band { font-size: 15px; padding: 5px 14px; }
+  .app[data-ratio="169"] .pc-title { font-size: 44px; }
+  .app[data-ratio="169"] .pc-hook { font-size: 22px; }
+  .app[data-ratio="169"] .pc-row { font-size: 18px; }
+  .app[data-ratio="169"] .pc-row b { font-size: 13px; }
+  .app[data-ratio="169"] .pc-steps { grid-template-columns: repeat(3, 1fr); gap: 22px; font-size: 17px; list-style-position: inside; padding-left: 0; }
+}
+.cupnum { font-family: var(--f-display); font-weight: 800; font-size: 36px; fill: #f4fffc; stroke: rgba(3,40,32,.85); stroke-width: 5px; paint-order: stroke; }
+.cupnum { opacity: 0; transition: opacity .3s; }
+.stage.shownum .cupnum { opacity: 1; }
+.stage.nonum .cupnum { display: none; }
+#voice { flex: 1 1 160px; min-width: 0; max-width: 260px; }
+.app[data-ratio="169"] #g-ideas { display: flex; }
+.app[data-ratio="916"] #g-ideas { justify-content: flex-start; }
+.opts { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; }
+.opts label { font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+.opts select { min-height: 38px; }
+.arena { position: relative; width: 100%; aspect-ratio: 1 / 1; max-width: 100%; margin-inline: auto; }
+.arena canvas { width: 100%; height: 100%; display: block; touch-action: none; cursor: pointer; }
+
+/* Screen ratio frames: auto keeps the natural column; 9:16 and 16:9 draw a recording frame. */
+.app[data-ratio="916"], .app[data-ratio="169"] { border: 1px solid var(--line); border-radius: 20px; padding: 16px; background: rgba(10,33,43,.5); max-width: none; }
+.app[data-ratio="916"] { width: min(100%, 560px, calc((100dvh - 40px) * 9 / 16)); aspect-ratio: 9 / 16; }
+.app[data-ratio="916"] .game { flex: 1; justify-content: center; }
+.app[data-ratio="916"] .stage { flex: 1; aspect-ratio: auto; min-height: 300px; }
+.app[data-ratio="169"] { --fw: min(100vw - 32px, 1180px, (100dvh - 40px) * 16 / 9); width: var(--fw); aspect-ratio: 16 / 9; }
+@media (min-width: 720px) {
+  .app[data-ratio="169"] .game { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); grid-template-rows: repeat(11, min-content) 1fr; gap: 12px 24px; align-content: start; }
+  .app[data-ratio="169"] .game > * { grid-column: 2; }
+  .app[data-ratio="169"] .game > .main-area { grid-column: 1; grid-row: 1 / span 12; align-self: start; justify-self: center; }
+  .app[data-ratio="169"] .stage, .app[data-ratio="169"] .arena { width: auto; max-width: 100%; height: max(240px, calc(var(--fw) * 9 / 16 - 250px)); }
+  .app[data-ratio="169"] .panel.main-area, .app[data-ratio="169"] .mgrid.main-area { width: 100%; }
+  .app[data-ratio="169"] .mgrid { grid-template-columns: repeat(8, 1fr); gap: 6px; }
+}
+@media (prefers-reduced-motion: reduce) { .cup.wrong .body { animation: none; } .mcard .inner { transition: none; } }
+</style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <linearGradient id="cupSide" x1="0" x2="1" y1="0" y2="0">
+      <stop offset="0" stop-color="#0d6b5b"/><stop offset=".18" stop-color="#27c3a6"/><stop offset=".3" stop-color="#17917c"/>
+      <stop offset=".72" stop-color="#127a69"/><stop offset=".9" stop-color="#0a5547"/><stop offset="1" stop-color="#0b6454"/>
+    </linearGradient>
+    <linearGradient id="cupTop" x1="0" x2="1" y1="0" y2="1"><stop offset="0" stop-color="#e9fffa"/><stop offset="1" stop-color="#a9ecdd"/></linearGradient>
+  </defs>
+</svg>
+
+<main class="app" data-ratio="auto">
+  <header>
+    <h1>Follow the<br>Capital</h1>
+    <div class="hdr-r">
+      <select id="cur" aria-label="Currency">
+        <option value="USD">USD</option><option value="EUR">EUR</option><option value="GBP">GBP</option><option value="NGN">NGN</option>
+      </select>
+      <button class="snd" id="snd" type="button" aria-pressed="true">Sound on</button>
+      <button class="snd" id="vo" type="button" aria-pressed="true">Voice on</button>
+    </div>
+  </header>
+
+  <nav class="tabs" aria-label="Games">
+    <button class="tab" type="button" data-game="shuffle" aria-pressed="true">Shuffle</button>
+    <button class="tab" type="button" data-game="hl" aria-pressed="false">Price</button>
+    <button class="tab" type="button" data-game="ab" aria-pressed="false">Assets</button>
+    <button class="tab" type="button" data-game="mem" aria-pressed="false">Vault</button>
+    <button class="tab" type="button" data-game="orb" aria-pressed="false">Orbs</button>
+    <button class="tab" type="button" data-game="ideas" aria-pressed="false">Ideas</button>
+  </nav>
+
+  <div class="opts">
+    <label for="ratio">Screen</label>
+    <select id="ratio">
+      <option value="auto">Auto</option>
+      <option value="916">9:16 Portrait</option>
+      <option value="169">16:9 Landscape</option>
+    </select>
+    <label for="voice" id="voice-l">Voice</label>
+    <select id="voice"></select>
+  </div>
+
+  <section class="game" id="g-shuffle">
+
+  <section class="hud" aria-label="Portfolio">
+    <div>
+      <div class="lbl" id="plbl">Portfolio</div>
+      <div class="value" id="value">$10,000</div>
+    </div>
+    <div class="side">
+      <div class="pips" id="pips" aria-label="Margin calls left"></div>
+      <div class="streak">Streak <b id="streak">0</b> · Best <b id="best">$0</b></div>
+    </div>
+  </section>
+
+  <div class="modes" role="group" aria-label="Difficulty">
+    <button class="mode" id="m-starter" data-mode="starter" aria-pressed="true"><strong>Starter</strong><span>3 funds</span></button>
+    <button class="mode" id="m-pro" data-mode="pro" aria-pressed="false"><strong>Pro</strong><span>5 funds</span></button>
+    <button class="mode insane" id="m-insane" data-mode="insane" aria-pressed="false"><strong>Insane</strong><span>9 funds</span></button>
+  </div>
+
+  <div class="opts">
+    <label for="pat">Pattern</label>
+    <select id="pat">
+      <option value="classic">Classic</option>
+      <option value="ring">Ring</option>
+      <option value="grid">Grid</option>
+      <option value="triangle">Triangle</option>
+      <option value="line">Line</option>
+      <option value="scatter">Scatter</option>
+    </select>
+    <label class="chk"><input type="checkbox" id="numtoggle" checked> Numbers</label>
+  </div>
+
+  <div class="stage main-area" id="stage" role="group" aria-label="Funds"></div>
+
+  <div class="status" id="status" aria-live="polite">
+    <div class="main">One fund holds your capital.</div>
+    <div class="sub">Watch the coin, then pick the fund after the shuffle.</div>
+  </div>
+
+  <div class="tip" id="tip" hidden><b>Money lesson</b><span id="tipText"></span></div>
+
+  <div class="controls">
+    <button class="go" id="go">Start round</button>
+  </div>
+  <div class="fine">A right pick grows your portfolio. A wrong pick costs a margin call. Three calls close the account. Game only, not investment advice.</div>
+  </section>
+
+  <section class="game" id="g-hl" hidden>
+    <div class="hud">
+      <div><div class="lbl">Score</div><div class="value" id="hl-score">0</div></div>
+      <div class="side">
+        <div class="pips" id="hl-pips" aria-label="Stop-losses left"></div>
+        <div class="streak">Streak <b id="hl-streak">0</b> · Best <b id="hl-best">0</b></div>
+      </div>
+    </div>
+    <div class="panel chart main-area">
+      <div class="tickrow"><span class="tick" id="hl-tick">NOVA</span><span class="chg up" id="hl-chg">+0.0%</span><span class="price" id="hl-price">$0.00</span></div>
+      <svg id="hl-svg" viewBox="0 0 300 120" aria-label="Price chart">
+        <g class="grid"><line x1="0" x2="300" y1="30" y2="30"/><line x1="0" x2="300" y1="60" y2="60"/><line x1="0" x2="300" y1="90" y2="90"/></g>
+        <polygon id="hl-area" points=""/>
+        <polyline id="hl-line" points=""/>
+        <circle id="hl-dot" r="4.5" cx="0" cy="0"/>
+      </svg>
+    </div>
+    <div class="status" id="hl-status" aria-live="polite"></div>
+    <div class="duo">
+      <button class="choice up" id="hl-up" type="button">Higher</button>
+      <button class="choice down" id="hl-down" type="button">Lower</button>
+    </div>
+    <button class="go" id="hl-go" type="button" hidden>New game</button>
+    <div class="fine">Fictional stock. Each good call scores more as your streak grows. Three wrong calls end the run.</div>
+  </section>
+
+  <section class="game" id="g-ab" hidden>
+    <div class="hud">
+      <div><div class="lbl">Score</div><div class="value" id="ab-score">0</div></div>
+      <div class="side">
+        <div class="pips" id="ab-pips" aria-label="Lives left"></div>
+        <div class="streak">Streak <b id="ab-streak">0</b> · Best <b id="ab-best">0</b></div>
+      </div>
+    </div>
+    <div class="panel main-area">
+      <div class="bar"><i id="ab-bar"></i></div>
+      <div class="card" id="ab-card">Ready?</div>
+    </div>
+    <div class="status" id="ab-status" aria-live="polite"></div>
+    <div class="duo">
+      <button class="choice up" id="ab-a" type="button" disabled>&larr; Asset</button>
+      <button class="choice down" id="ab-l" type="button" disabled>Liability &rarr;</button>
+    </div>
+    <button class="go" id="ab-go" type="button">Start</button>
+    <div class="fine">An asset puts money in your pocket or holds value. A liability takes money out. Arrow keys work too. The timer gets shorter every card.</div>
+  </section>
+
+  <section class="game" id="g-mem" hidden>
+    <div class="hud">
+      <div><div class="lbl">Moves</div><div class="value" id="mem-moves">0</div></div>
+      <div class="side"><div class="streak">Pairs <b id="mem-found">0/8</b> · Best <b id="mem-best">-</b></div></div>
+    </div>
+    <div class="mgrid main-area" id="mem-grid"></div>
+    <div class="status" id="mem-status" aria-live="polite"></div>
+    <button class="go" id="mem-go" type="button">Shuffle again</button>
+    <div class="fine">Match each money term with its meaning. Fewer moves is a better score.</div>
+  </section>
+
+  <section class="game" id="g-orb" hidden>
+    <div class="hud">
+      <div><div class="lbl" id="orb-lbl">Score</div><div class="value" id="orb-score">0</div></div>
+      <div class="side">
+        <div class="pips" id="orb-pips" aria-label="Lives left"></div>
+        <div class="streak">Level <b id="orb-level">1</b> · Best <b id="orb-best">0</b></div>
+      </div>
+    </div>
+    <div class="opts">
+      <label for="orb-pat">Pattern</label>
+      <select id="orb-pat">
+        <option value="drift">Drift</option>
+        <option value="orbit">Orbit</option>
+        <option value="chaos">Chaos</option>
+      </select>
+      <label for="orb-diff">Mode</label>
+      <select id="orb-diff">
+        <option value="starter">Starter</option>
+        <option value="pro">Pro</option>
+        <option value="nightmare">Nightmare</option>
+      </select>
+    </div>
+    <div class="arena main-area"><canvas id="orb-cv" aria-label="Orb arena. Tap the winning assets after they stop."></canvas></div>
+    <div class="status" id="orb-status" aria-live="polite"></div>
+    <button class="go" id="orb-go" type="button">Start round</button>
+    <div class="fine">Gold orbs are your profitable assets. Watch them, track them as everything moves, then tap them when the orbs stop.</div>
+  </section>
+
+  <section class="game" id="g-ideas" hidden>
+    <div class="panel">
+      <div class="lbl">What premium means here</div>
+      <p class="notep">A premium playbook is knowledge you can teach. Each one names who pays, the method in three steps and a coaching offer, so a single client can willingly pay you $1,000 to $4,000 to learn it from you.</p>
+    </div>
+
+    <div class="panel">
+      <div class="pc-head">
+        <div class="lbl">Daily post cards · weekly drop</div>
+        <div class="pc-days" id="pc-days"></div>
+      </div>
+      <div class="pcard" id="pcard"></div>
+      <div class="acts pc-acts">
+        <button class="mini" id="pc-cap" type="button">Copy caption</button>
+        <button class="mini ghost" id="pc-week" type="button">Copy week plan</button>
+        <button class="mini ghost" id="pc-listen" type="button">Listen</button>
+      </div>
+      <p class="pc-msg" id="pc-msg" aria-live="polite"></p>
+    </div>
+
+    <div class="panel gate">
+      <div class="gtitle">Top subscriber vault <span id="id-total"></span></div>
+      <p id="id-gmsg"></p>
+      <div class="grow" id="id-grow">
+        <label class="sr" for="id-code">Access code</label>
+        <input type="text" id="id-code" placeholder="Access code" autocomplete="off" autocapitalize="off">
+        <button class="mini" id="id-unlock" type="button">Unlock</button>
+      </div>
+    </div>
+
+    <div class="opts">
+      <label for="id-lib">Library</label>
+      <select id="id-lib"></select>
+      <label for="id-cat">Category</label>
+      <select id="id-cat"></select>
+      <label for="id-q">Search</label>
+      <input type="search" id="id-q" placeholder="clinic, solar, WhatsApp">
+      <label class="chk"><input type="checkbox" id="id-saved"> Saved only</label>
+    </div>
+    <div class="fine" id="id-count"></div>
+    <div class="idlist" id="id-list"></div>
+    <div class="fine">Prices and results depend on your proof, your audience and your skill. Teach only what you have done, never promise results, and check licensing and tax rules where you live. Nothing here is legal, tax or financial advice.</div>
+  </section>
+</main>
+
+<script>
+(function () {
+  var MODES = {
+    starter: { n: 3, swaps: 5, dur: 560, min: 300, par: 1, gain: 0.06, loss: 0.10, cw: 26, pos: [[18,50],[50,50],[82,50]] },
+    pro:     { n: 5, swaps: 7, dur: 440, min: 220, par: 1, gain: 0.15, loss: 0.18, cw: 21, pos: [[24,24],[76,24],[50,50],[24,76],[76,76]] },
+    insane:  { n: 9, swaps: 9, dur: 340, min: 170, par: 2, gain: 0.35, loss: 0.25, cw: 15, pos: [[49,9],[30,30],[68,32],[9,52],[50,50],[90,48],[31,70],[69,72],[50,91]] }
+  };
+  var TIPS = [
+    'Compounding means gains earn their own gains. The same 6% win is worth more on a bigger balance.',
+    'A 50% loss needs a 100% gain just to break even. Avoiding big drops matters.',
+    'Diversification spreads money across assets so one bad pick hurts less.',
+    'Higher possible returns usually come with higher possible losses.',
+    'An emergency fund of three to six months of expenses lets you take risk without panic selling.',
+    'Fees compound too. A 1% yearly fee can take a large share of long-run returns.',
+    'Inflation shrinks cash. If prices rise faster than your interest, you lose buying power.',
+    'Rule of 72: divide 72 by your yearly return to estimate the years it takes to double.'
+  ];
+  var $ = function (id) { return document.getElementById(id); };
+  var stage = $('stage'), go = $('go'), statusEl = $('status');
+  var mode = 'starter', phase = 'idle', portfolio = 10000, streak = 0, lives = 3, round = 0, coinCup = 0, cups = [], busy = false, best = {};
+  var START = 10000;
+
+  try { best = JSON.parse(localStorage.getItem('ftc-best') || '{}') || {}; } catch (e) { best = {}; }
+  function saveBest() { try { localStorage.setItem('ftc-best', JSON.stringify(best)); } catch (e) {} }
+
+  function money(v) {
+    try { return new Intl.NumberFormat('en-US', { style: 'currency', currency: $('cur').value, maximumFractionDigits: 0 }).format(v); }
+    catch (e) { return '$' + Math.round(v).toLocaleString(); }
+  }
+  function sym() { return { USD: '$', EUR: '€', GBP: '£', NGN: '₦' }[$('cur').value] || '$'; }
+  var sleep = function (ms) { return new Promise(function (r) { setTimeout(r, ms); }); };
+  function say(main, sub, cls) {
+    statusEl.className = 'status' + (cls ? ' ' + cls : '');
+    statusEl.innerHTML = '';
+    var a = document.createElement('div'); a.className = 'main'; a.textContent = main;
+    var b = document.createElement('div'); b.className = 'sub'; b.textContent = sub || '';
+    statusEl.appendChild(a); statusEl.appendChild(b);
+  }
+
+  function cupSVG(num) {
+    return '<svg viewBox="0 0 100 130" aria-hidden="true">' +
+      '<path d="M17 22 L83 22 L97 112 Q50 134 3 112 Z" fill="url(#cupSide)"/>' +
+      '<ellipse cx="50" cy="22" rx="33" ry="12" fill="url(#cupTop)"/>' +
+      '<path d="M22 30 L28 108" stroke="#d7fff4" stroke-opacity=".55" stroke-width="3" stroke-linecap="round" fill="none"/>' +
+      '<text class="cupnum" x="50" y="88" text-anchor="middle">' + num + '</text>' +
+      '</svg>';
+  }
+
+  var pat = 'classic', LAY = null;
+  function rowsLayout(counts, maxDx, maxDy, cwMax) {
+    var rowsN = counts.length, widest = Math.max.apply(null, counts), pos = [];
+    var dx = widest > 1 ? Math.min(maxDx, 76 / (widest - 1)) : 0;
+    var dy = rowsN > 1 ? Math.min(maxDy, 70 / (rowsN - 1)) : 0;
+    counts.forEach(function (c, ri) {
+      for (var k = 0; k < c; k++) pos.push([50 + (k - (c - 1) / 2) * dx, 50 + (ri - (rowsN - 1) / 2) * dy]);
+    });
+    var cw = cwMax;
+    if (dx) cw = Math.min(cw, dx * 0.85);
+    if (dy) cw = Math.min(cw, dy * 0.72);
+    return { pos: pos, cw: cw };
+  }
+  function layoutFor(p, m) {
+    var n = m.n, i, left;
+    if (p === 'classic') return { pos: m.pos, cw: m.cw };
+    if (p === 'ring') {
+      var rp = [];
+      for (i = 0; i < n; i++) { var an = -Math.PI / 2 + i * 2 * Math.PI / n; rp.push([50 + 37 * Math.cos(an), 50 + 35.5 * Math.sin(an)]); }
+      var chord = n > 1 ? 2 * 37 * Math.sin(Math.PI / n) : 99;
+      return { pos: rp, cw: Math.min(m.cw, chord / 1.35) };
+    }
+    if (p === 'grid') {
+      var cols = Math.ceil(Math.sqrt(n)), cg = []; left = n;
+      while (left > 0) { cg.push(Math.min(cols, left)); left -= cols; }
+      return rowsLayout(cg, 30, 28, m.cw);
+    }
+    if (p === 'triangle') {
+      var ct = [], rn = 1; left = n;
+      while (left > 0) { ct.push(Math.min(rn, left)); left -= rn; rn++; }
+      return rowsLayout(ct, 26, 26, m.cw);
+    }
+    if (p === 'line') {
+      var per = n <= 5 ? n : Math.ceil(n / 2), cl = [per];
+      if (n > per) cl.push(n - per);
+      return rowsLayout(cl, 32, 34, m.cw);
+    }
+    var scw = m.cw * 0.9, dmin = scw * 1.45, pts = [];
+    while (pts.length < n) {
+      var ok = false;
+      for (var t = 0; t < 400 && !ok; t++) {
+        var x = 14 + Math.random() * 72, y = 12 + Math.random() * 76; ok = true;
+        for (var j = 0; j < pts.length; j++) { if (Math.hypot(pts[j][0] - x, (pts[j][1] - y) * 1.04) < dmin) { ok = false; break; } }
+        if (ok) pts.push([x, y]);
+      }
+      if (!ok) dmin *= 0.93;
+    }
+    return { pos: pts, cw: Math.min(scw, dmin / 1.3) };
+  }
+  function build() {
+    var m = MODES[mode];
+    LAY = layoutFor(pat, m);
+    var order = LAY.pos.map(function (p, i) { return i; }).sort(function (a, b) {
+      var pa = LAY.pos[a], pb = LAY.pos[b];
+      return (Math.round(pa[1] / 12) - Math.round(pb[1] / 12)) || (pa[0] - pb[0]);
+    });
+    LAY.num = []; order.forEach(function (slot, r) { LAY.num[slot] = r + 1; });
+    stage.classList.remove('shownum');
+    stage.innerHTML = ''; cups = [];
+    for (var i = 0; i < m.n; i++) {
+      var el = document.createElement('button');
+      el.type = 'button'; el.className = 'cup'; el.disabled = true;
+      el.setAttribute('aria-label', 'Fund ' + (i + 1));
+      el.style.width = LAY.cw + '%';
+      el.innerHTML = '<span class="coin">' + sym() + '</span><span class="body">' + cupSVG(i + 1) + '</span>';
+      var c = { id: i, slot: i, el: el };
+      place(c);
+      (function (cc) { el.addEventListener('click', function () { pick(cc); }); })(c);
+      stage.appendChild(el); cups.push(c);
+    }
+    $('plbl').textContent = mode === 'insane' ? 'Portfolio · Insane mode' : 'Portfolio';
+    $('plbl').style.color = mode === 'insane' ? 'var(--loss)' : '';
+    $('best').textContent = money(best[mode] || 0);
+  }
+  function showNumbers(on) {
+    stage.classList.toggle('shownum', on);
+    if (on) cups.forEach(function (c) {
+      var t = c.el.querySelector('.cupnum'); if (t) t.textContent = LAY.num[c.slot];
+      c.el.setAttribute('aria-label', 'Fund ' + LAY.num[c.slot]);
+    });
+  }
+  function numOf(c) { return LAY.num[c.slot]; }
+  function place(c) {
+    var p = LAY.pos[c.slot];
+    c.el.style.left = p[0] + '%'; c.el.style.top = p[1] + '%';
+  }
+  function setLift(c, on) { c.el.classList.toggle('lift', on); }
+  function coinSet(c, on) {
+    var coin = c.el.querySelector('.coin');
+    c.el.classList.toggle('has', on); coin.classList.toggle('on', on);
+    if (on) coin.textContent = sym();
+  }
+
+  function renderHud() {
+    $('value').textContent = money(portfolio);
+    $('streak').textContent = streak;
+    var p = $('pips'); p.innerHTML = '';
+    for (var i = 0; i < 3; i++) { var d = document.createElement('span'); d.className = 'pip' + (i >= lives ? ' gone' : ''); p.appendChild(d); }
+  }
+  function flashValue(cls) {
+    var v = $('value'); v.className = 'value ' + cls;
+    setTimeout(function () { v.className = 'value'; }, 1200);
+  }
+  function lockUI(lock) {
+    document.querySelectorAll('.mode').forEach(function (b) { b.disabled = lock; });
+    $('cur').disabled = lock; $('pat').disabled = lock;
+  }
+  function setPickable(on) {
+    cups.forEach(function (c) { c.el.disabled = !on; c.el.classList.toggle('pickable', on); });
+  }
+
+  async function startRound() {
+    if (busy) return;
+    if (phase === 'over') { newGame(); }
+    busy = true; go.disabled = true; lockUI(true); $('tip').hidden = true;
+    cups.forEach(function (c) { setLift(c, false); coinSet(c, false); c.el.classList.remove('wrong'); });
+    showNumbers(false);
+    round++;
+    var m = MODES[mode];
+    coinCup = Math.floor(Math.random() * m.n);
+    var target = cups[coinCup];
+    say('Watch the coin', 'Round ' + round, '');
+    speak('Round ' + round + '. Watch the coin.');
+    await sleep(350);
+    coinSet(target, true); setLift(target, true); SFX.show();
+    speak('Here is the capital. Remember where it is.');
+    await sleep(1100);
+    setLift(target, false);
+    await sleep(500);
+    coinSet(target, false);
+    say('Shuffling…', 'Keep your eyes on the capital.', '');
+    speak(rnd(['Eyes on the capital!', 'Here we go. Keep watching.', 'Shuffling now. Do not blink.']));
+    phase = 'shuffle';
+    var swaps = m.swaps + round * 2;
+    var dur = Math.max(m.min, m.dur - round * 25);
+    stage.style.setProperty('--sd', dur + 'ms');
+    cups.forEach(function (c) { c.el.style.setProperty('--sd', dur + 'ms'); });
+    for (var s = 0; s < swaps; s++) {
+      var ids = cups.map(function (c) { return c.id; });
+      for (var k = ids.length - 1; k > 0; k--) { var j = Math.floor(Math.random() * (k + 1)); var t = ids[k]; ids[k] = ids[j]; ids[j] = t; }
+      var pairs = Math.min(m.par, Math.floor(ids.length / 2)), moved = [];
+      for (var q = 0; q < pairs; q++) {
+        var a = cups[ids[q * 2]], b = cups[ids[q * 2 + 1]];
+        var tmp = a.slot; a.slot = b.slot; b.slot = tmp;
+        a.el.classList.add('moving'); b.el.classList.add('moving');
+        place(a); place(b); moved.push(a, b);
+      }
+      SFX.swap(s);
+      await sleep(dur + 40);
+      moved.forEach(function (c) { c.el.classList.remove('moving'); });
+    }
+    phase = 'pick';
+    setPickable(true); showNumbers(true);
+    say('Pick the fund with the capital', 'Tap a numbered fund.', '');
+    speak('Where is the capital? Pick a numbered fund.');
+    busy = false;
+  }
+
+  async function pick(c) {
+    if (phase !== 'pick' || busy) return;
+    busy = true; phase = 'result'; setPickable(false);
+    var m = MODES[mode], right = c.id === coinCup;
+    var target = cups[coinCup];
+    coinSet(target, true); setLift(target, true);
+    if (right) {
+      streak++;
+      var bonus = 1 + 0.1 * Math.min(streak - 1, 9);
+      var gain = portfolio * m.gain * bonus;
+      portfolio += gain;
+      flashValue('up');
+      say('+' + money(gain) + ' · Capital found', streak > 1 ? 'Streak bonus x' + bonus.toFixed(1) : 'Gain of ' + Math.round(m.gain * 100) + '% on this round.', 'good');
+      SFX.win();
+      speak(rnd(['Brilliant!', 'You found it!', 'Great eye.']) + ' Plus ' + money(gain) + '.');
+      try { navigator.vibrate && navigator.vibrate(30); } catch (e) {}
+    } else {
+      c.el.classList.add('wrong');
+      streak = 0; lives--;
+      var loss = portfolio * m.loss;
+      portfolio -= loss;
+      flashValue('down');
+      say('−' + money(loss) + ' · Margin call', 'You lose ' + Math.round(m.loss * 100) + '% of the portfolio. ' + lives + ' left.', 'bad');
+      SFX.lose();
+      speak('Margin call! The capital was under fund ' + numOf(cups[coinCup]) + '.');
+      try { navigator.vibrate && navigator.vibrate([60, 40, 60]); } catch (e) {}
+    }
+    renderHud();
+    $('tipText').textContent = TIPS[Math.floor(Math.random() * TIPS.length)];
+    $('tip').hidden = false;
+    if (portfolio > (best[mode] || 0) && portfolio > START) { best[mode] = Math.round(portfolio); saveBest(); $('best').textContent = money(best[mode]); }
+    await sleep(900);
+    if (lives <= 0) {
+      phase = 'over'; SFX.over(); speak('Account closed at ' + money(portfolio) + '.');
+      say('Account closed at ' + money(portfolio), 'Best in ' + mode + ' mode: ' + money(best[mode] || 0), 'bad');
+      go.textContent = 'New game';
+    } else {
+      phase = 'idle';
+      go.textContent = 'Next round';
+    }
+    go.disabled = false; lockUI(false); busy = false;
+  }
+
+  function newGame() {
+    portfolio = START; streak = 0; lives = 3; round = 0; phase = 'idle';
+    go.textContent = 'Start round';
+    renderHud(); build();
+    say('One fund holds your capital.', 'Watch the coin, then pick the fund after the shuffle.', '');
+  }
+
+  document.querySelectorAll('.mode').forEach(function (b) {
+    b.addEventListener('click', function () {
+      if (busy) return;
+      mode = b.getAttribute('data-mode');
+      document.querySelectorAll('.mode').forEach(function (x) { x.setAttribute('aria-pressed', String(x === b)); });
+      newGame();
+    });
+  });
+  $('cur').addEventListener('change', function () { renderHud(); $('best').textContent = money(best[mode] || 0); cups.forEach(function (c) { c.el.querySelector('.coin').textContent = sym(); }); });
+  go.addEventListener('click', startRound);
+
+  /* ---------- sound (generated in the browser, no audio files) ---------- */
+  var AC = null, muted = false;
+  try { muted = localStorage.getItem('ftc-mute') === '1'; } catch (e) {}
+  function ctx() {
+    if (!AC) { try { AC = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { return null; } }
+    if (AC.state === 'suspended') { try { AC.resume(); } catch (e) {} }
+    return AC;
+  }
+  function tone(freq, dur, type, vol, delay, to) {
+    if (muted) return;
+    var c = ctx(); if (!c) return;
+    try {
+      var t = c.currentTime + (delay || 0), o = c.createOscillator(), g = c.createGain();
+      o.type = type || 'sine'; o.frequency.setValueAtTime(freq, t);
+      if (to) o.frequency.exponentialRampToValueAtTime(to, t + dur);
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(vol || 0.15, t + 0.012);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+      o.connect(g); g.connect(c.destination); o.start(t); o.stop(t + dur + 0.03);
+    } catch (e) {}
+  }
+  var SFX = {
+    click: function () { tone(520, 0.07, 'triangle', 0.12); },
+    show:  function () { tone(880, 0.14, 'sine', 0.16); tone(1320, 0.22, 'sine', 0.14, 0.09); },
+    swap:  function (i) { tone(200 + (i % 7) * 28, 0.07, 'square', 0.05); },
+    win:   function () { [523, 659, 784, 1047].forEach(function (f, k) { tone(f, 0.2, 'triangle', 0.17, k * 0.08); }); },
+    lose:  function () { tone(230, 0.4, 'sawtooth', 0.12, 0, 90); tone(170, 0.45, 'sawtooth', 0.09, 0.12, 70); },
+    over:  function () { [392, 330, 262, 196].forEach(function (f, k) { tone(f, 0.3, 'triangle', 0.16, k * 0.17); }); },
+    flip:  function () { tone(700, 0.05, 'triangle', 0.1); },
+    match: function () { tone(660, 0.12, 'sine', 0.16); tone(990, 0.2, 'sine', 0.15, 0.09); },
+    tick:  function () { tone(1000, 0.03, 'square', 0.04); }
+  };
+  document.addEventListener('pointerdown', function () { ctx(); });
+  var snd = $('snd');
+  function renderSnd() { snd.setAttribute('aria-pressed', String(!muted)); snd.textContent = muted ? 'Sound off' : 'Sound on'; }
+  snd.addEventListener('click', function () {
+    muted = !muted;
+    try { localStorage.setItem('ftc-mute', muted ? '1' : '0'); } catch (e) {}
+    renderSnd(); SFX.click();
+  });
+  renderSnd();
+
+  /* ---------- shared helpers ---------- */
+  function shuffled(a) {
+    var r = a.slice();
+    for (var i = r.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)); var t = r[i]; r[i] = r[j]; r[j] = t; }
+    return r;
+  }
+  function sayTo(id, main, sub, cls) {
+    var el = $(id); el.className = 'status' + (cls ? ' ' + cls : ''); el.innerHTML = '';
+    var a = document.createElement('div'); a.className = 'main'; a.textContent = main;
+    var b = document.createElement('div'); b.className = 'sub'; b.textContent = sub || '';
+    el.appendChild(a); el.appendChild(b);
+  }
+  function pipsInto(id, n) {
+    var el = $(id); el.innerHTML = '';
+    for (var i = 0; i < 3; i++) { var d = document.createElement('span'); d.className = 'pip' + (i >= n ? ' gone' : ''); el.appendChild(d); }
+  }
+  function bump(key, val) { if (val > (best[key] || 0)) { best[key] = val; saveBest(); } }
+
+  /* ---------- game 2: Price Call (higher or lower) ---------- */
+  var NAMES = ['NOVA', 'KOLA', 'ZEST', 'ORBT', 'LUMA', 'VETA', 'HALO', 'MINT'];
+  var hl = { price: 0, hist: [], score: 0, streak: 0, lives: 3, lock: false, over: false, init: false, name: 'NOVA' };
+  function hlStep(p) {
+    var r = (Math.random() - 0.5) * 0.16;
+    if (Math.abs(r) < 0.008) r = r < 0 ? -0.008 : 0.008;
+    return Math.max(5, p * (1 + r));
+  }
+  function hlDraw(dir) {
+    var h = hl.hist, n = h.length, min = Math.min.apply(null, h), max = Math.max.apply(null, h), rng = (max - min) || 1;
+    var pts = h.map(function (v, i) { return (12 + i * (276 / (n - 1))).toFixed(1) + ',' + (104 - ((v - min) / rng) * 88).toFixed(1); });
+    $('hl-line').setAttribute('points', pts.join(' '));
+    $('hl-area').setAttribute('points', pts.join(' ') + ' 288,116 12,116');
+    var last = pts[n - 1].split(',');
+    $('hl-dot').setAttribute('cx', last[0]); $('hl-dot').setAttribute('cy', last[1]);
+    $('hl-svg').setAttribute('class', dir || '');
+    $('hl-tick').textContent = hl.name;
+    $('hl-price').textContent = sym() + hl.price.toFixed(2);
+    var ch = (hl.price / h[n - 2] - 1) * 100, c = $('hl-chg');
+    c.textContent = (ch >= 0 ? '+' : '') + ch.toFixed(1) + '%'; c.className = 'chg ' + (ch >= 0 ? 'up' : 'down');
+  }
+  function hlHud() {
+    $('hl-score').textContent = hl.score.toLocaleString();
+    $('hl-streak').textContent = hl.streak;
+    $('hl-best').textContent = (best.hl || 0).toLocaleString();
+    pipsInto('hl-pips', hl.lives);
+  }
+  function hlReset() {
+    hl.name = NAMES[Math.floor(Math.random() * NAMES.length)];
+    var p = 60 + Math.random() * 90; hl.hist = [p];
+    for (var i = 0; i < 11; i++) { p = hlStep(p); hl.hist.push(p); }
+    hl.price = p; hl.score = 0; hl.streak = 0; hl.lives = 3; hl.lock = false; hl.over = false; hl.init = true;
+    $('hl-go').hidden = true; $('hl-up').disabled = false; $('hl-down').disabled = false;
+    hlDraw(); hlHud();
+    sayTo('hl-status', 'Higher or lower?', 'Read the chart, then call the next price.', '');
+  }
+  function hlGuess(up) {
+    if (hl.lock || hl.over) return;
+    hl.lock = true;
+    var old = hl.price, nw = hlStep(old), rose = nw > old;
+    hl.price = nw; hl.hist.push(nw); if (hl.hist.length > 14) hl.hist.shift();
+    hlDraw(rose ? 'up' : 'down');
+    var moved = Math.abs((nw / old - 1) * 100).toFixed(1) + '% ' + (rose ? 'up' : 'down');
+    if (up === rose) {
+      hl.streak++;
+      var pts = 100 + 25 * (hl.streak - 1); hl.score += pts;
+      SFX.win(); speak('Good call. ' + hl.streak + (hl.streak > 1 ? ' in a row.' : '.')); sayTo('hl-status', '+' + pts + ' · Good call', 'Price moved ' + moved + '.', 'good');
+    } else {
+      hl.streak = 0; hl.lives--;
+      SFX.lose(); speak('Stop-loss hit. The price moved ' + moved + '.'); sayTo('hl-status', 'Stop-loss hit', 'Price moved ' + moved + '.', 'bad');
+    }
+    bump('hl', hl.score); hlHud();
+    if (hl.lives <= 0) {
+      hl.over = true; $('hl-up').disabled = true; $('hl-down').disabled = true;
+      setTimeout(function () {
+        SFX.over();
+        speak('Run over. You scored ' + hl.score + ' points.'); sayTo('hl-status', 'Run over with ' + hl.score.toLocaleString() + ' points', 'Best: ' + (best.hl || 0).toLocaleString(), 'bad');
+        $('hl-go').hidden = false;
+      }, 700);
+    } else {
+      setTimeout(function () { hl.lock = false; }, 600);
+    }
+  }
+  $('hl-up').addEventListener('click', function () { hlGuess(true); });
+  $('hl-down').addEventListener('click', function () { hlGuess(false); });
+  $('hl-go').addEventListener('click', function () { SFX.click(); hlReset(); });
+
+  /* ---------- game 3: Assets (asset or liability, against the clock) ---------- */
+  var ITEMS = [
+    ['Savings account', 'a'], ['Credit card debt', 'l'], ['Rental property', 'a'], ['Car loan', 'l'],
+    ['Index fund', 'a'], ['Unpaid tax bill', 'l'], ['Emergency fund', 'a'], ['Payday loan', 'l'],
+    ['Dividend stock', 'a'], ['Mortgage', 'l'], ['Gold bars', 'a'], ['Store card balance', 'l'],
+    ['Government bond', 'a'], ['Student loan', 'l'], ['Overdraft', 'l'], ['Retirement fund', 'a'],
+    ['Money owed to you', 'a'], ['Unpaid rent', 'l']
+  ];
+  var ab = { score: 0, streak: 0, lives: 3, n: 0, running: false, locked: true, cur: null, pool: [], timer: null };
+  function abHud() {
+    $('ab-score').textContent = ab.score.toLocaleString();
+    $('ab-streak').textContent = ab.streak;
+    $('ab-best').textContent = (best.ab || 0).toLocaleString();
+    pipsInto('ab-pips', ab.lives);
+  }
+  function abButtons(on) { $('ab-a').disabled = !on; $('ab-l').disabled = !on; }
+  function abIdle() {
+    clearTimeout(ab.timer);
+    ab.score = 0; ab.streak = 0; ab.lives = 3; ab.n = 0; ab.running = false; ab.locked = true; ab.pool = [];
+    var bar = $('ab-bar'); bar.style.transition = 'none'; bar.style.width = '100%';
+    $('ab-card').textContent = 'Ready?'; $('ab-card').className = 'card';
+    abButtons(false); $('ab-go').hidden = false; $('ab-go').textContent = 'Start';
+    abHud();
+    sayTo('ab-status', 'Sort each item fast.', 'Asset puts money in. Liability takes money out.', '');
+  }
+  function abStop() { clearTimeout(ab.timer); ab.running = false; ab.locked = true; }
+  function abNext() {
+    if (!ab.pool.length) ab.pool = shuffled(ITEMS);
+    ab.cur = ab.pool.pop(); ab.locked = false;
+    $('ab-card').textContent = ab.cur[0]; $('ab-card').className = 'card';
+    var limit = Math.max(1600, 4200 - ab.n * 110), bar = $('ab-bar');
+    bar.style.transition = 'none'; bar.style.width = '100%'; void bar.offsetWidth;
+    bar.style.transition = 'width ' + limit + 'ms linear'; bar.style.width = '0%';
+    clearTimeout(ab.timer);
+    ab.timer = setTimeout(function () { abAnswer(null); }, limit);
+    abButtons(true); SFX.tick();
+    sayTo('ab-status', 'Asset or liability?', 'Left is asset. Right is liability.', '');
+  }
+  function abAnswer(choice) {
+    if (!ab.running || ab.locked) return;
+    ab.locked = true; clearTimeout(ab.timer); abButtons(false);
+    var bar = $('ab-bar'); var w = getComputedStyle(bar).width; bar.style.transition = 'none'; bar.style.width = w;
+    var isA = ab.cur[1] === 'a', ok = choice === ab.cur[1];
+    ab.n++;
+    if (ok) {
+      ab.streak++; ab.score += 50 + 10 * Math.min(ab.streak - 1, 10);
+      $('ab-card').className = 'card good'; SFX.match(); if (ab.streak % 5 === 0) speak(ab.streak + ' in a row. On fire!');
+      sayTo('ab-status', 'Correct', ab.cur[0] + (isA ? ' puts money in or holds value.' : ' takes money out of your pocket.'), 'good');
+    } else {
+      ab.streak = 0; ab.lives--;
+      $('ab-card').className = 'card bad'; SFX.lose(); speak((choice === null ? 'Too slow. ' : 'Wrong. ') + ab.cur[0] + ' is ' + (isA ? 'an asset.' : 'a liability.'));
+      sayTo('ab-status', choice === null ? 'Too slow' : 'Wrong', ab.cur[0] + ' is ' + (isA ? 'an asset.' : 'a liability.'), 'bad');
+    }
+    bump('ab', ab.score); abHud();
+    if (ab.lives <= 0) {
+      ab.running = false;
+      setTimeout(function () {
+        SFX.over();
+        speak('Game over. You scored ' + ab.score + ' points.'); sayTo('ab-status', 'Game over with ' + ab.score.toLocaleString() + ' points', 'Best: ' + (best.ab || 0).toLocaleString(), 'bad');
+        $('ab-go').hidden = false; $('ab-go').textContent = 'Play again';
+      }, 800);
+    } else {
+      setTimeout(function () { if (ab.running) abNext(); }, 950);
+    }
+  }
+  $('ab-a').addEventListener('click', function () { abAnswer('a'); });
+  $('ab-l').addEventListener('click', function () { abAnswer('l'); });
+  $('ab-go').addEventListener('click', function () {
+    SFX.click();
+    ab.score = 0; ab.streak = 0; ab.lives = 3; ab.n = 0; ab.pool = []; ab.running = true;
+    $('ab-go').hidden = true; abHud(); abNext();
+  });
+  document.addEventListener('keydown', function (e) {
+    if (cur !== 'ab') return;
+    if (e.key === 'ArrowLeft') abAnswer('a');
+    if (e.key === 'ArrowRight') abAnswer('l');
+  });
+
+  /* ---------- game 4: Vault (match money terms) ---------- */
+  var PAIRS = [['APR', 'Yearly loan cost'], ['ETF', 'Basket of assets'], ['Bull', 'Rising market'], ['Bear', 'Falling market'],
+               ['Equity', 'Ownership share'], ['Dividend', 'Payout to owners'], ['Inflation', 'Rising prices'], ['Liquidity', 'Easy to cash']];
+  var mem = { moves: 0, found: 0, open: [], lock: false, init: false };
+  function memHud() {
+    $('mem-moves').textContent = mem.moves;
+    $('mem-found').textContent = mem.found + '/8';
+    $('mem-best').textContent = best.mem ? best.mem : '-';
+  }
+  function memReset() {
+    var deck = [], grid = $('mem-grid');
+    PAIRS.forEach(function (p, i) { deck.push({ id: i, t: p[0], term: true }); deck.push({ id: i, t: p[1], term: false }); });
+    deck = shuffled(deck);
+    grid.innerHTML = '';
+    mem.moves = 0; mem.found = 0; mem.open = []; mem.lock = false; mem.init = true;
+    deck.forEach(function (card) {
+      var b = document.createElement('button');
+      b.type = 'button'; b.className = 'mcard'; b.setAttribute('aria-label', 'Hidden card');
+      b.innerHTML = '<span class="inner"><span class="f">' + '$' + '</span><span class="b' + (card.term ? ' term' : '') + '"></span></span>';
+      b.querySelector('.b').textContent = card.t;
+      b.addEventListener('click', function () { memFlip(b, card); });
+      grid.appendChild(b);
+    });
+    memHud();
+    sayTo('mem-status', 'Find all 8 pairs.', 'A term matches its meaning.', '');
+  }
+  function memFlip(b, card) {
+    if (mem.lock || b.classList.contains('open') || b.classList.contains('done')) return;
+    b.classList.add('open'); b.setAttribute('aria-label', card.t); SFX.flip();
+    mem.open.push({ b: b, card: card });
+    if (mem.open.length < 2) return;
+    mem.moves++; mem.lock = true;
+    var x = mem.open[0], y = mem.open[1];
+    mem.open = [];
+    if (x.card.id === y.card.id) {
+      mem.found++;
+      setTimeout(function () {
+        x.b.classList.add('done'); y.b.classList.add('done'); SFX.match(); mem.lock = false; memHud();
+        if (mem.found === 8) {
+          if (!best.mem || mem.moves < best.mem) { best.mem = mem.moves; saveBest(); }
+          memHud(); SFX.win(); speak('Vault cracked in ' + mem.moves + ' moves.');
+          sayTo('mem-status', 'Vault cracked in ' + mem.moves + ' moves', TIPS[Math.floor(Math.random() * TIPS.length)], 'good');
+        } else {
+          speak('Match! ' + (x.card.term ? x.card.t + ' means ' + y.card.t : y.card.t + ' means ' + x.card.t) + '.'); sayTo('mem-status', 'Match', x.card.term ? x.card.t + ' = ' + y.card.t : y.card.t + ' = ' + x.card.t, 'good');
+        }
+      }, 350);
+    } else {
+      memHud();
+      setTimeout(function () {
+        x.b.classList.remove('open'); y.b.classList.remove('open');
+        x.b.setAttribute('aria-label', 'Hidden card'); y.b.setAttribute('aria-label', 'Hidden card');
+        mem.lock = false;
+      }, 800);
+    }
+  }
+  $('mem-go').addEventListener('click', function () { SFX.click(); memReset(); });
+
+  /* ---------- game 5: Orb Tracker (follow the gold winners) ---------- */
+  var OCFG = { starter: { n: 8, k: 2, sp: 0.9 }, pro: { n: 11, k: 3, sp: 1.3 }, nightmare: { n: 14, k: 4, sp: 1.9 } };
+  var OR = 0.07, oc = $('orb-cv'), octx = oc.getContext('2d');
+  var orb = { st: 'idle', balls: [], k: 2, level: 1, score: 0, lives: 3, raf: 0, t0: 0, last: 0, trackT: 5, over: false, picked: 0 };
+  function orbParams() {
+    var c = OCFG[$('orb-diff').value], L = orb.level;
+    var n = Math.min(c.n + Math.floor((L - 1) / 2), 18);
+    return { n: n, k: Math.min(c.k + Math.floor((L - 1) / 2), 7, n - 3), sp: c.sp * (1 + 0.06 * (L - 1)), t: Math.min(4.2 + L * 0.35, 8) };
+  }
+  function orbSpawn(n, k, sp) {
+    var bs = [], i, j, tries, x, y, ok;
+    for (i = 0; i < n; i++) {
+      tries = 0;
+      do {
+        var ang = Math.random() * Math.PI * 2, rad = Math.sqrt(Math.random()) * 0.85;
+        x = rad * Math.cos(ang); y = rad * Math.sin(ang); ok = true;
+        for (j = 0; j < bs.length; j++) { if (Math.hypot(bs[j].x - x, bs[j].y - y) < OR * 2.6) { ok = false; break; } }
+      } while (!ok && ++tries < 80);
+      var r0 = Math.max(Math.hypot(x, y), 0.2), a0 = Math.atan2(y, x);
+      x = r0 * Math.cos(a0); y = r0 * Math.sin(a0);
+      var v = 0.42 * sp * (0.8 + Math.random() * 0.4), h = Math.random() * Math.PI * 2, dir = Math.random() < 0.5 ? -1 : 1;
+      bs.push({ x: x, y: y, v: v, vx: Math.cos(h) * v, vy: Math.sin(h) * v, a: a0, rr: r0, w: dir * v / Math.max(r0, 0.25), jt: Math.random() * 1.2, tgt: false, sel: false });
+    }
+    shuffled(bs.map(function (_, q) { return q; })).slice(0, k).forEach(function (q) { bs[q].tgt = true; });
+    orb.balls = bs;
+  }
+  function orbUpdate(dt) {
+    var mp = $('orb-pat').value, lim = 1 - OR;
+    orb.balls.forEach(function (b) {
+      if (mp === 'orbit') { b.a += b.w * dt; b.x = b.rr * Math.cos(b.a); b.y = b.rr * Math.sin(b.a); return; }
+      if (mp === 'chaos') {
+        b.jt -= dt;
+        if (b.jt <= 0) {
+          b.jt = 0.5 + Math.random();
+          var ang = Math.atan2(b.vy, b.vx) + (Math.random() - 0.5) * 2.6, sp = b.v * (0.6 + Math.random() * 1.1);
+          b.vx = Math.cos(ang) * sp; b.vy = Math.sin(ang) * sp;
+        }
+      }
+      b.x += b.vx * dt; b.y += b.vy * dt;
+      var d = Math.hypot(b.x, b.y);
+      if (d > lim) {
+        var nx = b.x / d, ny = b.y / d, dot = b.vx * nx + b.vy * ny;
+        if (dot > 0) { b.vx -= 2 * dot * nx; b.vy -= 2 * dot * ny; }
+        b.x = nx * lim; b.y = ny * lim;
+      }
+    });
+  }
+  function orbBall(x, y, r, gold) {
+    var g = octx.createRadialGradient(x - r * 0.35, y - r * 0.4, r * 0.1, x, y, r);
+    if (gold) { g.addColorStop(0, '#fff6cf'); g.addColorStop(0.5, '#f2b84b'); g.addColorStop(1, '#a56f14'); }
+    else { g.addColorStop(0, '#e6fbff'); g.addColorStop(0.45, '#45c8ff'); g.addColorStop(1, '#1478b8'); }
+    octx.shadowColor = gold ? 'rgba(242,184,75,.9)' : 'rgba(69,200,255,.85)'; octx.shadowBlur = r * 0.9;
+    octx.beginPath(); octx.arc(x, y, r, 0, Math.PI * 2); octx.fillStyle = g; octx.fill();
+    octx.shadowBlur = 0;
+  }
+  function orbDraw(el) {
+    var w = oc.clientWidth, h = oc.clientHeight;
+    if (!w || !h) return;
+    var dpr = window.devicePixelRatio || 1;
+    if (oc.width !== Math.round(w * dpr) || oc.height !== Math.round(h * dpr)) { oc.width = Math.round(w * dpr); oc.height = Math.round(h * dpr); }
+    octx.setTransform(dpr, 0, 0, dpr, 0, 0); octx.clearRect(0, 0, w, h);
+    var cx = w / 2, cy = h / 2, R = Math.min(w, h) / 2 - 4;
+    octx.beginPath(); octx.arc(cx, cy, R, 0, Math.PI * 2); octx.fillStyle = 'rgba(10,33,43,.55)'; octx.fill();
+    octx.lineWidth = 1.5; octx.strokeStyle = '#2b5a6b'; octx.stroke();
+    orb.balls.forEach(function (b) {
+      var r = OR * R, x = cx + b.x * R, y = cy + b.y * R;
+      var gold = b.tgt && (orb.st === 'show' || orb.st === 'result');
+      if (orb.st === 'show' && b.tgt) r *= 1 + 0.1 * Math.sin(el * 9);
+      orbBall(x, y, r, gold);
+      if (b.sel) {
+        octx.beginPath(); octx.arc(x, y, r * 1.45, 0, Math.PI * 2); octx.lineWidth = 3;
+        octx.strokeStyle = orb.st === 'result' ? (b.tgt ? '#4be3a8' : '#ff6b5e') : '#ffffff'; octx.stroke();
+      }
+    });
+  }
+  function orbLoop(ts) {
+    orb.raf = requestAnimationFrame(orbLoop);
+    var dt = orb.last ? Math.min(0.05, (ts - orb.last) / 1000) : 0; orb.last = ts;
+    var el = (ts - orb.t0) / 1000;
+    if (orb.st === 'idle') orbUpdate(dt * 0.3);
+    else if (orb.st === 'show') {
+      if (el >= 2) { orb.st = 'track'; orb.t0 = ts; el = 0; SFX.click(); speak('Track them. Keep your eyes on the gold.'); sayTo('orb-status', 'Track the winners','They look the same now. Keep your eyes on them.', ''); }
+    } else if (orb.st === 'track') {
+      orbUpdate(dt);
+      if (el >= orb.trackT) { orb.st = 'pick'; SFX.show(); speak('Tap the ' + orb.k + ' winners.'); sayTo('orb-status', 'Tap the ' + orb.k + ' winners', 'Picked 0 of ' + orb.k, ''); }
+    }
+    orbDraw(el);
+  }
+  function orbHud() {
+    $('orb-score').textContent = orb.score.toLocaleString();
+    $('orb-level').textContent = orb.level;
+    $('orb-best').textContent = (best.orb || 0).toLocaleString();
+    var dn = $('orb-diff').value;
+    $('orb-lbl').textContent = 'Score · ' + dn.charAt(0).toUpperCase() + dn.slice(1);
+    pipsInto('orb-pips', orb.lives);
+  }
+  function orbLock(on) { $('orb-pat').disabled = on; $('orb-diff').disabled = on; }
+  function orbIdle() {
+    var c = OCFG[$('orb-diff').value];
+    orb.level = 1; orb.score = 0; orb.lives = 3; orb.over = false; orb.st = 'idle'; orb.picked = 0;
+    orbSpawn(c.n, c.k, c.sp);
+    $('orb-go').hidden = false; $('orb-go').textContent = 'Start round'; orbLock(false); orbHud();
+    sayTo('orb-status', 'Find the winners.', 'Gold orbs are profitable assets. Remember them, then track them.', '');
+  }
+  function orbEnter() { orbIdle(); orb.last = 0; if (!orb.raf) orb.raf = requestAnimationFrame(orbLoop); }
+  function orbLeave() { if (orb.raf) { cancelAnimationFrame(orb.raf); orb.raf = 0; } }
+  function orbStart() {
+    if (orb.st === 'show' || orb.st === 'track' || orb.st === 'pick') return;
+    if (orb.over) { orb.level = 1; orb.score = 0; orb.lives = 3; orb.over = false; }
+    var p = orbParams(); orb.k = p.k; orb.trackT = p.t; orb.picked = 0;
+    orbSpawn(p.n, p.k, p.sp);
+    orb.st = 'show'; orb.t0 = performance.now();
+    $('orb-go').hidden = true; orbLock(true); orbHud();
+    speak('Remember the ' + p.k + ' gold winners.'); sayTo('orb-status', 'Remember the winners',p.k + ' of ' + p.n + ' assets are profitable. Watch the gold ones.', '');
+    SFX.show();
+  }
+  function orbResolve() {
+    orb.st = 'result';
+    var good = orb.balls.filter(function (b) { return b.sel && b.tgt; }).length, miss = orb.k - good;
+    if (miss === 0) {
+      var pts = Math.round(100 * orb.k * (1 + 0.25 * (orb.level - 1)));
+      orb.score += pts; orb.level++; SFX.win();
+      speak('Perfect round! Level ' + orb.level + ' next.'); sayTo('orb-status', '+' + pts + ' · All winners found', 'Level ' + orb.level + ' next: more assets and faster moves.', 'good');
+    } else {
+      orb.score += good * 40; orb.lives--; SFX.lose();
+      speak('You lost ' + miss + ' of the winners. ' + orb.lives + ' lives left.'); sayTo('orb-status', 'Lost ' + miss + ' of ' + orb.k + ' winners', good + ' found. ' + orb.lives + ' lives left.', 'bad');
+    }
+    bump('orb', orb.score); orbHud();
+    orbLock(false); $('orb-go').hidden = false;
+    if (orb.lives <= 0) {
+      orb.over = true; $('orb-go').textContent = 'New game';
+      setTimeout(function () {
+        SFX.over();
+        speak('Game over. You reached level ' + orb.level + '.'); sayTo('orb-status', 'Game over at level ' + orb.level + ' with ' + orb.score.toLocaleString() + ' points', TIPS[Math.floor(Math.random() * TIPS.length)], 'bad');
+      }, 800);
+    } else { $('orb-go').textContent = 'Next round'; }
+  }
+  oc.addEventListener('pointerdown', function (e) {
+    if (orb.st !== 'pick') return;
+    var rc = oc.getBoundingClientRect(), R = Math.min(rc.width, rc.height) / 2 - 4;
+    var nx = (e.clientX - rc.left - rc.width / 2) / R, ny = (e.clientY - rc.top - rc.height / 2) / R;
+    var hit = null, bd = OR * 2;
+    orb.balls.forEach(function (b) { var d = Math.hypot(b.x - nx, b.y - ny); if (d < bd) { bd = d; hit = b; } });
+    if (!hit) return;
+    if (hit.sel) { hit.sel = false; orb.picked--; } else { hit.sel = true; orb.picked++; }
+    SFX.flip();
+    sayTo('orb-status', 'Tap the ' + orb.k + ' winners', 'Picked ' + orb.picked + ' of ' + orb.k, '');
+    if (orb.picked === orb.k) orbResolve();
+  });
+  $('orb-go').addEventListener('click', function () { SFX.click(); orbStart(); });
+  $('orb-diff').addEventListener('change', function () { SFX.click(); orbIdle(); });
+  $('orb-pat').addEventListener('change', function () { SFX.click(); });
+
+  /* ---------- pattern + screen ratio ---------- */
+  $('pat').addEventListener('change', function () {
+    if (busy) { $('pat').value = pat; return; }
+    pat = $('pat').value; SFX.click(); newGame();
+  });
+  var appEl = document.querySelector('.app'), ratioSel = $('ratio');
+  try { var rv = localStorage.getItem('ftc-ratio'); if (rv === 'auto' || rv === '916' || rv === '169') ratioSel.value = rv; } catch (e) {}
+  function applyRatio() {
+    appEl.setAttribute('data-ratio', ratioSel.value);
+    try { localStorage.setItem('ftc-ratio', ratioSel.value); } catch (e) {}
+  }
+  ratioSel.addEventListener('change', function () { SFX.click(); applyRatio(); });
+  applyRatio();
+
+  /* ---------- Voice commentary (browser speech, no audio files) ---------- */
+  var synth = null;
+  try { synth = window.speechSynthesis || null; } catch (e) {}
+  var voiceOn = true, voiceName = '';
+  try { voiceOn = localStorage.getItem('ftc-voice') !== '0'; voiceName = localStorage.getItem('ftc-voicename') || ''; } catch (e) {}
+  function rnd(a) { return a[Math.floor(Math.random() * a.length)]; }
+  function pickVoice() {
+    if (!synth) return null;
+    var vs = synth.getVoices() || [], i;
+    for (i = 0; i < vs.length; i++) if (vs[i].name === voiceName) return vs[i];
+    for (i = 0; i < vs.length; i++) if (/^en[-_](US|GB|NG|AU)/i.test(vs[i].lang)) return vs[i];
+    return vs[0] || null;
+  }
+  function speak(text, force) {
+    if (!synth || (!voiceOn && !force)) return;
+    try {
+      synth.cancel();
+      var u = new SpeechSynthesisUtterance(String(text).replace(/\s+/g, ' '));
+      var v = pickVoice();
+      if (v) { u.voice = v; u.lang = v.lang; }
+      u.rate = 1.05; u.pitch = 1; u.volume = 1;
+      synth.speak(u);
+    } catch (e) {}
+  }
+  function fillVoices() {
+    var sel = $('voice');
+    if (!synth || !sel) return;
+    var vs = (synth.getVoices() || []).slice().sort(function (a, b) {
+      var ae = /^en/i.test(a.lang) ? 0 : 1, be = /^en/i.test(b.lang) ? 0 : 1;
+      return ae - be || a.name.localeCompare(b.name);
+    });
+    sel.innerHTML = '';
+    vs.forEach(function (v) { var o = document.createElement('option'); o.value = v.name; o.textContent = v.name + ' (' + v.lang + ')'; sel.appendChild(o); });
+    var cur = pickVoice();
+    if (cur) sel.value = cur.name;
+  }
+  function renderVoice() { var b = $('vo'); b.setAttribute('aria-pressed', String(voiceOn)); b.textContent = voiceOn ? 'Voice on' : 'Voice off'; }
+  if (!synth) { $('vo').hidden = true; $('voice').hidden = true; $('voice-l').hidden = true; }
+  else {
+    fillVoices();
+    try { synth.addEventListener('voiceschanged', fillVoices); } catch (e) { synth.onvoiceschanged = fillVoices; }
+    $('vo').addEventListener('click', function () {
+      voiceOn = !voiceOn;
+      try { localStorage.setItem('ftc-voice', voiceOn ? '1' : '0'); } catch (e) {}
+      renderVoice();
+      if (voiceOn) speak('Commentary on. Let the games begin.'); else { try { synth.cancel(); } catch (e) {} }
+    });
+    $('voice').addEventListener('change', function () {
+      voiceName = $('voice').value;
+      try { localStorage.setItem('ftc-voicename', voiceName); } catch (e) {}
+      speak('This is how I sound.', true);
+    });
+    renderVoice();
+  }
+  $('numtoggle').addEventListener('change', function () { stage.classList.toggle('nonum', !$('numtoggle').checked); });
+
+  /* ---------- Ideas vault ---------- */
+  var CATS = ['Productized service', 'Micro-SaaS and tools', 'Data and AI', 'Local business', 'Cross-border', 'Courses and cohorts', 'Directories and media', 'Physical micro-brand', 'Finance and compliance', 'Niche agency'];
+var COSTS = ['Under $100', '$100 to $500', '$500 to $2k', 'Over $2k'];
+/* [category, title, pitch, how it earns, first move this week, watch out, cost tier, price or value] */
+var IDEAS = [
+[0, 'Dead-Lead Revival', 'Small B2B firms sit on hundreds of old quotes and enquiries nobody follows up. Sell a fixed-scope campaign that re-contacts them.', '$1,200 flat per list of 500 to 1,000 contacts, plus 10% of revenue recovered within 60 days.', 'Offer one contractor a free pass over 200 old leads and show them the replies.', 'Get written permission to contact people and follow local spam and data rules.', 0, '$1.2k to $4k per client'],
+[0, 'Quote-Speed Rescue', 'Tradespeople lose jobs because quotes take two days. Build a form that turns a site visit into a priced PDF in ten minutes.', '$750 setup plus $49 a month per business for template upkeep.', 'Record a two-minute demo using a plumber\'s real price list.', 'Keep each client\'s prices in their own sheet and never share them.', 0, '$750 setup, $590 a year after'],
+[0, 'Review-to-Revenue Pack', 'A clinic at 4.1 stars loses patients to the 4.7 next door. Automate review requests after each visit and draft replies to every review.', '$500 setup plus $120 a month.', 'Screenshot the rating gap for ten clinics and send each owner their own.', 'Never offer rewards for reviews. Platforms ban it.', 0, '$500 plus $1.4k a year'],
+[0, 'Menu Margin Audit', 'Most restaurants cannot say which dish makes money. Cost the top 25 dishes, reprice them and redesign the menu around the winners.', '$900 per audit, $250 a quarter to refresh prices.', 'Cost one signature dish for a cafe owner for free and show the real margin.', 'Ingredient prices move, so date every costing sheet.', 0, '$900 per audit'],
+[0, 'Bid Packager', 'Small contractors skip public tenders because of paperwork. Assemble tax, registration and experience documents into a ready bid pack.', '$1,500 per bid, or $300 a month to track tenders and keep documents current.', 'List five open tenders under $50,000 on your national procurement portal.', 'Sell preparation only. Never promise a win.', 0, '$1.5k per bid'],
+[0, 'Handbook in a Weekend', 'Startups with ten to forty staff have no written policies. Deliver a local-law handbook covering leave, conduct and remote work.', '$1,200 per handbook, $200 a year for updates.', 'Draft a template for one country and book an hour with a local employment lawyer to review it.', 'Have a qualified local professional sign off before you sell it.', 1, '$1.2k per client'],
+[0, 'Stock Reconciliation Sprint', 'Shops run on spreadsheets that stopped matching the shelf months ago. Spend five days counting, reconciling and setting reorder points.', '$1,000 per sprint, $150 a month for monthly cycle counts.', 'Count one shelf for a friendly shop owner and show what the gap costs in lost sales.', 'Agree access to cash and stock rooms in writing.', 0, '$1k per shop'],
+[0, 'Grant Radar for NGOs', 'Small NGOs miss funding because nobody scans calls for proposals. Send ten matched grants each month with deadlines and fit notes.', '$250 a month per organisation, plus $1,500 per written application.', 'Build a matched list of ten grants for one NGO you know and send it free.', 'Tell clients plainly that funding is never guaranteed.', 0, '$250 a month'],
+[0, 'Proposal Rescue', 'Freelancers and small agencies lose pitches to weak proposals. Rewrite and restructure a draft within 24 hours.', '$300 per proposal, or $1,500 a month for six.', 'Rewrite a public proposal template and post a before and after.', 'Sign a confidentiality note before touching client documents.', 0, '$300 per proposal'],
+
+[1, 'Walk-in Queue by WhatsApp', 'Barbershops and clinics run on crowded waiting rooms. Give each customer a queue number and a message when they are next.', '$19 a month per shop.', 'Run the queue by hand through a WhatsApp broadcast for one shop for a week.', 'Collect phone numbers only with consent.', 0, '$19 a month per shop'],
+[1, 'Rent Reminder Ledger', 'Small landlords chase tenants by hand. Track due dates, send reminders and issue receipts automatically.', '$9 a month per landlord, $99 a month per property manager.', 'Build a sheet and message flow for three landlords.', 'Receipts do not replace legal tenancy records.', 0, '$9 to $99 a month'],
+[1, 'Inspection Log Generator', 'Food stalls need daily cleaning and temperature logs for inspectors. Produce filled, print-ready logs for each site.', '$12 a month per site.', 'Visit two stalls and copy the log format the local inspector actually asks for.', 'Match the inspector\'s format exactly, not an international one.', 0, '$12 a month per site'],
+[1, 'Pledge Tracker for Communities', 'Churches, mosques and clubs track pledges in notebooks. Record pledges, remind givers gently and show totals.', '$25 a month per organisation.', 'Offer a free build to one treasurer.', 'Keep donor data private and share totals only.', 0, '$25 a month'],
+[1, 'Supplier Price Watcher', 'Contractors overpay because supplier prices change weekly. Collect price lists and alert buyers to drops.', '$79 a month per contractor.', 'Gather ten suppliers\' cement and steel prices weekly in one sheet and send it free for a month.', 'Credit your sources and skip sites that forbid scraping.', 0, '$79 a month'],
+[1, 'Invoice Chaser', 'Freelancers hate chasing payment. Send firm, polite reminders on day 1, 7 and 14 after the due date.', '$15 a month, or 3% of invoices recovered.', 'Write the three reminder templates and test them with five freelancers.', 'Never threaten legal action in a template.', 0, '$15 a month'],
+[1, 'Deposit Link for Salons', 'No-shows cost salons a full chair. Send a small deposit link when a slot is booked.', '$29 a month per salon.', 'Set up one salon with a payment link and track no-shows for a month.', 'State refund rules clearly at booking.', 0, '$29 a month'],
+[1, 'Sheet-to-Status Page', 'Tailors and delivery vendors answer "is it ready?" all day. Turn their order sheet into a customer status page.', '$300 build plus $39 a month.', 'Convert one vendor\'s order sheet into a page with a search box.', 'Hide other customers\' data behind the order code.', 0, '$300 plus $39 a month'],
+[1, 'Rota Swapper', 'Shift teams swap shifts in group chats and lose track. Give them a shared rota that logs swaps and approvals.', '$29 a month per team.', 'Run it for one pharmacy with five staff.', 'Respect local limits on working hours.', 0, '$29 a month'],
+
+[2, 'Missed-Call Voice Agent', 'Clinics and garages lose jobs when nobody answers the phone. An AI agent picks up, takes details and books a slot.', '$400 setup plus $199 a month.', 'Forward your own number to a demo agent and let a dentist ring it.', 'Tell callers they are speaking to an assistant and get consent for recordings.', 1, '$400 plus $199 a month'],
+[2, 'Contract Red-Flag Reader', 'Small firms sign supplier contracts they cannot read. Return a plain-language list of risky clauses.', '$29 per document, $99 a month unlimited, referral fees from lawyers.', 'Analyse five public sample contracts and publish the output format.', 'State that it is not legal advice and refer risky cases to a lawyer.', 0, '$29 per document'],
+[2, 'SKU Description Factory', 'Marketplace sellers have hundreds of products with one-line listings. Rewrite them with attributes and search terms.', '$0.80 per SKU, minimum 250 SKUs.', 'Rewrite 20 listings for one seller as a sample.', 'Check claims against the product. Never invent specifications.', 0, '$200 or more per batch'],
+[2, 'Inbox Triage Setup', 'Support teams drown in mixed emails. Tag, prioritise and draft replies so staff only review.', '$1,000 setup plus $150 a month.', 'Build the tagging rules on an exported month of one team\'s emails.', 'A human approves anything that touches refunds or health.', 1, '$1k plus $150 a month'],
+[2, 'Voice Note to CRM', 'Field sales reps forget to log visits. Turn voice notes into CRM entries and next-step tasks.', '$20 per user per month.', 'Process one rep\'s voice notes for a week and show the logged result.', 'Get consent before recording customers.', 1, '$20 per user a month'],
+[2, 'Competitor Price Radar', 'Online sellers cannot watch rivals every day. Track 20 competing products and send a Monday summary.', '$149 a month per seller.', 'Track one seller\'s top ten products for two weeks.', 'Use public pages only and respect terms of use.', 0, '$149 a month'],
+[2, 'Interview Synthesiser', 'Founders hold customer calls and never analyse them. Turn ten transcripts into themes, quotes and decisions.', '$900 per report.', 'Analyse five of your own calls and publish the template.', 'Anonymise people and companies unless they agree.', 0, '$900 per report'],
+[2, 'SOP Chatbot', 'Small firms keep procedures in scattered documents. Build a private assistant that answers staff from them.', '$1,500 build plus $99 a month.', 'Index one company\'s handbook and show answers with source pages.', 'Always show the source page so staff can verify.', 1, '$1.5k plus $99 a month'],
+[2, 'Receipt-Photo Bookkeeper', 'Market traders keep receipts in bags. They send photos over WhatsApp and get a monthly ledger back.', '$8 a month per trader.', 'Collect a week of receipts from five traders and build their ledger by hand.', 'Keep photos private and delete them on request.', 0, '$8 a month per trader'],
+
+[3, 'Shoe Repair Pickup', 'People bin shoes a cobbler could fix. Collect, repair and return them within three days.', '$12 to $25 per pair at about 40% margin.', 'Partner with one cobbler and advertise to one housing estate.', 'Photograph every pair at pickup.', 0, '$12 to $25 per pair'],
+[3, 'Generator Service Plans', 'Where power is unreliable, generators fail at the worst time. Sell quarterly service plans.', '$60 a quarter per household, $150 for shops.', 'Sell ten plans to neighbours before hiring a technician.', 'Fuel and oil handling needs safety training.', 1, '$60 to $150 a quarter'],
+[3, 'Water Tank Cleaning Route', 'Tanks need cleaning twice a year and nobody tracks it. Build a dense route and rebook automatically.', '$40 per clean with six-month rebooking.', 'Clean ten tanks on one street and photograph before and after.', 'Use safe, food-grade cleaning products.', 1, '$40 per job'],
+[3, 'Office Honesty Shelf', 'Offices want snacks without a canteen. Stock a shelf with prices and a QR payment code.', '$300 to $600 a month per site at about 35% margin.', 'Ask three small offices to host a shelf for two weeks.', 'Track shrinkage per site and drop weak sites.', 1, '$300 to $600 a month per site'],
+[3, 'Workplace Car Detailing', 'Employees leave cars all day in the office park. Detail interiors while they work.', '$25 per car, eight cars a day.', 'Get one office manager\'s permission and offer a launch-day price.', 'Confirm parking rules and insurance.', 0, 'About $200 a day'],
+[3, 'Shift-Worker Meal Prep', 'Nurses and security staff skip proper meals. Deliver five weekly meals to the workplace gate.', '$35 a week per customer.', 'Sell 15 weekly boxes to one hospital ward.', 'Check food handling licences.', 1, '$525 a week at 15 customers'],
+[3, 'Gas Refill Delivery Club', 'Cooking gas runs out without warning. Deliver on a reminder cycle and sell a monthly plan.', '$2 to $3 margin per refill across 200 recurring households.', 'Sign up 20 households and track their refill intervals.', 'Follow local rules on cylinders and storage.', 1, 'About $500 a month at 200 homes'],
+[3, 'Back-to-School Alteration Pop-Up', 'Uniforms never fit at the start of term. Run a three-day alteration stand near schools.', '$3 to $6 per hem or seam.', 'Pre-sell slots to one parent group.', 'Take written measurements to avoid disputes.', 0, 'About $900 a season'],
+[3, 'Short-Stay Linen Turnover', 'Holiday-let hosts lose hours washing sheets between guests. Swap, wash and return within a day.', '$8 to $12 per turnover.', 'Serve two hosts for a month.', 'Count items at every handover.', 1, 'About $600 a month at 60 turnovers'],
+
+[4, 'Diaspora Errand Concierge', 'Families abroad cannot visit offices, hospitals or relatives. Handle errands and send photo proof.', '$60 to $200 per task, $150 a month plans.', 'Offer three people abroad one free errand each.', 'Get written authority before acting on someone\'s papers.', 0, '$60 to $200 per task'],
+[4, 'Land Document Check Coordination', 'Overseas buyers fear fake land documents. Coordinate checks with a lawyer and a surveyor and return one report.', '$350 per check, with partner fees paid separately.', 'Agree a referral arrangement with one lawyer and one surveyor.', 'You coordinate. Licensed professionals sign the opinions.', 1, '$350 per check'],
+[4, 'Spare-Parts Matching', 'Mechanics cannot find rare parts. Source them from overseas suppliers and add a clear fee.', '10% to 15% sourcing fee.', 'Source one part for a garage and share the full cost breakdown.', 'Check import duties before quoting.', 1, '$20 to $200 per order'],
+[4, 'Visa Document Pack', 'Applicants miss documents and lose fees. Compile checklists, translations and formats for one visa route.', '$180 per pack.', 'Pick one route, publish a free checklist and sell the full pack.', 'Never promise visa outcomes or give immigration advice.', 0, '$180 per pack'],
+[4, 'Export Sample Boxes', 'Overseas specialty shops want to taste before they buy. Ship curated sample boxes of one country\'s foods.', '$90 per box, then wholesale follow-ups.', 'Mail ten boxes to specialty grocers abroad.', 'Check food export and labelling rules.', 2, '$90 per box'],
+[4, 'Customs Checklist Library', 'Small exporters get stuck on paperwork. Sell one checklist per product category.', '$39 per checklist, $15 a month for updates.', 'Write the checklist for one product and share it in exporters\' groups.', 'Date each checklist and link to the official source.', 0, '$39 each'],
+[4, 'Label Localisation', 'Importers need ingredient and safety labels in local languages. Translate and format them.', '$60 per label.', 'Translate one popular label and show it printed.', 'Have a native speaker review every label.', 0, '$60 per label'],
+[4, 'Nearshore Assistant Pods', 'Founders want reliable assistants. Manage three trained assistants as one pod.', '$2,400 a month per client at about 45% margin.', 'Train two assistants on one client\'s task list for a trial month.', 'Be clear on contracts and tax status.', 2, '$2.4k a month'],
+[4, 'Remote-Job Readiness Studio', 'Graduates have skills but no overseas-ready portfolio. Build the portfolio, time-zone routine and payment setup.', '$120 per cohort seat.', 'Run a free session for ten graduates.', 'Never guarantee jobs.', 0, '$120 per seat'],
+
+[5, 'Logistics Excel Bootcamp', 'Generic Excel courses bore people. Teach dispatch sheets, route costing and fuel tracking.', '$149 per seat, 30 seats per cohort.', 'Teach one free workshop to a logistics team.', 'Use real sample data.', 0, '$4.5k per cohort'],
+[5, 'Exam Sprint Weekends', 'Professional exam candidates panic before the paper. Run a weekend of past questions and timed practice.', '$60 per student.', 'Test it with one study group.', 'Avoid copyrighted exam material.', 0, '$2.4k per weekend at 40 students'],
+[5, 'One-Profession Template Shop', 'Quantity surveyors, pharmacists and nurses each need their own forms. Sell 20 templates in one bundle.', '$79 per bundle.', 'Interview five practitioners about their worst paperwork.', 'Keep patient and client data out of samples.', 0, '$79 per bundle'],
+[5, 'Teardown Newsletter', 'Take one company or product apart each week in a narrow market.', '$12 a month, plus sponsors at $500 per issue after 3,000 readers.', 'Publish three teardowns before charging.', 'Cite public sources only.', 0, '$36k a year at 250 paying readers'],
+[5, 'Live Case Clinic', 'Founders submit one problem and a 90-minute live session solves three.', '$25 per seat, recordings sold as a library at $15.', 'Run one free clinic with three problems.', 'Get permission before sharing a founder\'s details.', 0, '$25 per seat'],
+[5, 'Trade Apprenticeship Board', 'Skilled tradespeople want to train others but have no channel. List paid apprenticeships and match learners.', '$50 per trainer listing, $500 per placed hire.', 'Sign up five electricians who will each take one trainee.', 'Agree safety rules and written terms.', 0, '$50 to $500'],
+[5, 'Corporate Lunch Talks', 'Companies want learning without travel. Provide 45-minute internal talks by local experts.', '$300 per talk, 60% to the speaker.', 'Pitch HR at three firms with a menu of six talks.', 'Confirm each speaker\'s topic before the talk.', 0, '$300 per talk'],
+[5, 'Role Interview Gym', 'Candidates for one role, such as data analyst, need realistic mock interviews with scoring.', '$40 per session, $99 per bundle.', 'Run five free mock interviews and publish the scoring sheet.', 'Make no claims about job outcomes.', 0, '$40 per session'],
+[5, 'Workplace Safety Induction Pack', 'Small employers have no induction material. Provide slides, a quiz and certificates.', '$149 per company, $49 a year for updates.', 'Draft one pack for a workshop business and check it with a safety officer.', 'Match local safety law and have it reviewed.', 1, '$149 per company'],
+
+[6, 'Verified Artisan Directory', 'People distrust unknown plumbers. List checked trades with ID, references and reviews.', '$10 a month per trade plus $5 per lead.', 'Verify 30 tradespeople in one district.', 'Check ID and references yourself and keep records.', 0, 'About $300 a month at 30 trades'],
+[6, 'Tender Alert Newsletter', 'Companies miss tenders in their niche, such as solar. Send a weekly curated list.', '$29 a month.', 'Send a free issue to 50 solar firms.', 'Link every alert to the official notice.', 0, '$29 a month'],
+[6, 'Salary Transparency Database', 'Nobody knows what roles pay in one city or industry. Collect anonymous submissions and publish ranges.', '$199 per HR report, $99 a month for recruiters.', 'Collect 100 entries for one profession.', 'Strip names and employers.', 0, '$199 per report'],
+[6, 'Wedding Vendor Map', 'Couples search blind. List vendors with live availability calendars.', '$20 a month per featured vendor.', 'Onboard 40 vendors in one city.', 'Keep calendars current or trust collapses.', 1, '$800 a month at 40 vendors'],
+[6, 'Used Kitchen Equipment Board', 'Closing restaurants dump equipment cheaply. List ovens and fridges and charge a fee.', '$15 listing plus 3% on sale.', 'List five items from one closing restaurant.', 'Check ownership and condition photos.', 0, '$15 plus 3%'],
+[6, 'Local Materials Price Index', 'Developers guess building material prices. Publish a monthly index by supplier.', '$39 a month.', 'Collect 20 prices from five suppliers and publish a sample.', 'Name sources and dates.', 0, '$39 a month'],
+[6, 'Niche Job Board', 'Marine engineers, drone pilots and similar niches have no board. Charge employers per post.', '$99 per post.', 'Pick one niche and list ten live roles by hand.', 'Verify employers to avoid scams.', 0, '$99 per post'],
+[6, 'City Opportunity Digest', 'Licences, grants, bids and auctions are scattered. Send five a week in a five-minute email.', 'Sponsorship at $300 per issue plus a $9 paid tier.', 'Send one issue to 100 local business owners.', 'Check dates twice.', 0, 'About $1.2k a month in sponsors'],
+[6, 'Outage Tracker for Solar Leads', 'People report power cuts. Map outages and pass qualified leads to solar installers.', '$5 per qualified lead.', 'Collect 100 outage reports in one district.', 'Get consent before passing contact details on.', 0, '$5 per lead'],
+
+[7, 'Custom Boxes for Food Makers', 'Small food brands want branded boxes at low volumes. Source 100-unit runs.', '$1 margin per box on $2 to $4 boxes.', 'Order samples from two printers and photograph a food maker\'s product in one.', 'Use food-safe materials only.', 2, 'About $100 margin per run'],
+[7, 'Smart-Fit School Uniforms', 'Parents lose time on uniform fittings. Store sizes and reorder yearly.', '$3,000 per school contract.', 'Pitch one small school with a measured sample class.', 'Protect children\'s measurement data.', 2, '$3k per school'],
+[7, 'Delivery Bag Rentals', 'Home cooks deliver food in open bags. Rent insulated bags by the week.', '$3 a week per bag.', 'Rent 20 bags to cooks and riders.', 'Clean bags between rentals.', 1, '$60 a week at 20 bags'],
+[7, 'Market Charging Lockers', 'People need phone charging in markets. Place coin or QR lockers.', '$0.20 per charge across 20 slots.', 'Build one locker and test it at a market stall.', 'Use certified chargers and lockable cabling.', 2, 'About $200 a month'],
+[7, 'Used Cooking Oil Collection', 'Restaurants pay to dump oil. Collect it and sell it to biodiesel buyers.', '$0.30 to $0.60 per litre.', 'Collect from five restaurants and get a buyer quote.', 'Handle and transport it under local waste rules.', 2, 'About $600 a month at 1,500 litres'],
+[7, 'Refill Station for Cleaning Products', 'People buy cleaning products in single-use bottles. Refill jugs at housing estates.', '$4 per refill at about 55% margin.', 'Run a Saturday stand at one estate.', 'Label contents and hazards.', 1, '$4 per refill'],
+[7, 'Amateur League Jerseys', 'Local teams buy jerseys one at a time. Offer small-batch printing with sponsor logos.', '$18 per jersey at about 40% margin.', 'Pitch ten teams with a mock-up.', 'Collect names and sizes in one sheet.', 1, '$18 per jersey'],
+[7, 'Barbers\' Supply Co-op', 'Barbers overpay for clippers and disinfectant. Pool their orders and charge a fee.', '8% fee on pooled orders.', 'Gather 20 barbers and pool one order.', 'Keep records of who paid.', 1, '8% of each order'],
+[7, 'Balcony Garden Kits', 'City dwellers want herbs without gardening knowledge. Ship a climate-matched kit monthly.', '$18 a month.', 'Test one kit with ten customers.', 'Plant only species that grow in your climate.', 1, '$18 a month'],
+
+[8, 'Tax Calendar Concierge', 'Sole traders miss filings. Send reminders and prepare simple returns.', '$20 a month, $120 per return.', 'Map the filing dates for one business type.', 'Preparation needs a qualified accountant\'s review.', 0, '$20 a month'],
+[8, 'Payroll-Lite for Tiny Firms', 'Firms with under ten staff calculate pay by hand. Produce payslips and deduction reports.', '$4 per employee per month.', 'Run payroll for two firms alongside their own method.', 'Check statutory rates every quarter.', 0, '$4 per employee'],
+[8, 'Cash-Flow Forecast Build', 'Owners do not see a cash gap until it hits. Build a 13-week forecast.', '$800 per forecast, $150 a month for updates.', 'Build one forecast for a friendly owner.', 'Show your assumptions clearly.', 0, '$800 per forecast'],
+[8, 'Loan Readiness Pack', 'Lenders reject messy statements. Format accounts and cash records to what lenders need.', '$650 per pack.', 'Ask a lender\'s officer what they reject most.', 'Never inflate numbers.', 0, '$650 per pack'],
+[8, 'Savings Circle Ledger', 'Rotating savings groups run on trust and notebooks. Track rounds, payouts and balances.', '$5 a month per group.', 'Digitise one group you know.', 'Do not hold the group\'s money.', 0, '$5 per group a month'],
+[8, 'Shop Insurance Comparison', 'Shopkeepers underinsure. Compare quotes through licensed partners.', 'Referral commission from licensed brokers.', 'Sign a referral deal with one licensed broker.', 'Only a licensed party can sell insurance.', 0, 'Commission per policy'],
+[8, 'Supplier Terms Negotiator', 'Cash is tight because suppliers want payment fast. Negotiate 30-day terms.', '15% of working capital freed in year one.', 'Review a client\'s top five suppliers for terms.', 'Do not promise outcomes.', 0, '15% of freed cash'],
+[8, 'Chargeback Defence Kit', 'Online sellers lose payment disputes because of missing evidence. Provide templates and a dispute checklist.', '$49 kit, $79 a month to handle disputes.', 'Collect five dispute cases and build the evidence pack.', 'Follow each processor\'s deadlines.', 0, '$49 per kit'],
+[8, 'Quarterly Bookkeeping Clean-Up', 'Books are months behind when the tax office asks. Reconcile and tidy three months at a time.', '$600 per quarter.', 'Clean one quarter for a small shop at a discount.', 'Keep source documents safe.', 0, '$600 per quarter'],
+
+[9, 'Vet Clinic Reminders', 'Pet owners forget vaccinations. Automate reminders and booking.', '$300 setup, $150 a month.', 'Pull overdue vaccinations for one clinic and message those owners.', 'Respect opt-outs.', 0, '$300 plus $150 a month'],
+[9, 'Driving School Lead Machine', 'Learners compare schools online. Build a booking page and follow-up flow.', '$500 setup, $200 a month.', 'Build a page for one school and track enquiries.', 'Show prices and pass rates truthfully.', 0, '$500 plus $200 a month'],
+[9, 'Solar Quote Funnel', 'Buyers cannot size solar. A calculator turns their bills into quotes.', '$1,200 setup plus $20 per lead.', 'Build a calculator for one installer.', 'Show assumptions and savings ranges.', 1, '$1.2k plus $20 a lead'],
+[9, 'Boutique Hotel Direct Booking', 'Booking platforms take 15% to 20%. Build a direct booking page and an email loop.', '$900 setup plus 5% of direct bookings.', 'Audit one hotel\'s booking mix.', 'Check rate parity clauses in platform contracts.', 0, '$900 plus 5%'],
+[9, 'Admissions Funnel for Private Schools', 'Schools fill classes through word of mouth. Run open-day campaigns.', '$2,000 per intake season.', 'Plan one open day for a small school.', 'Respect child-data and consent rules.', 0, '$2k per season'],
+[9, 'Photographer Album Upsell Flow', 'Photographers sell the shoot and stop. Add gallery, album and print follow-ups.', '$400 setup, 10% of upsells.', 'Build the flow for one wedding photographer.', 'Get client consent before using photos.', 0, '$400 plus 10%'],
+[9, 'Radio-to-WhatsApp Converter', 'Radio listeners have no way to respond. Move them into WhatsApp communities and sell sponsor slots.', '$600 a month per station.', 'Run one on-air call-to-join for a presenter.', 'Follow broadcast rules.', 0, '$600 a month'],
+[9, 'Livestream Setup for Congregations', 'Congregations want a clean stream. Set up cameras, sound and a simple stream.', '$1,500 setup, $200 a month.', 'Offer a trial stream at one weekly service.', 'Check venue permission.', 2, '$1.5k plus $200 a month'],
+[9, 'Farm Pre-Order Pages', 'Smallholders sell only when buyers walk by. Build pre-order pages for each harvest batch.', '$250 setup plus 3% of orders.', 'Pre-sell one harvest batch for one farmer.', 'Agree on delivery and cold-chain realities.', 0, '$250 plus 3%']
+];
+
+  var PCATS = ["Operator systems", "Pricing and cash", "Career leverage", "Sales and deals", "Audience and content", "AI operations", "Trade and sourcing", "Property and assets", "Funding and grants", "Niche skills"];
+/* [category, title, hook, who pays, three-step method (separated by |), your coaching offer, how to land the first client, watch out, price band] */
+var PLAYS = [
+[0, "The Two-Week Clinic Turnaround", "Fix a half-empty clinic schedule without running ads.", "Owners of small clinics with under 60% room or chair use.", "Map every empty slot by weekday and hour for 8 weeks | Turn the three weakest slots into named offers with a fixed price | Add a recall list that re-books lapsed patients every Monday", "Six-week programme at $3,500, or $1,500 plus 5% of added revenue.", "Pull one clinic's empty-slot map for free and show the money sitting in it.", "Respect patient privacy law. Work with anonymised schedules.", "$1.5k to $3.5k"],
+[0, "Contractor Margin Rescue", "Teach builders to price jobs from real labour hours, not gut feel.", "Small building and fit-out firms that win jobs but finish on thin profit.", "Rebuild five finished jobs from timesheets and receipts | Create a rate card with a 20% contingency line | Add a variation-order form signed before any extra work", "$4,000 for four sessions plus a rate card workshop.", "Ask a builder for one finished job file and show where the margin went.", "Do not promise margin gains. Show the arithmetic.", "$2k to $4k"],
+[0, "Fleet Downtime Detective", "Cut vehicle downtime by costing every breakdown.", "Delivery and haulage firms with 5 to 30 vehicles.", "Log every stoppage by cause for 30 days | Rank causes by cost per day lost | Build a service calendar and a spare-parts shelf for the top three causes", "$3,000 for a 30-day audit, then $500 a quarter for review.", "Offer a fleet owner a free one-vehicle downtime sheet.", "Safety-critical repairs need a licensed mechanic.", "$3k to $5k"],
+[0, "School Fee Collection System", "Raise on-time fee payment with a calendar, not threats.", "Private school owners and bursars.", "Sort parents into early, late and chronic payers | Send a three-touch reminder plan tied to term dates | Offer a written instalment option before arrears pile up", "$2,500 per school to design the system and train the bursar.", "Ask a bursar for last term's payment dates and chart them.", "Keep the tone respectful. Never shame families or children.", "$2k to $4k"],
+[0, "Hotel Turnover Time Cut", "Cut room turnover time without hiring anyone.", "Owners of boutique hotels and guesthouses.", "Time ten room turnovers with a stopwatch | Rearrange trolleys and the linen route to remove walking | Set one checklist with photo spot checks", "$2,800 for a workshop and one on-site day.", "Time five rooms for an owner and show the minutes saved.", "Involve staff early. Do not frame it as a layoff plan.", "$2k to $3k"],
+[0, "Pharmacy Dead-Stock Recovery", "Turn slow and expiring stock into cash before it dies on the shelf.", "Independent pharmacy owners.", "Sort stock by expiry window and sales speed | Agree returns and swaps with wholesalers early | Set a reorder rule that stops the same overbuy", "$2,000 clean-up plus $400 a month for review.", "Count one shelf and show the expiry exposure in money.", "Follow pharmacy law on resale and disposal.", "$2k to $2.5k"],
+[0, "Salon Rebooking Engine", "Raise repeat visits by booking the next appointment before the client leaves.", "Salon and barbershop owners with many one-visit clients.", "Track each client's visit gap for 90 days | Script the in-chair rebooking line | Send a reminder five days before the usual gap ends", "$1,800 including a staff training session.", "Show a salon the share of clients who never came back after one visit.", "Offer the next slot. Never pressure.", "$1.5k to $2k"],
+[0, "Warehouse Pick-Path Redesign", "Cut order picking time by shelving by sales frequency.", "Small distributors with a single warehouse.", "Rank products by picks per week | Move the top 20% to the shelves nearest the dispatch bay | Re-time the same ten orders and show the saving", "$4,500 for a two-day on-site redesign.", "Walk one warehouse and mark the longest pick route on a floor plan.", "Keep aisles clear and shelf loads within safe limits.", "$3k to $5k"],
+[0, "Maintenance Calendar for Landlords", "Stop emergency repairs by scheduling the boring ones.", "Landlords and managers with 20 or more units.", "List every system per building with age and last service | Set a yearly calendar by season | Keep a vendor shortlist with agreed prices", "$2,200 set-up plus $300 a month check-in.", "Build the calendar for one block and show repairs it would have caught.", "Electrical and gas work needs licensed professionals.", "$2k to $2.5k"],
+
+[1, "Retainer Pricing for Freelancers", "Move a freelancer from one-off projects to retainers that pay on the 1st.", "Freelancers with uneven monthly income.", "Audit last year's clients for repeat work | Package recurring work into three tiers | Pitch the best three clients a simple monthly offer", "$1,500 for a four-week sprint.", "Review a freelancer's invoices and show how much was repeatable.", "Never promise income. Use their own data.", "$1k to $2k"],
+[1, "Price Raise Script Clinic", "Raise prices 15% with a script that keeps 90% of clients.", "Service owners who are afraid to raise prices.", "Sort clients into keep, test and release | Write a one-paragraph notice with a date and a reason | Offer a loyalty option to the top ten clients", "$1,200 for a one-day clinic.", "Write a notice for a friend's business and watch the response.", "Check contract notice periods before sending.", "$1k to $1.5k"],
+[1, "Cash-Gap Bridge Plan", "Plan for the 45 days between paying suppliers and getting paid.", "Firms that wait on late customers.", "Plot weekly cash in and out for 13 weeks | Bring forward the three largest receivable dates | Ask for part-payment upfront on new contracts", "$3,000 plan plus weekly calls for a month.", "Build a 13-week sheet for one owner and highlight the first negative week.", "You are not a lender or a licensed adviser. Say so.", "$2.5k to $4k"],
+[1, "Subscription Conversion for Local Shops", "Turn repeat customers into monthly plans.", "Neighbourhood shops with weekly repeat buyers.", "Find items that at least 20 customers buy weekly | Bundle them at a small discount | Collect payment on the 1st of each month", "$2,000 design plus launch support.", "List a shop's top repeat items from its receipts.", "State cancellation terms clearly.", "$1.5k to $2.5k"],
+[1, "Deposit Policy Design", "Cut cancellations with a deposit schedule customers accept.", "Caterers, photographers and event vendors.", "List cancellations and their timing for 12 months | Set three payment dates tied to preparation costs | Put the policy on the quote, not in small print", "$1,500 for the policy and templates.", "Show a caterer what last-minute cancellations cost.", "Refund rules must follow local consumer law.", "$1k to $2k"],
+[1, "Founder Salary Rule", "Choose a founder salary with a rule, not a guess.", "Early-stage founders and their co-founders.", "Compute six months of personal minimum cost | Tie salary steps to revenue milestones | Write the rule down so co-founders agree", "$1,800 for two coaching sessions.", "Offer a founder a worksheet and a 30-minute walk-through.", "Tax treatment varies by country. Involve an accountant.", "$1k to $2k"],
+[1, "Supplier Credit Ladder", "Earn 30-day supplier terms within 12 months.", "New small importers and shop owners.", "Start with small prepaid orders and keep records | Pay early on three orders in a row | Ask for terms with a written reference", "$2,200 programme.", "Help one importer write the reference-request email.", "Never promise credit. Suppliers decide.", "$2k to $2.5k"],
+[1, "Quote-to-Cash Audit", "Find the week where money gets stuck between quote and payment.", "Project-based businesses with slow collections.", "Time each stage for ten recent jobs | Find the longest wait | Remove it with a template, a deadline or a deposit", "$2,500 for the audit and the fix.", "Time five of a client's last jobs and show the longest wait.", "Protect client confidentiality.", "$2k to $3k"],
+[1, "Fixed-Fee Pricing for Consultants", "Replace hourly billing with fees tied to the client's outcome.", "Consultants who bill by the hour.", "Ask the client what the result is worth | Set the fee at 10% to 20% of that value | Define scope in three bullets plus a change fee", "$2,500 for two pricing sessions and a proposal review.", "Re-price one of a consultant's past projects on paper.", "Do not promise outcomes.", "$2k to $3.5k"],
+
+[2, "Salary Negotiation Dossier", "Walk into a pay talk with evidence a manager cannot ignore.", "Mid-career professionals due a raise.", "Collect three market data points for the role | Log wins with numbers for 12 months | Rehearse the ask and the fallback", "$900 per session, or $2,000 from offer to contract.", "Build a dossier for one friend and track the result.", "Never guarantee outcomes.", "$900 to $2k"],
+[2, "Remote Contract Pricing for Engineers", "Move from a local salary to a remote contract at a global rate.", "Software and hardware engineers working locally.", "Rebuild the CV around results per client | Set a day rate from salary times 1.6 plus costs | Pitch three agencies that place remote talent", "$3,000 coaching package.", "Convert one engineer's CV and land a screening call.", "Check tax and employment rules for contractors.", "$2k to $3k"],
+[2, "Promotion Case Builder", "Turn a year of work into a one-page promotion case.", "Professionals who feel overlooked.", "List outcomes by revenue, cost or time | Collect two quotes from stakeholders | Present the case with a clear ask", "$1,200 for two sessions.", "Build a case for yourself first and share the result.", "Promotions are not yours to decide. Offer preparation only.", "$1k to $1.5k"],
+[2, "Career Switch Bridge", "Move into a new field using the old one as a selling point.", "Accountants, teachers and analysts changing careers.", "Pick one hybrid role where both skills count | Build two portfolio pieces from your old industry's data | Apply first to firms in that same industry", "$2,500 for twelve weeks of coaching.", "Build one portfolio piece for a client at a discount.", "No job guarantees.", "$2k to $3k"],
+[2, "Assistant to Chief of Staff", "Lift an assistant into a higher-paid operations role.", "Executive assistants ready for more scope.", "Document processes the assistant already owns | Move from tasks to decisions in weekly reports | Propose a role change with a salary range", "$1,800 programme.", "Offer an assistant a one-page process map.", "Titles and roles vary. Keep claims modest.", "$1.5k to $2k"],
+[2, "Interview Loop Decoder", "Break a big-company interview into stages and prepare each like an exam.", "Candidates targeting large employers.", "Map the stages from public candidate reports | Build a story bank of eight stories with numbers | Run timed mock interviews and score them", "$2,000 for six sessions.", "Run a free mock interview for one friend.", "Do not leak confidential interview questions.", "$1.5k to $2.5k"],
+[2, "Marketplace Escape Plan", "Move clients off a freelance marketplace without breaking its rules.", "Freelancers who earn through platforms.", "Deliver standout work and ask for a testimonial | Build a simple site with your own contact route | Offer direct retainers for new work", "$1,500 for a four-week sprint.", "Review a freelancer's profile and fix the three weakest parts.", "Read the platform's terms on taking clients off-platform.", "$1k to $2k"],
+[2, "Advisory Board Seat Starter", "Win an advisory seat at a startup.", "Senior professionals with deep expertise.", "Name the one problem you solve better than most | List 20 founders who struggle with it | Offer a 90-day advisory pilot for a fee or equity", "$3,000 for positioning and outreach coaching.", "Write the positioning statement for one professional.", "Check conflicts of interest and write the terms down.", "$2k to $4k"],
+[2, "Graduate Job-Hunt System", "Run a job hunt like a sales pipeline.", "Recent graduates and their parents.", "List 100 target employers by fit | Contact eight a week with a short note | Track replies and adjust the message weekly", "$800 for a four-week group.", "Run it for three graduates and publish the results.", "No outcome promises.", "$800 to $1.2k"],
+
+[3, "Referral Partner Map", "Find the five businesses that meet your customers first.", "B2B firms relying on word of mouth.", "Map where customers go before they find you | Approach the owners with a small, clear referral offer | Track leads from each partner monthly", "$2,500 set-up plus a quarterly check.", "Map referral partners for one client in a free hour.", "Disclose referral fees where the law requires.", "$2k to $3k"],
+[3, "Cold Email for Industrial Buyers", "Write emails procurement officers actually answer.", "Manufacturers and wholesalers.", "List buyers with a named problem you solve | Write a four-line email with one number | Follow up twice with new information", "$3,000 for the list, templates and training.", "Send 30 emails for a client and share the reply rate.", "Follow email and data protection rules.", "$2k to $4k"],
+[3, "Tender Win-Rate Review", "Learn from past bids to raise the win rate.", "Contractors who bid often.", "Collect the last 15 bids and outcomes | Compare price, delivery time and documents | Rebuild the bid template around the winners", "$3,500 for the review.", "Review three old bids for a contractor for free.", "Keep bid details confidential.", "$3k to $4k"],
+[3, "Warm Intro Machine", "Turn existing contacts into introductions without being pushy.", "Consultants and agency owners.", "Sort your top 50 contacts by who they know | Send a specific ask with a draft intro | Thank every helper with a result update", "$1,500 sprint.", "Run it on your own network and share the numbers.", "Respect contacts' time and privacy.", "$1k to $2k"],
+[3, "Distributor Hunt for Small Brands", "Land a first regional distributor with a one-page offer.", "Small product brands ready to scale.", "Profile five distributors in the category | Put margin, MOQ and marketing support on one page | Offer a three-month trial in one region", "$3,500 coaching package.", "Write a one-page distributor offer for one brand.", "Check exclusivity clauses with a lawyer.", "$3k to $4k"],
+[3, "Price Objection Handbook", "Answer the five price objections that kill deals.", "Sales teams and owner-sellers.", "Record 20 lost deals and the reason given | Write one reply per objection that includes a number | Role-play weekly until the replies feel natural", "$2,000 team workshop.", "Review five recorded calls for a sales lead.", "Avoid manipulative tactics.", "$1.5k to $2.5k"],
+[3, "Pilot-to-Contract Conversion", "Turn free pilots into signed contracts.", "Startups running pilots with larger customers.", "Agree success metrics in writing before the pilot | Review results with the buyer at the midpoint | Present the contract proposal at the final review", "$2,800 coaching.", "Review one live pilot agreement.", "Not legal advice. Suggest counsel for contract terms.", "$2k to $3k"],
+[3, "Government Buyer Meeting Prep", "Prepare for a public procurement meeting like an exam.", "Suppliers meeting public buyers for the first time.", "Read the buyer's last three tenders | Prepare compliance proof before price | Ask about evaluation criteria and timelines", "$2,200 workshop.", "Summarise one agency's past tenders for a client.", "Never offer gifts or favours. It can be illegal.", "$2k to $2.5k"],
+[3, "Revenue Split Design", "Design a revenue share both sides can sign in a week.", "Creators and firms partnering on a product.", "List what each side brings in money and effort | Choose a simple split with a review date | Write one page and share numbers monthly", "$1,800 per partnership.", "Draft one split for two friends starting something.", "A lawyer should review the final agreement.", "$1.5k to $2k"],
+
+[4, "Newsletter to First $5k", "Launch a paid newsletter with 100 founding readers.", "Writers and experts with a narrow audience.", "Pick a narrow audience with a costly problem | Write four free issues that prove depth | Open 100 founding seats at a one-time price", "$2,500 for six weeks.", "Launch your own and share the numbers.", "No income promises.", "$2k to $3k"],
+[4, "Sponsorship Rate Card", "Price sponsorships from audience response, not follower count.", "Small creators and community leaders.", "Measure clicks and replies from the last ten posts | Set price per post from average response | Pitch three brands with a result summary", "$1,500 workshop.", "Build a rate card for one creator.", "Disclose sponsorships as local rules require.", "$1k to $2k"],
+[4, "Webinar Funnel for Experts", "Fill a paid programme through one live webinar.", "Coaches and trainers.", "Choose one problem and one promise | Teach one useful method live in 45 minutes | Offer the programme with a deadline", "$3,000 for build and rehearsal.", "Run a free webinar and track sign-ups.", "Do not exaggerate results.", "$2k to $4k"],
+[4, "Case Study Engine", "Turn every client win into a sales asset within a week.", "Service firms with happy but silent clients.", "Ask for numbers at project close | Write a one-page story of problem, action and result | Ask the client to approve and share it", "$1,800 set-up.", "Write a case study from a recent client.", "Get written approval before publishing.", "$1.5k to $2k"],
+[4, "Community-Led Validation", "Test a product idea inside a community before building.", "Founders about to build something.", "Find three active communities with the problem | Post a problem thread and collect replies | Pre-sell to the first ten respondents", "$2,200 for four weeks.", "Run one test for your own idea.", "Follow each community's rules on promotion.", "$2k to $2.5k"],
+[4, "Podcast for B2B Leads", "Use a podcast to meet buyers, not to chase downloads.", "Consultants and agencies selling to companies.", "List 40 ideal clients as guests | Record short interviews on their problems | Send the episode with a follow-up note", "$3,500 set-up.", "Record one interview with a target client.", "Get guest consent and a release.", "$3k to $4k"],
+[4, "Authority in 60 Days", "Build a profile buyers trust with one post series.", "Professionals selling services online.", "Choose one theme tied to a service you sell | Post three proof stories a week | Message every commenter with a useful next step", "$1,800 for eight weeks.", "Run the series for yourself and track enquiries.", "Do not post confidential client details.", "$1.5k to $2k"],
+[4, "Course Pre-Sale Playbook", "Sell a course before recording a lesson.", "Experts planning a course.", "Write the outline and the result promised | Pre-sell to 15 buyers with a live start date | Record each module the week before delivery", "$2,500 coaching.", "Pre-sell your own course to five people.", "Deliver what you promised or refund.", "$2k to $3k"],
+[4, "Proof Video Library", "Make ten short videos that buyers watch before calling.", "Local service firms.", "List the ten questions buyers ask most | Record 60-second answers on a phone | Place them on one page and in replies", "$2,000 package.", "Record three videos for a client.", "Get permission before filming customers.", "$1.5k to $2.5k"],
+
+[5, "AI Quote Desk for Fabricators", "Cut quoting time from days to hours.", "Metal, wood and plastics fabricators.", "Collect 30 past quotes with drawings | Build a checklist of cost drivers per job type | Draft quotes with AI, then price-check by hand", "$4,000 build and training.", "Re-quote one old job with the tool and compare.", "A human checks every final price.", "$3k to $5k"],
+[5, "AI Back Office for Clinics", "Reduce admin hours with AI drafts for referrals and recalls.", "Clinic managers drowning in letters.", "Time admin tasks for one week | Pick two repeatable documents to automate | Add a human review step and an audit log", "$3,500 plus $300 a month.", "Show one clinic the hours spent on letters.", "Keep identifiable patient data out of unapproved tools.", "$3k to $4k"],
+[5, "Sales Call Review with AI", "Review every call instead of three percent of them.", "Sales managers with 5 to 30 reps.", "Record and transcribe calls with consent | Score each against a five-point rubric | Coach the weakest behaviour per rep each week", "$3,000 set-up plus training.", "Score ten of a manager's calls.", "Get consent and follow recording laws.", "$2.5k to $4k"],
+[5, "Help Centre From Chat Logs", "Turn old chats into a help centre that cuts tickets.", "Support leads with repeat questions.", "Cluster the last 1,000 tickets by topic | Write answers for the top 20 topics | Link them in replies and track ticket volume", "$2,800 project.", "Cluster 200 tickets for a client.", "Remove personal data first.", "$2k to $3k"],
+[5, "Role Prompt Library", "Package ten tested prompts for one job and train the team.", "Team leads in bid writing, HR or finance.", "Pick one role such as bid writer | Test prompts on real tasks and record results | Teach the team with before and after samples", "$1,500 workshop per team.", "Run one workshop for a team.", "Check each tool's data policy.", "$1k to $2k"],
+[5, "Invoice Extraction Setup", "Cut data entry on supplier invoices by 70%.", "Accounting and bookkeeping firms.", "Sample 200 invoices across suppliers | Build extraction rules and an exception queue | Measure time per invoice before and after", "$4,000 set-up.", "Process 50 invoices for a firm.", "Check accuracy and keep an audit trail.", "$3k to $5k"],
+[5, "Meeting Intelligence for Consultancies", "Turn client calls into action lists and weekly updates.", "Consulting and agency teams.", "Record calls with consent | Draft actions and decisions automatically | Review and send within 24 hours", "$2,200 set-up.", "Run it on three real meetings.", "Consent and confidentiality come first.", "$2k to $2.5k"],
+[5, "Automated Lead Qualifier", "Qualify enquiries within minutes, day or night.", "Service firms that lose leads overnight.", "List the five facts that make a lead good | Ask them in a short chat or form | Route hot leads to a person immediately", "$2,500 build.", "Build a demo for a local firm.", "Tell users they are talking to automation.", "$2k to $3k"],
+[5, "AI Use Policy for Small Firms", "Write a two-page AI policy staff will actually follow.", "Owners of firms with 10 to 100 staff.", "List the tools staff already use | Mark what data is never allowed in them | Add a review step and a named owner", "$1,800 per firm.", "Draft a policy for your own team.", "Not legal advice. Suggest counsel for regulated sectors.", "$1.5k to $2k"],
+
+[6, "First Container Playbook", "Land a first container without a costly mistake.", "New importers with savings on the line.", "Cost the landed price per unit including duties and delays | Order samples and test one product for quality | Start with a part-container to prove the route", "$3,500 coaching and checklist.", "Run a landed-cost sheet for a would-be importer.", "Check import rules and restricted goods.", "$3k to $4k"],
+[6, "Supplier Visit Scorecard", "Judge a factory in one visit with a 20-point scorecard.", "Importers choosing manufacturers.", "Check capacity, quality control and records | Ask for three client references | Score and compare factories in one table", "$2,000 workshop.", "Build the scorecard and test it on a video tour.", "Include safety and ethics checks.", "$1.5k to $2.5k"],
+[6, "Agro Export Readiness", "Prepare a farm for its first export buyer.", "Farm and cooperative owners.", "List certificates and tests buyers ask for | Run a trial shipment of a small lot | Build a one-page spec sheet per product", "$3,500 programme.", "Build a spec sheet for one farm.", "Check plant health rules and buyer requirements.", "$3k to $4k"],
+[6, "Freight Quote Comparison", "Compare freight quotes on total cost, not headline price.", "Small shippers and online sellers.", "List every charge from port to door | Ask three forwarders for the same scope | Compare delivered cost and delay risk", "$1,800 session and sheet.", "Build a comparison sheet for a client's last shipment.", "Quotes change. Date every comparison.", "$1.5k to $2k"],
+[6, "Private Label Starter", "Launch a private label product with a clear margin.", "Brand founders and online sellers.", "Pick a product with repeat demand and weak branding | Source three quotes and test samples | Price at three times landed cost and test with 50 buyers", "$3,000 coaching.", "Source samples for one product.", "Check product safety and labelling rules.", "$2k to $3.5k"],
+[6, "Customs Broker Selection", "Choose a customs broker by asking six questions.", "First-time importers and exporters.", "Ask about typical clearance time and common delays | Request sample documents and the fee schedule | Call two references with similar goods", "$1,200 advice session.", "Publish the six questions as a guide.", "Brokers are licensed. Do not act as one.", "$1k to $1.5k"],
+[6, "Local Sourcing Substitution", "Replace imported inputs with local suppliers without losing quality.", "Manufacturers hit by currency swings.", "List imported inputs by cost | Find two local suppliers per top item | Run a side-by-side trial on one batch", "$3,500 project.", "Identify the top three imported inputs for a factory.", "Test quality before switching a whole line.", "$3k to $4k"],
+[6, "Trade Fair ROI Plan", "Decide whether a fair is worth it before paying for a stand.", "Exhibitors and small manufacturers.", "Estimate how many target buyers will attend | Set a lead target and a follow-up plan | Track deals closed within six months", "$1,800 plan.", "Review one fair's exhibitor list for a client.", "Costs vary. Use quotes, not guesses.", "$1.5k to $2k"],
+[6, "Reverse Sourcing for Retailers", "Start with what shops cannot get, then find the supplier.", "Retailers and wholesalers.", "Ask 20 retailers what they struggle to source | Pick the top request with repeat volume | Find and vet a supplier, then pre-sell", "$2,500 programme.", "Survey ten retailers and share the top gap.", "Do not misuse retailer information.", "$2k to $3k"],
+
+[7, "Short-Let Conversion Analysis", "Decide whether a flat earns more as a short-let.", "Property owners weighing a switch.", "Collect occupancy and rates for ten comparable listings | Add cleaning, platform fees, utilities and vacancy | Compare with a long-let net return", "$1,500 per property analysis.", "Run one for a friend's flat.", "Check local short-let rules and building bylaws.", "$1k to $2k"],
+[7, "Land Due Diligence Workshop", "Teach buyers to check land step by step before paying.", "First-time land buyers.", "Verify seller identity and ownership documents | Confirm boundaries with a licensed surveyor | Check zoning and government claims", "$2,500 workshop.", "Write a checklist and review it with a lawyer.", "Always use licensed professionals for the final check.", "$2k to $3k"],
+[7, "Used Vehicle Flip Method", "Find undervalued vehicles with a repeatable checklist.", "People who want to buy and resell cars.", "Track asking and sold prices for one model for 60 days | Inspect with a mechanic's checklist | Fix only what raises resale more than it costs", "$2,000 course.", "Track one model's prices and publish them.", "Check ownership papers and local dealer rules.", "$1.5k to $2.5k"],
+[7, "Rental Yield Sprint", "Raise rental income without raising rent.", "Small landlords with 3 to 20 units.", "List costs and vacancy per unit | Fix the three biggest leaks | Add one paid extra such as parking or storage", "$1,800 per portfolio review.", "Review one landlord's units for free.", "Follow tenancy law on fees.", "$1.5k to $2k"],
+[7, "Off-Plan Risk Checker", "Check a developer's track record before paying a deposit.", "Buyers of unbuilt property.", "Visit three past projects and talk to residents | Verify approvals and escrow arrangements | Read the payment schedule for stage triggers", "$1,500 per review.", "Review a developer's public record.", "Not investment advice.", "$1k to $2k"],
+[7, "Co-Living Setup", "Convert a large house into rooms that earn 40% more.", "Owners of large homes.", "Check permits and fire safety | Furnish rooms at a standard cost | Write house rules and a utilities split", "$3,000 plan.", "Cost one house for an owner.", "Safety codes and licences vary. Get approvals.", "$2k to $3.5k"],
+[7, "Spare Space Storage Business", "Turn a spare room or garage into rented storage.", "Owners of unused space.", "Measure and price per square metre | Add locks, lighting and cameras | List on two local sites with a contract template", "$1,200 set-up session.", "Convert one space as a case study.", "Check insurance and which goods are allowed.", "$1k to $1.5k"],
+[7, "Farmland Lease Strategy", "Lease farmland on terms that protect the land and the income.", "Landowners who do not farm.", "Compare lease prices for similar plots | Set clear terms on crops, water and inputs | Add a yearly review and a rent step-up", "$2,500 per plan.", "Collect lease prices in one area.", "Land law varies. Involve a lawyer.", "$2k to $3k"],
+[7, "Auction Buying Guide", "Buy at auctions without paying for hidden problems.", "Buyers of vehicles, equipment and property at auction.", "Read the lot descriptions and conditions | Inspect at preview and set a walk-away price | Budget for fees, repairs and transport", "$1,800 course.", "Attend one auction and write up notes.", "Check auction terms and legal ownership.", "$1.5k to $2k"],
+
+[8, "Grant Narrative Rewrite", "Rewrite a failing grant story into one reviewers fund.", "NGOs that keep getting rejected.", "Study funded proposals from the same donor | Rebuild the problem, activity and result chain | Add a budget that matches each activity", "$3,000 per proposal.", "Rewrite one public proposal as a sample.", "No guarantee of funding.", "$2k to $4k"],
+[8, "Donor Mapping Sprint", "Find 20 donors likely to fund your work.", "Nonprofit directors.", "Search donor records for similar grants | Score fit by theme, size and region | Contact programme officers with a short note", "$2,200 sprint.", "Build a donor map for one NGO.", "Use public information only.", "$2k to $2.5k"],
+[8, "Pitch Competition Coach", "Prepare for pitch competitions like an athlete.", "Founders entering local and regional contests.", "Read past winners' decks and scores | Build a five-minute pitch and a ten-question Q and A | Rehearse three times with strangers", "$1,800 package.", "Coach one founder for a local competition.", "No outcome promises.", "$1.5k to $2k"],
+[8, "Loan Application Defence", "Prepare answers to the five questions loan officers always ask.", "Small business owners seeking a first loan.", "Map the officer's checklist | Prepare cash-flow, collateral and use-of-funds pages | Rehearse the meeting", "$1,500 prep.", "Prepare one owner and report the outcome.", "Never overstate numbers.", "$1k to $2k"],
+[8, "Crowdfunding Launch Plan", "Launch with 30% funded in the first 48 hours.", "Creators and product makers.", "Gather 50 warm backers before launch | Set a goal from real costs | Plan daily updates and a stretch reward", "$2,200 plan.", "Plan one small campaign.", "Follow platform rules and deliver rewards.", "$2k to $2.5k"],
+[8, "Angel Intro Pathways", "Reach angel investors through operators they already trust.", "Founders raising a first round.", "List operators who have invested nearby | Ask for a feedback call, not a cheque | Update them monthly and ask for introductions", "$2,500 coaching.", "Build an investor map for one founder.", "Follow securities rules on soliciting investors.", "$2k to $3k"],
+[8, "Export Credit Guide", "Use trade finance tools to get paid before delivery.", "Exporters waiting on foreign buyers.", "Learn letters of credit and invoice finance basics | Compare costs from two banks | Choose a tool by payment risk", "$2,000 workshop.", "Summarise two bank products for exporters.", "Not financial advice. Banks decide approval.", "$1.5k to $2.5k"],
+[8, "Cooperative Formation Coach", "Form a co-op that buys and sells together.", "Farmer and artisan groups.", "Agree rules on fees, voting and profit | Register under local co-op law | Pool one purchase and one sale in month one", "$3,000 programme.", "Hold a founding meeting for ten members.", "Co-op law varies. Check registration steps.", "$2k to $3.5k"],
+[8, "Public Supplier Registration Path", "Walk a supplier through registering to sell to government.", "New suppliers with no public contracts.", "List documents each agency asks for | Fix tax and registration gaps | Submit and track the registration", "$1,500 per supplier.", "Map the steps for one agency.", "Never pay anyone to speed up approval.", "$1k to $2k"],
+
+[9, "Drone Survey Business Setup", "Start a drone mapping service from scratch.", "Surveyors, farmers and roofers.", "Get licences and insurance | Pick two niches such as farms or roofs | Price per hectare and deliver a clean report", "$2,500 course.", "Do one survey as a showcase.", "Drone rules and licences vary. Check before flying.", "$2k to $3k"],
+[9, "Solar Installer Training Funnel", "Train electricians to move into solar installation.", "Electricians and solar installers.", "Map skill gaps against local certification | Build a hands-on lab day | Connect graduates to installers who are hiring", "$1,800 per learner.", "Run one demo day with an installer.", "Follow electrical safety law and certification rules.", "$1.5k to $2k"],
+[9, "Bookkeeping Practice in a Box", "Open a bookkeeping practice with ten clients in 90 days.", "Accountants and ex-corporate finance staff.", "Pick one industry such as clinics | Standardise software, checklist and fees | Win clients with a free books health check", "$2,500 programme.", "Offer a free check to three owners.", "Check licensing requirements in your country.", "$2k to $3k"],
+[9, "Voice-Over Income Starter", "Build a voice-over income from local ad work.", "Voice talent and presenters.", "Record a demo reel in three styles | Pitch agencies and radio stations | Price per word or per minute", "$1,200 coaching.", "Record a demo and send it to ten agencies.", "Check usage rights in every contract.", "$1k to $1.5k"],
+[9, "Translation and Localisation Studio", "Turn bilingual skill into a business with recurring clients.", "Bilingual professionals.", "Choose one industry such as legal or fintech | Build a glossary and style guide | Sell monthly packages to local firms", "$1,800 programme.", "Translate one sample and ask for feedback.", "Use native reviewers for quality.", "$1.5k to $2k"],
+[9, "Event Pricing Method", "Price events from cost drivers so profit stays above 25%.", "Event planners and producers.", "List cost lines for five past events | Add a risk buffer and vendor mark-up | Quote with three options", "$1,800 session.", "Re-price one event on paper.", "Be clear on mark-ups to clients.", "$1.5k to $2k"],
+[9, "Pet Business Operations", "Run a pet business with predictable slots and clients.", "Groomers, trainers and small vets.", "Track services by profit per hour | Set up recurring plans for grooming | Add a waiting list and referral thanks", "$1,500 coaching.", "Time and price one groomer's services.", "Animal welfare and licence rules apply.", "$1k to $2k"],
+[9, "Mobile Mechanic Business Model", "Take a garage skill on the road at higher margins.", "Mechanics who want their own business.", "List jobs doable at a customer's door | Price a call-out fee and a labour rate | Open a parts supplier account and a booking page", "$2,000 programme.", "Do five mobile jobs in one housing estate.", "Check roadside safety and insurance.", "$1.5k to $2.5k"],
+[9, "Cleaning Contract Playbook", "Win office cleaning contracts that renew.", "Owners of small cleaning firms.", "Price by area, frequency and risk | Offer a trial month with quality checks | Report results monthly with photos", "$2,200 programme.", "Bid on one small contract.", "Check labour rules for staff.", "$2k to $2.5k"]
+];
+
+  /* Soft gate only. Anyone who can open this page can read its source, so share the link with top subscribers only. */
+  var UNLOCK_CODE = 'TOPSUB';
+  var FREE = [0, 9, 18, 27, 36, 45];
+  var LIBS = { play: { label: 'Coaching playbooks', items: PLAYS, cats: PCATS }, biz: { label: 'Business ideas', items: IDEAS, cats: CATS } };
+  var lib = 'play', saved = {}, unlocked = false, iq = '', icat = 'all', onlySaved = false, ideasReady = false, dayOffset = 0;
+  try { saved = JSON.parse(localStorage.getItem('ftc-saved2') || '{}') || {}; unlocked = localStorage.getItem('ftc-unlock') === '1'; } catch (e) {}
+  function rng(seed) {
+    return function () {
+      seed |= 0; seed = seed + 0x6D2B79F5 | 0;
+      var t = Math.imul(seed ^ seed >>> 15, 1 | seed);
+      t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+      return ((t ^ t >>> 14) >>> 0) / 4294967296;
+    };
+  }
+  function buildOrder(items, cats, seed) {
+    var r = rng(seed), groups = cats.map(function () { return []; }), out = [];
+    function mix(a) { for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(r() * (i + 1)), t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
+    items.forEach(function (it, i) { groups[it[0]].push(i); });
+    groups.forEach(mix);
+    for (var round = 0; round < 9; round++) {
+      mix(cats.map(function (_, c) { return c; })).forEach(function (c) { if (groups[c][round] !== undefined) out.push(groups[c][round]); });
+    }
+    return out;
+  }
+  var PLAY_ORDER = buildOrder(PLAYS, PCATS, 4417);
+  function mk(tag, cls, text) { var e = document.createElement(tag); if (cls) e.className = cls; if (text !== undefined) e.textContent = text; return e; }
+  function norm(key, it) {
+    if (key === 'play') {
+      return { cat: it[0], title: it[1], tag: it[8], fields: [['Who pays', it[3]], ['The method you teach', it[4].split(' | ')], ['Your coaching offer', it[5]], ['How to land the first client', it[6]], ['Watch out', it[7]]] };
+    }
+    return { cat: it[0], title: it[1], tag: it[7], fields: [['What you sell', it[2]], ['How it earns', it[3]], ['First move this week', it[4]], ['Watch out', it[5]], ['Startup cost', COSTS[it[6]]]] };
+  }
+  function fieldsInto(parent, n) {
+    var dl = mk('dl', 'idf');
+    n.fields.forEach(function (f) {
+      var w = mk('div'), dt = mk('dt', '', f[0]), dd = mk('dd');
+      if (Array.isArray(f[1])) { var ol = mk('ol', 'idsteps'); f[1].forEach(function (s) { ol.appendChild(mk('li', '', s)); }); dd.appendChild(ol); }
+      else dd.textContent = f[1];
+      w.appendChild(dt); w.appendChild(dd); dl.appendChild(w);
+    });
+    parent.appendChild(dl);
+  }
+  function plainText(key, n) {
+    var lines = [n.title + ' (' + LIBS[key].cats[n.cat] + ')'];
+    n.fields.forEach(function (f) {
+      if (Array.isArray(f[1])) lines.push(f[0] + ':\n' + f[1].map(function (s, i) { return (i + 1) + '. ' + s; }).join('\n'));
+      else lines.push(f[0] + ': ' + f[1]);
+    });
+    return lines.join('\n');
+  }
+  function copyText(text, btn) {
+    function done(ok) { var old = btn.textContent; btn.textContent = ok ? 'Copied' : 'Select and copy'; setTimeout(function () { btn.textContent = old; }, 1400); }
+    function fallback() {
+      try {
+        var ta = document.createElement('textarea'); ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+        document.body.appendChild(ta); ta.select(); var ok = document.execCommand('copy'); document.body.removeChild(ta); done(ok);
+      } catch (e) { done(false); }
+    }
+    try { navigator.clipboard.writeText(text).then(function () { done(true); }, fallback); } catch (e) { fallback(); }
+  }
+
+  /* daily post cards and weekly drop */
+  function dateOf(offset) { var d = new Date(); d.setDate(d.getDate() + offset); return d; }
+  function fmtDate(d, o) { try { return d.toLocaleDateString('en-GB', o); } catch (e) { return ''; } }
+  function dayNumber(offset) { var d = new Date(); return Math.floor(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) / 86400000) + offset; }
+  function playFor(offset) { var len = PLAYS.length; return PLAYS[PLAY_ORDER[((dayNumber(offset) % len) + len) % len]]; }
+  function dayOpen(offset) { return unlocked || offset === 0; }
+  function captionFor(offset) {
+    var it = playFor(offset);
+    return it[1] + '\n' + it[2] + '\n\nWho pays: ' + it[3] + '\n\nThe method:\n' +
+      it[4].split(' | ').map(function (s, i) { return (i + 1) + '. ' + s; }).join('\n') +
+      '\n\nYour offer: ' + it[5] + '\nHow to land the first client: ' + it[6] + '\n\nSave this and follow for a new playbook every day.';
+  }
+  function renderCard() {
+    var it = playFor(dayOffset), open = dayOpen(dayOffset), c = $('pcard');
+    c.innerHTML = '';
+    var top = mk('div', 'pc-top');
+    top.appendChild(mk('span', 'pc-kick', 'Daily playbook · ' + fmtDate(dateOf(dayOffset), { weekday: 'short', day: 'numeric', month: 'short' })));
+    top.appendChild(mk('span', 'pc-band', it[8]));
+    c.appendChild(top); c.appendChild(mk('h3', 'pc-title', it[1])); c.appendChild(mk('p', 'pc-hook', it[2]));
+    if (open) {
+      var by = mk('div', 'pc-row'); by.appendChild(mk('b', '', 'Who pays')); by.appendChild(document.createTextNode(' ' + it[3])); c.appendChild(by);
+      var ol = mk('ol', 'pc-steps'); it[4].split(' | ').forEach(function (s) { ol.appendChild(mk('li', '', s)); }); c.appendChild(ol);
+      var of = mk('div', 'pc-row'); of.appendChild(mk('b', '', 'Your offer')); of.appendChild(document.createTextNode(' ' + it[5])); c.appendChild(of);
+    } else {
+      c.appendChild(mk('p', 'pc-lock', 'The buyer, the three-step method and the coaching offer are for top subscribers. Enter the access code below to open this card.'));
+    }
+    c.appendChild(mk('div', 'pc-foot', 'Follow the Capital · Top subscriber vault'));
+    var days = $('pc-days'); days.innerHTML = '';
+    for (var k = 0; k < 7; k++) (function (k) {
+      var b = mk('button', 'pc-day' + (dayOpen(k) ? '' : ' lk')); b.type = 'button';
+      b.setAttribute('aria-pressed', String(k === dayOffset));
+      b.setAttribute('aria-label', fmtDate(dateOf(k), { weekday: 'long', day: 'numeric', month: 'long' }) + (dayOpen(k) ? '' : ', locked'));
+      b.appendChild(mk('span', 'pc-dw', k === 0 ? 'Today' : fmtDate(dateOf(k), { weekday: 'short' })));
+      b.appendChild(mk('span', 'pc-dn', fmtDate(dateOf(k), { day: 'numeric' })));
+      b.addEventListener('click', function () { dayOffset = k; $('pc-msg').textContent = ''; SFX.click(); renderCard(); });
+      days.appendChild(b);
+    })(k);
+  }
+
+  /* library list */
+  function renderGate() {
+    $('id-total').textContent = '· ' + (PLAYS.length + IDEAS.length) + ' plans';
+    $('id-grow').hidden = unlocked;
+    $('id-gmsg').textContent = unlocked ? 'Top subscriber access is on. Every card and plan is open.' : 'Today\'s card and ' + FREE.length + ' sample plans per library are open. Enter the top subscriber code to open everything.';
+  }
+  function renderList() {
+    var L = LIBS[lib], list = $('id-list'), q = iq.trim().toLowerCase(), n = 0;
+    list.innerHTML = '';
+    L.items.forEach(function (it, i) {
+      var nm = norm(lib, it), key = lib + ':' + i;
+      if (icat !== 'all' && String(it[0]) !== icat) return;
+      if (onlySaved && !saved[key]) return;
+      if (q && (nm.title + ' ' + L.cats[it[0]] + ' ' + JSON.stringify(nm.fields)).toLowerCase().indexOf(q) < 0) return;
+      n++;
+      var open = unlocked || FREE.indexOf(i) >= 0;
+      var d = mk('details', 'idea'), s = mk('summary');
+      s.appendChild(mk('span', 'it', nm.title));
+      s.appendChild(mk('span', 'ic', L.cats[it[0]] + (open ? '' : ' · Locked')));
+      s.appendChild(mk('span', 'iv', nm.tag));
+      d.appendChild(s);
+      var b = mk('div', 'ib');
+      if (open) fieldsInto(b, nm); else b.appendChild(mk('p', 'lock', 'This plan is for top subscribers. Enter the access code above to open it.'));
+      var acts = mk('div', 'acts');
+      var sv = mk('button', 'mini ghost', saved[key] ? 'Saved' : 'Save'); sv.type = 'button';
+      sv.addEventListener('click', function () {
+        if (saved[key]) delete saved[key]; else saved[key] = 1;
+        try { localStorage.setItem('ftc-saved2', JSON.stringify(saved)); } catch (e) {}
+        SFX.click();
+        if (onlySaved) renderList(); else sv.textContent = saved[key] ? 'Saved' : 'Save';
+      });
+      acts.appendChild(sv);
+      if (open) {
+        var cp = mk('button', 'mini ghost', 'Copy plan'); cp.type = 'button';
+        cp.addEventListener('click', function () { copyText(plainText(lib, nm), cp); });
+        acts.appendChild(cp);
+      }
+      b.appendChild(acts); d.appendChild(b); list.appendChild(d);
+    });
+    $('id-count').textContent = 'Showing ' + n + ' of ' + L.items.length + ' ' + L.label.toLowerCase() + (unlocked ? '.' : '. ' + FREE.length + ' are free to read.');
+  }
+  function fillCats() {
+    var sel = $('id-cat'); sel.innerHTML = '';
+    var all = mk('option', '', 'All categories'); all.value = 'all'; sel.appendChild(all);
+    LIBS[lib].cats.forEach(function (name, i) { var o = mk('option', '', name); o.value = String(i); sel.appendChild(o); });
+    sel.value = 'all'; icat = 'all';
+  }
+  function ideasEnter() {
+    if (!ideasReady) {
+      var ls = $('id-lib');
+      Object.keys(LIBS).forEach(function (k) { var o = mk('option', '', LIBS[k].label + ' (' + LIBS[k].items.length + ')'); o.value = k; ls.appendChild(o); });
+      ls.addEventListener('change', function () { lib = ls.value; fillCats(); renderList(); });
+      fillCats();
+      $('id-cat').addEventListener('change', function () { icat = $('id-cat').value; renderList(); });
+      $('id-q').addEventListener('input', function () { iq = $('id-q').value; renderList(); });
+      $('id-saved').addEventListener('change', function () { onlySaved = $('id-saved').checked; renderList(); });
+      $('id-unlock').addEventListener('click', function () {
+        if ($('id-code').value.trim().toLowerCase() === UNLOCK_CODE.toLowerCase()) {
+          unlocked = true; try { localStorage.setItem('ftc-unlock', '1'); } catch (e) {}
+          SFX.win(); renderGate(); renderCard(); renderList();
+        } else { SFX.lose(); $('id-gmsg').textContent = 'That code does not match. Check it and try again.'; }
+      });
+      $('id-code').addEventListener('keydown', function (e) { if (e.key === 'Enter') $('id-unlock').click(); });
+      $('pc-cap').addEventListener('click', function () {
+        if (!dayOpen(dayOffset)) { $('pc-msg').textContent = 'Unlock with the top subscriber code to copy this caption.'; return; }
+        $('pc-msg').textContent = ''; copyText(captionFor(dayOffset), $('pc-cap'));
+      });
+      $('pc-week').addEventListener('click', function () {
+        if (!unlocked) { $('pc-msg').textContent = 'The weekly drop is for top subscribers. Enter the code below to copy all seven captions.'; return; }
+        $('pc-msg').textContent = '';
+        var parts = ['Weekly drop starting ' + fmtDate(dateOf(0), { weekday: 'long', day: 'numeric', month: 'long' })];
+        for (var k = 0; k < 7; k++) parts.push('Day ' + (k + 1) + ' · ' + fmtDate(dateOf(k), { weekday: 'short', day: 'numeric', month: 'short' }) + '\n' + captionFor(k));
+        copyText(parts.join('\n\n----------\n\n'), $('pc-week'));
+      });
+      if (!synth) $('pc-listen').hidden = true;
+      $('pc-listen').addEventListener('click', function () {
+        var it = playFor(dayOffset), t = it[1] + '. ' + it[2];
+        if (dayOpen(dayOffset)) t += ' Who pays: ' + it[3] + ' The method. ' + it[4].split(' | ').map(function (s, i) { return 'Step ' + (i + 1) + '. ' + s + '.'; }).join(' ') + ' Your offer: ' + it[5];
+        speak(t, true);
+      });
+      ideasReady = true;
+    }
+    renderCard(); renderGate(); renderList();
+  }
+
+  /* ---------- tabs ---------- */
+  var GAMES = ['shuffle', 'hl', 'ab', 'mem', 'orb', 'ideas'], cur = 'shuffle';
+  document.querySelectorAll('.tab').forEach(function (b) {
+    b.addEventListener('click', function () {
+      var g = b.getAttribute('data-game');
+      if (g === cur || busy) return;
+      abStop(); orbLeave(); cur = g;
+      document.querySelectorAll('.tab').forEach(function (x) { x.setAttribute('aria-pressed', String(x === b)); });
+      GAMES.forEach(function (k) { $('g-' + k).hidden = k !== g; });
+      SFX.click();
+      if (g === 'hl' && !hl.init) hlReset();
+      if (g === 'mem' && !mem.init) memReset();
+      if (g === 'ab') abIdle();
+      if (g === 'orb') orbEnter();
+      if (g === 'ideas') ideasEnter();
+    });
+  });
+
+  newGame();
+})();
+</script>
+
+</body></html>
