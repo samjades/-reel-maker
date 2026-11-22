@@ -125,7 +125,7 @@ select {
 .hdr-r select { min-height: 38px; min-width: 68px; }
 .snd { font: inherit; font-size: 12px; font-weight: 600; color: var(--ink); background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 0 12px; min-height: 38px; cursor: pointer; white-space: nowrap; }
 .snd[aria-pressed="false"] { color: var(--muted); }
-.tabs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 4px; }
+.tabs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 4px; }
 .tab { font: inherit; font-size: 12px; font-weight: 600; color: var(--muted); background: transparent; border: 0; border-radius: 7px; padding: 10px 2px; cursor: pointer; min-width: 0; }
 .tab[aria-pressed="true"] { background: var(--teal); color: #032019; }
 .game { display: flex; flex-direction: column; gap: 14px; }
@@ -209,6 +209,13 @@ input[type="text"], input[type="search"] { font: inherit; color: var(--ink); bac
 .pc-lock { margin: 0; color: var(--muted); font-size: 13px; }
 .pc-foot { margin-top: auto; font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
 .pc-acts { margin-top: 12px; }
+.hk { margin-top: 14px; border-top: 1px solid var(--line); padding-top: 12px; }
+.hk-dots { display: flex; gap: 6px; margin: 8px 0; }
+.hk-dots button { flex: 1; height: 8px; min-height: 0; padding: 0; border: 0; border-radius: 4px; background: var(--line); cursor: pointer; }
+.hk-dots button.on { background: var(--gold); }
+.hk-dots button.done { background: var(--teal); }
+.hk-beat { font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--gold); font-weight: 600; }
+.hk-text { font-family: 'Unbounded', 'Inter', sans-serif; font-size: 17px; line-height: 1.35; margin: 6px 0 12px; min-height: 90px; text-wrap: balance; }
 .pc-msg { margin: 8px 0 0; min-height: 18px; font-size: 13px; color: var(--gold); }
 .app[data-ratio="916"] .pcard { aspect-ratio: 9 / 16; }
 .app[data-ratio="916"] .pcard { justify-content: center; gap: 16px; }
@@ -253,6 +260,19 @@ input[type="text"], input[type="search"] { font: inherit; color: var(--ink); bac
 .opts { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; }
 .opts label { font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
 .opts select { min-height: 38px; }
+.phwrap { position: relative; width: 100%; max-width: 420px; aspect-ratio: 340 / 400; margin-inline: auto; border: 1px solid var(--line); border-radius: 12px; overflow: hidden; background: #07161c; touch-action: manipulation; }
+.phwrap svg { width: 100%; height: 100%; display: block; }
+.ph-cap { position: absolute; left: 50%; transform: translateX(-50%); width: max-content; max-width: calc(100% - 16px); top: 46px; padding: 6px 12px; border-radius: 10px; background: rgba(7,22,28,.78); text-align: center; font-family: 'Unbounded', 'Inter', sans-serif; font-size: 13px; font-weight: 700; line-height: 1.3; color: #fff; text-shadow: 0 2px 8px #000, 0 0 2px #000; text-wrap: balance; pointer-events: none; }
+.ph-cap:empty { display: none; }
+.ph-count { position: absolute; left: 0; right: 0; top: 36%; text-align: center; font-family: 'Unbounded', 'Inter', sans-serif; font-size: 72px; font-weight: 800; color: #ffd36b; text-shadow: 0 4px 18px #000; opacity: .92; pointer-events: none; }
+.ph-banner { position: absolute; left: 0; right: 0; top: 40%; text-align: center; font-family: 'Unbounded', 'Inter', sans-serif; font-size: 34px; font-weight: 800; letter-spacing: .02em; text-shadow: 0 4px 18px #000; pointer-events: none; transform: scale(.6); opacity: 0; transition: transform .22s cubic-bezier(.2,1.6,.4,1), opacity .15s; }
+.ph-banner.on { transform: scale(1); opacity: 1; }
+.ph-banner.crush { color: var(--loss); } .ph-banner.hold { color: var(--gain); } .ph-banner.near { color: var(--gold); }
+.ph-bar { position: absolute; left: 0; bottom: 0; height: 5px; width: 0; background: var(--gold); pointer-events: none; }
+.phg { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.phg button { font: inherit; font-weight: 700; min-height: 50px; border-radius: 10px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); cursor: pointer; }
+.phg button[aria-pressed="true"] { background: var(--gold); color: #1a1200; border-color: var(--gold); }
+.phg button:disabled { opacity: .45; cursor: default; }
 .arena { position: relative; width: 100%; aspect-ratio: 1 / 1; max-width: 100%; margin-inline: auto; }
 .arena canvas { width: 100%; height: 100%; display: block; touch-action: none; cursor: pointer; }
 
@@ -267,6 +287,7 @@ input[type="text"], input[type="search"] { font: inherit; color: var(--ink); bac
   .app[data-ratio="169"] .game > * { grid-column: 2; }
   .app[data-ratio="169"] .game > .main-area { grid-column: 1; grid-row: 1 / span 12; align-self: start; justify-self: center; }
   .app[data-ratio="169"] .stage, .app[data-ratio="169"] .arena { width: auto; max-width: 100%; height: max(240px, calc(var(--fw) * 9 / 16 - 250px)); }
+  .app[data-ratio="169"] .phwrap { width: auto; max-width: 100%; height: max(240px, calc(var(--fw) * 9 / 16 - 250px)); }
   .app[data-ratio="169"] .panel.main-area, .app[data-ratio="169"] .mgrid.main-area { width: 100%; }
   .app[data-ratio="169"] .mgrid { grid-template-columns: repeat(8, 1fr); gap: 6px; }
 }
@@ -301,6 +322,7 @@ input[type="text"], input[type="search"] { font: inherit; color: var(--ink); bac
     <button class="tab" type="button" data-game="ab" aria-pressed="false">Assets</button>
     <button class="tab" type="button" data-game="mem" aria-pressed="false">Vault</button>
     <button class="tab" type="button" data-game="orb" aria-pressed="false">Orbs</button>
+    <button class="tab" type="button" data-game="peril" aria-pressed="false">Peril</button>
     <button class="tab" type="button" data-game="ideas" aria-pressed="false">Ideas</button>
   </nav>
 
@@ -448,6 +470,44 @@ input[type="text"], input[type="search"] { font: inherit; color: var(--ink); bac
     <div class="fine">Gold orbs are your profitable assets. Watch them, track them as everything moves, then tap them when the orbs stop.</div>
   </section>
 
+  <section class="game" id="g-peril" hidden>
+    <div class="hud">
+      <div><div class="lbl">Score</div><div class="value" id="ph-score">0</div></div>
+      <div class="side"><div class="streak">Streak <b id="ph-streak">0</b> · Best <b id="ph-best">0</b></div></div>
+    </div>
+    <div class="opts">
+      <label for="ph-scene">Scene</label>
+      <select id="ph-scene">
+        <option value="random">Random</option>
+        <option value="0">Boulder over savings</option>
+        <option value="1">Anvil over salary</option>
+        <option value="2">Wrecking ball over portfolio</option>
+        <option value="3">10-ton weight over nest egg</option>
+      </select>
+      <label for="ph-len">Tension</label>
+      <select id="ph-len">
+        <option value="3000">Quick · 3s</option>
+        <option value="6000" selected>Reel · 6s</option>
+        <option value="10000">Long · 10s</option>
+      </select>
+      <label class="chk"><input type="checkbox" id="ph-loop"> Auto-loop</label>
+    </div>
+    <div class="phwrap main-area" id="ph-wrap">
+      <svg id="ph-svg" viewBox="0 0 340 400" role="img" aria-label="A heavy object hangs by a fraying rope above your money."></svg>
+      <div class="ph-cap" id="ph-cap" aria-live="polite"></div>
+      <div class="ph-count" id="ph-count"></div>
+      <div class="ph-banner" id="ph-banner"></div>
+      <div class="ph-bar" id="ph-bar"></div>
+    </div>
+    <div class="status" id="ph-status" aria-live="polite"></div>
+    <div class="phg">
+      <button type="button" id="ph-fall" aria-pressed="false" disabled>It falls</button>
+      <button type="button" id="ph-hold" aria-pressed="false" disabled>It holds</button>
+    </div>
+    <button class="go" id="ph-go" type="button">Start the hook</button>
+    <div class="fine">The rope is fraying. Call it before time runs out: does the weight crush your money or not? Turn on Auto-loop to record a non-stop reel.</div>
+  </section>
+
   <section class="game" id="g-ideas" hidden>
     <div class="panel">
       <div class="lbl">What premium means here</div>
@@ -466,6 +526,17 @@ input[type="text"], input[type="search"] { font: inherit; color: var(--ink); bac
         <button class="mini ghost" id="pc-listen" type="button">Listen</button>
       </div>
       <p class="pc-msg" id="pc-msg" aria-live="polite"></p>
+      <div class="hk" id="hk">
+        <div class="lbl">Anticipation reel hooks · 6-part series</div>
+        <div class="hk-dots" id="hk-dots"></div>
+        <div class="hk-beat" id="hk-beat" aria-live="polite"></div>
+        <div class="hk-text" id="hk-text"></div>
+        <div class="acts">
+          <button class="mini" id="hk-next" type="button">Next hook</button>
+          <button class="mini ghost" id="hk-copy" type="button">Copy series</button>
+          <button class="mini ghost" id="hk-say" type="button">Listen</button>
+        </div>
+      </div>
     </div>
 
     <div class="panel gate">
@@ -1742,6 +1813,34 @@ var GL_PLAY = [
     var i = playIdx(offset);
     return '\n\n' + glanceOf('play', i, PLAYS[i][8]).map(function (f) { return f[0] + ': ' + f[1]; }).join('\n');
   }
+  var hkStep = 0;
+  function hooksFor(offset) {
+    var i = playIdx(offset), it = PLAYS[i], g = GL_PLAY[i] || ['', '', ''], tom = playFor(offset + 1)[1];
+    return [
+      ['1 · Tease', 'Stop scrolling. There is a way to earn ' + it[8] + ' from one skill, and almost nobody teaches it.'],
+      ['2 · Stakes', 'The people who pay for this are ' + it[3].replace(/\.$/, '') + '. They are losing money every week without it.'],
+      ['3 · Open loop', 'I will show you the 3 steps. But step 2 is the one that changes everything, so do not leave yet.'],
+      ['4 · Delay', 'Before step 2, one number: it costs about ' + g[0] + ' to start. Keep watching.'],
+      ['5 · Reveal', it[1] + '. ' + it[2]],
+      ['6 · Next episode', 'That was part ' + (offset + 1) + '. Tomorrow I reveal: ' + tom + '. Follow so you do not miss it.']
+    ];
+  }
+  function renderHook() {
+    var hs = hooksFor(dayOffset), open = dayOpen(dayOffset);
+    if (hkStep >= hs.length) hkStep = 0;
+    $('hk-beat').textContent = 'Hook ' + (hkStep + 1) + ' of ' + hs.length + ' · ' + hs[hkStep][0].split(' · ')[1];
+    $('hk-text').textContent = hs[hkStep][1];
+    var d = $('hk-dots'); d.innerHTML = '';
+    hs.forEach(function (h, k) {
+      var b = mk('button', k === hkStep ? 'on' : (k < hkStep ? 'done' : '')); b.type = 'button';
+      b.setAttribute('aria-label', 'Hook ' + (k + 1));
+      b.addEventListener('click', function () { hkStep = k; SFX.click(); renderHook(); });
+      d.appendChild(b);
+    });
+  }
+  function hookSeries() {
+    return hooksFor(dayOffset).map(function (h) { return h[0] + '\n' + h[1]; }).join('\n\n');
+  }
   function dayOpen(offset) { return unlocked || offset === 0; }
   function captionFor(offset) {
     var it = playFor(offset);
@@ -1767,6 +1866,7 @@ var GL_PLAY = [
       c.appendChild(mk('p', 'pc-lock', 'The buyer, the three-step method and the coaching offer are for top subscribers. Enter the access code below to open this card.'));
     }
     c.appendChild(mk('div', 'pc-foot', 'Follow the Capital · Top subscriber vault'));
+    renderHook();
     var days = $('pc-days'); days.innerHTML = '';
     for (var k = 0; k < 7; k++) (function (k) {
       var b = mk('button', 'pc-day' + (dayOpen(k) ? '' : ' lk')); b.type = 'button';
@@ -1774,7 +1874,7 @@ var GL_PLAY = [
       b.setAttribute('aria-label', fmtDate(dateOf(k), { weekday: 'long', day: 'numeric', month: 'long' }) + (dayOpen(k) ? '' : ', locked'));
       b.appendChild(mk('span', 'pc-dw', k === 0 ? 'Today' : fmtDate(dateOf(k), { weekday: 'short' })));
       b.appendChild(mk('span', 'pc-dn', fmtDate(dateOf(k), { day: 'numeric' })));
-      b.addEventListener('click', function () { dayOffset = k; $('pc-msg').textContent = ''; SFX.click(); renderCard(); });
+      b.addEventListener('click', function () { dayOffset = k; hkStep = 0; $('pc-msg').textContent = ''; SFX.click(); renderCard(); });
       days.appendChild(b);
     })(k);
   }
@@ -1882,6 +1982,12 @@ var GL_PLAY = [
         for (var k = 0; k < 7; k++) parts.push('Day ' + (k + 1) + ' · ' + fmtDate(dateOf(k), { weekday: 'short', day: 'numeric', month: 'short' }) + '\n' + captionFor(k));
         copyText(parts.join('\n\n----------\n\n'), $('pc-week'));
       });
+      $('hk-next').addEventListener('click', function () {
+        hkStep = (hkStep + 1) % 6; SFX.click(); renderHook(); speak($('hk-text').textContent, true);
+      });
+      $('hk-copy').addEventListener('click', function () { copyText(hookSeries(), $('hk-copy')); });
+      if (!synth) $('hk-say').hidden = true;
+      $('hk-say').addEventListener('click', function () { speak($('hk-text').textContent, true); });
       if (!synth) $('pc-listen').hidden = true;
       $('pc-listen').addEventListener('click', function () {
         var it = playFor(dayOffset), t = it[1] + '. ' + it[2];
@@ -1893,13 +1999,216 @@ var GL_PLAY = [
     renderCard(); renderGate(); renderList();
   }
 
+  /* ---------- Peril: anticipation hook scenes ---------- */
+  var PH_FONT = 'font-family="Unbounded,Inter,sans-serif" font-weight="800" text-anchor="middle"';
+  var PH_HEAVY = [
+    function () { return '<polygon points="-50,10 -40,-28 -12,-46 22,-40 48,-14 52,20 28,44 -22,46 -46,32" fill="#6d7a80" stroke="#3b464b" stroke-width="3"/><polygon points="-12,-46 22,-40 48,-14 10,-8 -20,-24" fill="#8b989d" opacity=".6"/><text y="8" font-size="12" fill="#eef4f6" ' + PH_FONT + '>CRASH</text>'; },
+    function () { return '<path d="M-56,-30 H44 Q58,-30 62,-20 Q50,-10 30,-8 L24,0 Q30,14 40,24 H46 V34 H-46 V24 H-36 Q-20,14 -22,0 L-28,-8 Q-50,-12 -56,-30Z" fill="#2d3a40" stroke="#0e171a" stroke-width="3"/><text y="-13" font-size="9" fill="#cfe3ea" ' + PH_FONT + '>INFLATION</text>'; },
+    function () { return '<circle r="42" fill="#37454b" stroke="#0e171a" stroke-width="3"/><circle cx="-14" cy="-16" r="12" fill="#fff" opacity=".12"/><rect x="-8" y="-54" width="16" height="14" rx="3" fill="#56666d" stroke="#0e171a" stroke-width="2"/><text y="6" font-size="13" fill="#e4eef1" ' + PH_FONT + '>DEBT</text>'; },
+    function () { return '<path d="M-30,-38 H30 L48,38 H-48Z" fill="#c9482f" stroke="#531a10" stroke-width="3"/><path d="M-12,-38 a12,12 0 0 1 24,0" fill="none" stroke="#531a10" stroke-width="5"/><text y="8" font-size="13" fill="#fff" ' + PH_FONT + '>10 TON</text><text y="24" font-size="9" fill="#ffd9cf" ' + PH_FONT + '>FEES</text>'; }
+  ];
+  var PH_TGT = [
+    function () { return '<polygon points="-6,-54 4,-68 14,-52" fill="#f29bb5" stroke="#9a4560" stroke-width="3"/><ellipse cx="0" cy="-30" rx="40" ry="28" fill="#f29bb5" stroke="#9a4560" stroke-width="3"/><ellipse cx="38" cy="-30" rx="9" ry="8" fill="#f6b1c6" stroke="#9a4560" stroke-width="3"/><rect x="-28" y="-8" width="12" height="10" rx="3" fill="#d97a98" stroke="#9a4560" stroke-width="2"/><rect x="14" y="-8" width="12" height="10" rx="3" fill="#d97a98" stroke="#9a4560" stroke-width="2"/><rect x="-14" y="-54" width="24" height="5" rx="2.5" fill="#5a2338"/><circle cx="24" cy="-40" r="3" fill="#3a1424"/><circle cx="-2" cy="-68" r="8" fill="#f2b84b" stroke="#8a5b0b" stroke-width="2"/>'; },
+    function () { var s = '', i; for (i = 0; i < 5; i++) s += '<rect x="-44" y="' + (-14 * (i + 1)) + '" width="88" height="13" rx="2" fill="#2f9e6a" stroke="#14543a" stroke-width="2"/><circle cx="0" cy="' + (-14 * i - 7.5) + '" r="4" fill="#bfe8d1"/>'; return s; },
+    function () { var s = '', i; for (i = 0; i < 8; i++) { var x = i % 2 ? 3 : -3, y = -9 * i; s += '<rect x="' + (x - 34) + '" y="' + (y - 12) + '" width="68" height="10" fill="#d99a22" stroke="#8a5b0b" stroke-width="2"/><ellipse cx="' + x + '" cy="' + (y - 12) + '" rx="34" ry="5" fill="#f2b84b" stroke="#8a5b0b" stroke-width="2"/>'; } return s; },
+    function () { return '<path d="M-46,-4 Q0,18 46,-4 L40,-14 Q0,-2 -40,-14Z" fill="#8a6a3a" stroke="#4c3817" stroke-width="3"/><ellipse cx="0" cy="-48" rx="26" ry="36" fill="#f6c453" stroke="#8a5b0b" stroke-width="3"/><ellipse cx="-9" cy="-60" rx="7" ry="12" fill="#fff" opacity=".35"/>'; }
+  ];
+  var PH_SC = [
+    { hn: 'a market crash', tn: 'SAVINGS', ra: 46, hb: 46, hw: 52, th: 80, tw: 40, col: '#f2b84b', line: 'Your savings sit under a falling market.' },
+    { hn: 'inflation', tn: 'SALARY', ra: 34, hb: 34, hw: 60, th: 70, tw: 44, col: '#2f9e6a', line: 'Your salary sits under an anvil called inflation.' },
+    { hn: 'debt', tn: 'PORTFOLIO', ra: 54, hb: 42, hw: 42, th: 80, tw: 36, col: '#f2b84b', line: 'Your portfolio sits under a wrecking ball of debt.' },
+    { hn: 'hidden fees', tn: 'NEST EGG', ra: 38, hb: 38, hw: 48, th: 84, tw: 30, col: '#f6c453', line: 'Your nest egg sits under ten tons of hidden fees.' }
+  ];
+  var PH_CX = 170, PH_GY = 340, PH_Y0 = 130;
+  var ph = { inited: false, raf: 0, phase: 'idle', sc: null, si: 0, dur: 6000, guess: null, outcome: '', score: 0, streak: 0, hx: PH_CX, hy: PH_Y0, sag: 0, rot: 0, z: 1, shx: 0, shy: 0, sx: 1, sy: 1, ta: 0, ropeOn: true, vig: 0, flash: 0, dust: [], burst: [], capIdx: -1, timer: 0 };
+  function phBuild(si) {
+    var sc = PH_SC[si], s, i;
+    ph.sc = sc; ph.si = si;
+    s = '<defs><pattern id="phz" width="14" height="14" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="7" height="14" fill="#f2b84b"/><rect x="7" width="7" height="14" fill="#1b2a30"/></pattern></defs>';
+    s += '<g id="ph-cam"><rect x="-200" y="-200" width="740" height="540" fill="#07161c"/><rect x="-200" y="' + PH_GY + '" width="740" height="300" fill="#0d2229"/><line x1="-200" x2="540" y1="' + PH_GY + '" y2="' + PH_GY + '" stroke="#1f5666" stroke-width="2"/>';
+    s += '<rect x="14" y="20" width="312" height="16" rx="3" fill="url(#phz)" stroke="#0e171a" stroke-width="2"/>';
+    s += '<text x="' + PH_CX + '" y="' + (PH_GY + 24) + '" font-size="11" fill="#8fb3bf" letter-spacing="2" ' + PH_FONT + '>' + sc.tn + '</text>';
+    s += '<g id="ph-tgt">' + PH_TGT[si]() + '</g>';
+    s += '<g id="ph-swing"><line id="ph-rope" x1="' + PH_CX + '" y1="36" x2="' + PH_CX + '" y2="' + (PH_Y0 - sc.ra) + '" stroke="#c9a46a" stroke-width="5" stroke-linecap="round"/>';
+    s += '<g id="ph-heavy">' + PH_HEAVY[si]() + '<g id="ph-fib" opacity="0" stroke="#f3e2bd" stroke-width="1.6" stroke-linecap="round"><line x1="-4" y1="' + (-sc.ra - 16) + '" x2="3" y2="' + (-sc.ra - 8) + '"/><line x1="3" y1="' + (-sc.ra - 18) + '" x2="-3" y2="' + (-sc.ra - 10) + '"/><line x1="-2" y1="' + (-sc.ra - 12) + '" x2="5" y2="' + (-sc.ra - 5) + '"/><line x1="4" y1="' + (-sc.ra - 14) + '" x2="-5" y2="' + (-sc.ra - 7) + '"/></g></g></g>';
+    s += '<g id="ph-dust" fill="#9fb4bb">';
+    ph.dust = [];
+    for (i = 0; i < 10; i++) s += '<circle r="1.8" cx="-50" cy="-50" opacity="0"/>';
+    s += '</g><g id="ph-burst" fill="' + sc.col + '" stroke="#00000055" stroke-width=".8">';
+    for (i = 0; i < 18; i++) s += '<circle r="' + (3 + (i % 3)) + '" cx="-50" cy="-50" opacity="0"/>';
+    s += '</g></g><rect id="ph-vig" width="340" height="400" fill="#ff2a2a" opacity="0" pointer-events="none"/><rect id="ph-flash" width="340" height="400" fill="#fff" opacity="0" pointer-events="none"/>';
+    $('ph-svg').innerHTML = s;
+    var d = $('ph-dust').children, b = $('ph-burst').children;
+    ph.dust = Array.prototype.map.call(d, function (el) { return { el: el, x: 0, y: 0, vy: 0, life: 0 }; });
+    ph.burst = Array.prototype.map.call(b, function (el) { return { el: el, x: 0, y: 0, vx: 0, vy: 0, life: 0 }; });
+    ph.hx = PH_CX; ph.hy = PH_Y0; ph.sag = 0; ph.rot = 0; ph.z = 1; ph.shx = 0; ph.shy = 0; ph.sx = 1; ph.sy = 1; ph.ta = 0; ph.ropeOn = true; ph.vig = 0; ph.flash = 0;
+    phApply();
+  }
+  function phApply() {
+    var sc = ph.sc; if (!sc) return;
+    $('ph-swing').setAttribute('transform', 'rotate(' + ph.rot.toFixed(2) + ' ' + PH_CX + ' 36)');
+    $('ph-heavy').setAttribute('transform', 'translate(' + ph.hx.toFixed(1) + ' ' + ph.hy.toFixed(1) + ')');
+    var r = $('ph-rope'); r.setAttribute('y2', (ph.hy - sc.ra).toFixed(1)); r.style.display = ph.ropeOn ? '' : 'none';
+    $('ph-tgt').setAttribute('transform', 'translate(' + PH_CX + ' ' + PH_GY + ') rotate(' + ph.ta.toFixed(2) + ') scale(' + ph.sx.toFixed(3) + ' ' + ph.sy.toFixed(3) + ')');
+    $('ph-cam').setAttribute('transform', 'translate(' + (PH_CX + ph.shx).toFixed(1) + ' ' + (230 + ph.shy).toFixed(1) + ') scale(' + ph.z.toFixed(3) + ') translate(' + (-PH_CX) + ' -230)');
+    $('ph-vig').setAttribute('opacity', Math.max(0, ph.vig).toFixed(3));
+    $('ph-flash').setAttribute('opacity', Math.max(0, ph.flash).toFixed(3));
+    ph.dust.forEach(function (p) { p.el.setAttribute('cx', p.x.toFixed(1)); p.el.setAttribute('cy', p.y.toFixed(1)); p.el.setAttribute('opacity', Math.max(0, Math.min(1, p.life)).toFixed(2)); });
+    ph.burst.forEach(function (p) { p.el.setAttribute('cx', p.x.toFixed(1)); p.el.setAttribute('cy', p.y.toFixed(1)); p.el.setAttribute('opacity', Math.max(0, Math.min(1, p.life * 1.5)).toFixed(2)); });
+  }
+  function phBurst(x, y, n, spread) {
+    var k = 0;
+    ph.burst.forEach(function (p) { if (k >= n || p.life > 0) return; k++; p.x = x; p.y = y; p.vx = (Math.random() - .5) * spread; p.vy = -120 - Math.random() * 300; p.life = 1; });
+  }
+  function phParticles(dt) {
+    ph.dust.forEach(function (p) { if (p.life > 0) { p.y += p.vy * dt; p.life -= dt * 1.2; } });
+    ph.burst.forEach(function (p) { if (p.life > 0) { p.vy += 900 * dt; p.x += p.vx * dt; p.y += p.vy * dt; if (p.y > PH_GY - 3) { p.y = PH_GY - 3; p.vy *= -.35; p.vx *= .7; } p.life -= dt * .7; } });
+  }
+  function phSetCap(t) { $('ph-cap').textContent = t; }
+  function phBanner(txt, cls) { var b = $('ph-banner'); b.textContent = txt || ''; b.className = 'ph-banner' + (txt ? ' on ' + cls : ''); }
+  function phFrame(now) {
+    var dt = Math.min(0.05, (now - ph.last) / 1000), sc = ph.sc, t, p, u;
+    ph.last = now;
+    if (ph.phase === 'tension') {
+      t = now - ph.t0; p = Math.min(1, t / ph.dur);
+      var f = 6 + 30 * p;
+      ph.rot = Math.sin(t / 1000 * f) * (0.4 + 5 * p * p);
+      ph.sag = 10 * p; ph.hy = PH_Y0 + ph.sag;
+      ph.z = 1 + 0.22 * Math.pow(p, 1.5);
+      var sk = p > 0.8 ? (p - 0.8) * 16 : 0; ph.shx = (Math.random() - .5) * sk; ph.shy = (Math.random() - .5) * sk;
+      ph.vig = 0.06 + 0.34 * p * (0.55 + 0.45 * Math.sin(t / 1000 * (5 + 12 * p)));
+      $('ph-fib').setAttribute('opacity', p.toFixed(2));
+      $('ph-rope').setAttribute('stroke-width', (5 - 2.2 * p).toFixed(2));
+      if (Math.random() < 0.03 + 0.25 * p) { var dp = ph.dust.filter(function (q) { return q.life <= 0; })[0]; if (dp) { dp.x = PH_CX - 20 + Math.random() * 40; dp.y = 40; dp.vy = 40 + Math.random() * 90; dp.life = 1; } }
+      if (now >= ph.nextCreak) { tone(80 + Math.random() * 50, 0.28, 'sawtooth', 0.045, 0, 55); ph.nextCreak = now + 750 - 520 * p; }
+      if (p > 0.55 && now >= ph.nextTick) { SFX.tick(); ph.nextTick = now + 420 - 300 * p; }
+      var rem = Math.ceil((ph.dur - t) / 1000);
+      $('ph-count').textContent = rem <= 3 && rem >= 1 ? rem : '';
+      var ci = p < 0.35 ? 0 : p < 0.7 ? 1 : 2;
+      if (ci !== ph.capIdx) { ph.capIdx = ci; phSetCap([sc.line, 'The rope is fraying. Will it hold?', 'Do not blink.'][ci]); if (ci === 1) speak('The rope is fraying. Will it hold?'); if (ci === 2) speak('Do not blink.'); }
+      $('ph-bar').style.width = (p * 100).toFixed(1) + '%';
+      if (p >= 1) phResolve(now);
+    } else if (ph.phase === 'fall') {
+      ph.vy += 1900 * dt; ph.hy += ph.vy * dt;
+      if (ph.outcome === 'near') ph.hx = PH_CX + (ph.landX - PH_CX) * Math.min(1, (ph.hy - ph.fromY) / ph.dist);
+      ph.rot *= 0.8;
+      if (ph.hy >= ph.ly) { ph.hy = ph.ly; phImpact(now); }
+    } else if (ph.phase === 'after') {
+      u = (now - ph.i0) / 1000;
+      var k = Math.exp(-5 * u);
+      ph.shx = (Math.random() - .5) * 12 * k; ph.shy = (Math.random() - .5) * 12 * k;
+      ph.z = 1 + 0.22 * Math.exp(-3 * u);
+      ph.flash = 0.6 * Math.exp(-12 * u); ph.vig = Math.max(0, ph.vig - dt * .6);
+      if (ph.outcome === 'crush') { var q = Math.min(1, u / 0.1); ph.sy = 1 - 0.82 * q; ph.sx = 1 + 0.4 * q; }
+      else { ph.ta = 7 * Math.exp(-3 * u) * Math.sin(20 * u); }
+      if (u > 1.5) { phFinish(); return; }
+    } else if (ph.phase === 'hold') {
+      u = (now - ph.h0) / 1000;
+      ph.hy = PH_Y0 + ph.sag + 24 * (1 - Math.exp(-5 * u) * Math.cos(18 * u));
+      ph.rot = 2.5 * Math.exp(-3 * u) * Math.sin(14 * u);
+      ph.z = 1 + 0.22 * Math.exp(-3 * u); ph.shx = ph.shy = 0; ph.vig = Math.max(0, ph.vig - dt * .6);
+      if (u > 1.6) { phFinish(); return; }
+    }
+    phParticles(dt); phApply();
+    ph.raf = requestAnimationFrame(phFrame);
+  }
+  function phResolve(now) {
+    var sc = ph.sc;
+    $('ph-count').textContent = ''; $('ph-bar').style.width = '100%';
+    ph.fromY = ph.hy; ph.vy = 0;
+    if (ph.outcome === 'hold') {
+      ph.phase = 'hold'; ph.h0 = now;
+      $('ph-fib').setAttribute('opacity', '1');
+      tone(140, 0.25, 'triangle', 0.14, 0, 90); tone(520, 0.4, 'sine', 0.1, 0.1, 380);
+      phBanner('HOLDS!', 'hold'); phSetCap('Somehow, it holds.');
+      return;
+    }
+    ph.phase = 'fall'; ph.ropeOn = false; ph.rot = 0;
+    $('ph-fib').setAttribute('opacity', '0');
+    if (ph.outcome === 'crush') ph.ly = PH_GY - sc.th - sc.hb; else { ph.ly = PH_GY - sc.hb; ph.landX = PH_CX + sc.tw + sc.hw + 10; }
+    ph.dist = ph.ly - ph.fromY;
+    tone(900, 0.08, 'square', 0.1, 0, 200); tone(600, 0.5, 'sawtooth', 0.07, 0.04, 110);
+    phSetCap('SNAP.');
+  }
+  function phImpact(now) {
+    var sc = ph.sc;
+    ph.phase = 'after'; ph.i0 = now; ph.flash = 0.6;
+    tone(70, 0.5, 'sawtooth', 0.2, 0, 35); tone(110, 0.35, 'square', 0.1, 0.02, 45);
+    if (ph.outcome === 'crush') { phBurst(PH_CX, PH_GY - sc.th * 0.5, 16, 520); phBanner('CRUSHED!', 'crush'); phSetCap('Everything you saved. Gone.'); }
+    else { phBurst(ph.hx, PH_GY - 6, 6, 260); phBanner('NEAR MISS!', 'near'); phSetCap('Inches. Pure luck.'); }
+  }
+  function phFinish() {
+    var win = false, said;
+    ph.phase = 'idle';
+    var truth = ph.outcome === 'crush' ? 'fall' : 'hold';
+    if (ph.guess) {
+      if (ph.guess === truth) { win = true; ph.score += 10 + 5 * Math.min(ph.streak, 5); ph.streak++; SFX.win(); }
+      else { ph.streak = 0; SFX.lose(); }
+    }
+    if (ph.score > (best.ph || 0)) { best.ph = ph.score; saveBest(); }
+    phHud();
+    said = ph.outcome === 'crush' ? 'Crushed. That money is gone.' : ph.outcome === 'hold' ? 'It holds. Barely.' : 'Near miss. You got lucky.';
+    $('ph-status').textContent = (ph.guess ? (win ? 'You called it. ' : 'Wrong call. ') : 'No call made. ') + said;
+    speak(said);
+    $('ph-go').disabled = false; $('ph-go').textContent = 'Next hook';
+    $('ph-fall').disabled = true; $('ph-hold').disabled = true;
+    if ($('ph-loop').checked) ph.timer = setTimeout(function () { if (cur === 'peril') phStart(); }, 1800);
+  }
+  function phHud() { $('ph-score').textContent = ph.score; $('ph-streak').textContent = ph.streak; $('ph-best').textContent = best.ph || 0; }
+  function phStart() {
+    if (ph.phase !== 'idle') return;
+    clearTimeout(ph.timer);
+    var v = $('ph-scene').value, si = v === 'random' ? Math.floor(Math.random() * PH_SC.length) : +v;
+    if (v === 'random' && si === ph.si && ph.started) si = (si + 1 + Math.floor(Math.random() * (PH_SC.length - 1))) % PH_SC.length;
+    ph.started = true;
+    ph.dur = +$('ph-len').value || 6000;
+    phBuild(si); phBanner('');
+    var r = Math.random(); ph.outcome = r < 0.5 ? 'crush' : r < 0.75 ? 'hold' : 'near';
+    ph.guess = null; ph.capIdx = -1;
+    $('ph-fall').disabled = false; $('ph-hold').disabled = false;
+    $('ph-fall').setAttribute('aria-pressed', 'false'); $('ph-hold').setAttribute('aria-pressed', 'false');
+    $('ph-go').disabled = true; $('ph-go').textContent = 'Watch closely...';
+    $('ph-status').textContent = 'Call it before the rope goes.';
+    $('ph-bar').style.width = '0%';
+    ph.phase = 'tension'; ph.t0 = ph.last = performance.now(); ph.nextCreak = ph.t0 + 300; ph.nextTick = 0;
+    speak(ph.sc.line + ' Will it survive?');
+    cancelAnimationFrame(ph.raf); ph.raf = requestAnimationFrame(phFrame);
+  }
+  function phGuess(g) {
+    if (ph.phase !== 'tension' || ph.guess) return;
+    ph.guess = g; SFX.click();
+    $('ph-fall').setAttribute('aria-pressed', String(g === 'fall')); $('ph-hold').setAttribute('aria-pressed', String(g === 'hold'));
+    $('ph-fall').disabled = true; $('ph-hold').disabled = true;
+    $('ph-status').textContent = 'Locked in: ' + (g === 'fall' ? 'It falls' : 'It holds') + '.';
+  }
+  function phLeave() {
+    if (ph.raf) { cancelAnimationFrame(ph.raf); ph.raf = 0; }
+    clearTimeout(ph.timer);
+    if (ph.phase !== 'idle') {
+      ph.phase = 'idle';
+      $('ph-go').disabled = false; $('ph-go').textContent = 'Start the hook';
+      $('ph-fall').disabled = true; $('ph-hold').disabled = true; $('ph-count').textContent = ''; phBanner('');
+    }
+  }
+  function phEnter() {
+    if (!ph.inited) {
+      $('ph-go').addEventListener('click', phStart);
+      $('ph-fall').addEventListener('click', function () { phGuess('fall'); });
+      $('ph-hold').addEventListener('click', function () { phGuess('hold'); });
+      $('ph-scene').addEventListener('change', function () { if (ph.phase === 'idle') { phBuild($('ph-scene').value === 'random' ? 0 : +$('ph-scene').value); phSetCap(ph.sc.line); } });
+      ph.inited = true; ph.started = false;
+    }
+    phHud();
+    if (ph.phase === 'idle') { phBuild($('ph-scene').value === 'random' ? 0 : +$('ph-scene').value); phSetCap(ph.sc.line); $('ph-status').textContent = 'Pick a scene and press Start the hook.'; }
+  }
+
   /* ---------- tabs ---------- */
-  var GAMES = ['shuffle', 'hl', 'ab', 'mem', 'orb', 'ideas'], cur = 'shuffle';
+  var GAMES = ['shuffle', 'hl', 'ab', 'mem', 'orb', 'peril', 'ideas'], cur = 'shuffle';
   document.querySelectorAll('.tab').forEach(function (b) {
     b.addEventListener('click', function () {
       var g = b.getAttribute('data-game');
       if (g === cur || busy) return;
-      abStop(); orbLeave(); cur = g;
+      abStop(); orbLeave(); phLeave(); cur = g;
       document.querySelectorAll('.tab').forEach(function (x) { x.setAttribute('aria-pressed', String(x === b)); });
       GAMES.forEach(function (k) { $('g-' + k).hidden = k !== g; });
       SFX.click();
@@ -1907,6 +2216,7 @@ var GL_PLAY = [
       if (g === 'mem' && !mem.init) memReset();
       if (g === 'ab') abIdle();
       if (g === 'orb') orbEnter();
+      if (g === 'peril') phEnter();
       if (g === 'ideas') ideasEnter();
     });
   });
