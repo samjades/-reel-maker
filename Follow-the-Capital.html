@@ -483,6 +483,9 @@ input[type="text"], input[type="search"] { font: inherit; color: var(--ink); bac
         <option value="1">Anvil over salary</option>
         <option value="2">Wrecking ball over portfolio</option>
         <option value="3">10-ton weight over nest egg</option>
+        <option value="4">Melting ice block over gold</option>
+        <option value="5">Crane dropping a car on your house fund</option>
+        <option value="6">Domino chain to your investments</option>
       </select>
       <label for="ph-len">Tension</label>
       <select id="ph-len">
@@ -490,10 +493,16 @@ input[type="text"], input[type="search"] { font: inherit; color: var(--ink); bac
         <option value="6000" selected>Reel · 6s</option>
         <option value="10000">Long · 10s</option>
       </select>
+      <label for="ph-odds">Odds</label>
+      <select id="ph-odds">
+        <option value="fair">Fair · falls about half</option>
+        <option value="danger">Dangerous · usually falls</option>
+        <option value="lucky">Lucky · rarely falls</option>
+      </select>
       <label class="chk"><input type="checkbox" id="ph-loop"> Auto-loop</label>
     </div>
     <div class="phwrap main-area" id="ph-wrap">
-      <svg id="ph-svg" viewBox="0 0 340 400" role="img" aria-label="A heavy object hangs by a fraying rope above your money."></svg>
+      <svg id="ph-svg" viewBox="0 0 340 400" role="img" aria-label="A heavy object or a domino chain threatens your money."></svg>
       <div class="ph-cap" id="ph-cap" aria-live="polite"></div>
       <div class="ph-count" id="ph-count"></div>
       <div class="ph-banner" id="ph-banner"></div>
@@ -2005,33 +2014,55 @@ var GL_PLAY = [
     function () { return '<polygon points="-50,10 -40,-28 -12,-46 22,-40 48,-14 52,20 28,44 -22,46 -46,32" fill="#6d7a80" stroke="#3b464b" stroke-width="3"/><polygon points="-12,-46 22,-40 48,-14 10,-8 -20,-24" fill="#8b989d" opacity=".6"/><text y="8" font-size="12" fill="#eef4f6" ' + PH_FONT + '>CRASH</text>'; },
     function () { return '<path d="M-56,-30 H44 Q58,-30 62,-20 Q50,-10 30,-8 L24,0 Q30,14 40,24 H46 V34 H-46 V24 H-36 Q-20,14 -22,0 L-28,-8 Q-50,-12 -56,-30Z" fill="#2d3a40" stroke="#0e171a" stroke-width="3"/><text y="-13" font-size="9" fill="#cfe3ea" ' + PH_FONT + '>INFLATION</text>'; },
     function () { return '<circle r="42" fill="#37454b" stroke="#0e171a" stroke-width="3"/><circle cx="-14" cy="-16" r="12" fill="#fff" opacity=".12"/><rect x="-8" y="-54" width="16" height="14" rx="3" fill="#56666d" stroke="#0e171a" stroke-width="2"/><text y="6" font-size="13" fill="#e4eef1" ' + PH_FONT + '>DEBT</text>'; },
-    function () { return '<path d="M-30,-38 H30 L48,38 H-48Z" fill="#c9482f" stroke="#531a10" stroke-width="3"/><path d="M-12,-38 a12,12 0 0 1 24,0" fill="none" stroke="#531a10" stroke-width="5"/><text y="8" font-size="13" fill="#fff" ' + PH_FONT + '>10 TON</text><text y="24" font-size="9" fill="#ffd9cf" ' + PH_FONT + '>FEES</text>'; }
+    function () { return '<path d="M-30,-38 H30 L48,38 H-48Z" fill="#c9482f" stroke="#531a10" stroke-width="3"/><path d="M-12,-38 a12,12 0 0 1 24,0" fill="none" stroke="#531a10" stroke-width="5"/><text y="8" font-size="13" fill="#fff" ' + PH_FONT + '>10 TON</text><text y="24" font-size="9" fill="#ffd9cf" ' + PH_FONT + '>FEES</text>'; },
+    function () { return '<rect x="-44" y="-40" width="88" height="80" rx="9" fill="#a8e2f3" fill-opacity=".85" stroke="#e8fbff" stroke-width="3"/><polygon points="-34,-30 -10,-30 -34,0" fill="#fff" opacity=".45"/><polygon points="14,40 40,12 40,40" fill="#fff" opacity=".25"/><text y="6" font-size="11" fill="#1d5a6e" ' + PH_FONT + '>RECESSION</text>'; },
+    function () { return '<rect x="-4" y="-40" width="8" height="14" rx="2" fill="#56666d" stroke="#0e171a" stroke-width="2"/><path d="M-60,14 V0 Q-60,-6 -50,-8 L-32,-10 L-20,-26 H24 L38,-10 H54 Q62,-8 62,0 V14Z" fill="#d6402f" stroke="#5a140c" stroke-width="3"/><path d="M-15,-22 H-2 V-10 H-26Z M5,-22 H20 L30,-10 H5Z" fill="#bfe3f0" stroke="#5a140c" stroke-width="2"/><circle cx="-34" cy="16" r="11" fill="#1a2326" stroke="#000" stroke-width="2"/><circle cx="34" cy="16" r="11" fill="#1a2326" stroke="#000" stroke-width="2"/><circle cx="-34" cy="16" r="4" fill="#9aa8ad"/><circle cx="34" cy="16" r="4" fill="#9aa8ad"/><text y="6" font-size="7" fill="#fff" ' + PH_FONT + '>CAR LOAN</text>'; },
+    function () { return ''; }
   ];
   var PH_TGT = [
     function () { return '<polygon points="-6,-54 4,-68 14,-52" fill="#f29bb5" stroke="#9a4560" stroke-width="3"/><ellipse cx="0" cy="-30" rx="40" ry="28" fill="#f29bb5" stroke="#9a4560" stroke-width="3"/><ellipse cx="38" cy="-30" rx="9" ry="8" fill="#f6b1c6" stroke="#9a4560" stroke-width="3"/><rect x="-28" y="-8" width="12" height="10" rx="3" fill="#d97a98" stroke="#9a4560" stroke-width="2"/><rect x="14" y="-8" width="12" height="10" rx="3" fill="#d97a98" stroke="#9a4560" stroke-width="2"/><rect x="-14" y="-54" width="24" height="5" rx="2.5" fill="#5a2338"/><circle cx="24" cy="-40" r="3" fill="#3a1424"/><circle cx="-2" cy="-68" r="8" fill="#f2b84b" stroke="#8a5b0b" stroke-width="2"/>'; },
     function () { var s = '', i; for (i = 0; i < 5; i++) s += '<rect x="-44" y="' + (-14 * (i + 1)) + '" width="88" height="13" rx="2" fill="#2f9e6a" stroke="#14543a" stroke-width="2"/><circle cx="0" cy="' + (-14 * i - 7.5) + '" r="4" fill="#bfe8d1"/>'; return s; },
     function () { var s = '', i; for (i = 0; i < 8; i++) { var x = i % 2 ? 3 : -3, y = -9 * i; s += '<rect x="' + (x - 34) + '" y="' + (y - 12) + '" width="68" height="10" fill="#d99a22" stroke="#8a5b0b" stroke-width="2"/><ellipse cx="' + x + '" cy="' + (y - 12) + '" rx="34" ry="5" fill="#f2b84b" stroke="#8a5b0b" stroke-width="2"/>'; } return s; },
-    function () { return '<path d="M-46,-4 Q0,18 46,-4 L40,-14 Q0,-2 -40,-14Z" fill="#8a6a3a" stroke="#4c3817" stroke-width="3"/><ellipse cx="0" cy="-48" rx="26" ry="36" fill="#f6c453" stroke="#8a5b0b" stroke-width="3"/><ellipse cx="-9" cy="-60" rx="7" ry="12" fill="#fff" opacity=".35"/>'; }
+    function () { return '<path d="M-46,-4 Q0,18 46,-4 L40,-14 Q0,-2 -40,-14Z" fill="#8a6a3a" stroke="#4c3817" stroke-width="3"/><ellipse cx="0" cy="-48" rx="26" ry="36" fill="#f6c453" stroke="#8a5b0b" stroke-width="3"/><ellipse cx="-9" cy="-60" rx="7" ry="12" fill="#fff" opacity=".35"/>'; },
+    function () { return '<path d="M-44,0 L-36,-16 H0 L8,0Z M0,0 L8,-16 H44 L52,0Z" fill="#e0a526" stroke="#7a5208" stroke-width="2.5" transform="translate(-4 0)"/><path d="M-22,-16 L-14,-32 H22 L30,-16Z" fill="#f2c24b" stroke="#7a5208" stroke-width="2.5" transform="translate(-4 0)"/><text y="-4" x="-4" font-size="6" fill="#7a5208" ' + PH_FONT + '>GOLD</text>'; },
+    function () { return '<path d="M-40,0 V-36 L0,-66 L40,-36 V0Z" fill="#e9d6a5" stroke="#6b5a2c" stroke-width="3"/><rect x="-8" y="-24" width="16" height="24" fill="#8a5a2b"/><rect x="-32" y="-30" width="13" height="12" fill="#bfe3f0" stroke="#6b5a2c" stroke-width="2"/><rect x="19" y="-30" width="13" height="12" fill="#bfe3f0" stroke="#6b5a2c" stroke-width="2"/>'; },
+    function () { var s = '', i; for (i = 0; i < 8; i++) { var x = i % 2 ? 3 : -3, y = -9 * i; s += '<rect x="' + (x - 34) + '" y="' + (y - 12) + '" width="68" height="10" fill="#d99a22" stroke="#8a5b0b" stroke-width="2"/><ellipse cx="' + x + '" cy="' + (y - 12) + '" rx="34" ry="5" fill="#f2b84b" stroke="#8a5b0b" stroke-width="2"/>'; } return s; }
   ];
   var PH_SC = [
     { hn: 'a market crash', tn: 'SAVINGS', ra: 46, hb: 46, hw: 52, th: 80, tw: 40, col: '#f2b84b', line: 'Your savings sit under a falling market.' },
     { hn: 'inflation', tn: 'SALARY', ra: 34, hb: 34, hw: 60, th: 70, tw: 44, col: '#2f9e6a', line: 'Your salary sits under an anvil called inflation.' },
     { hn: 'debt', tn: 'PORTFOLIO', ra: 54, hb: 42, hw: 42, th: 80, tw: 36, col: '#f2b84b', line: 'Your portfolio sits under a wrecking ball of debt.' },
-    { hn: 'hidden fees', tn: 'NEST EGG', ra: 38, hb: 38, hw: 48, th: 84, tw: 30, col: '#f6c453', line: 'Your nest egg sits under ten tons of hidden fees.' }
+    { hn: 'hidden fees', tn: 'NEST EGG', ra: 38, hb: 38, hw: 48, th: 84, tw: 30, col: '#f6c453', line: 'Your nest egg sits under ten tons of hidden fees.' },
+    { hn: 'a recession', tn: 'GOLD BARS', ra: 40, hb: 40, hw: 44, th: 48, tw: 48, col: '#f2c24b', melt: true, dcol: '#a8e2f3', line: 'Your gold sits under a block of ice, and it is melting.', holdTxt: 'MELTED!', holdCap: 'It melted before it could fall.', holdSay: 'It melted away first.' },
+    { hn: 'a car loan', tn: 'HOUSE FUND', ra: 40, hb: 27, hw: 62, th: 66, tw: 40, col: '#d9c28a', rc: '#9aa8ad', line: 'A crane holds a car over your house fund.' },
+    { hn: 'a chain reaction', tn: 'INVESTMENTS', ra: 0, hb: 0, hw: 0, th: 80, tw: 36, col: '#f2b84b', dom: true, tx: 250, line: 'One domino starts a chain toward your investments.', holdTxt: 'CHAIN BROKEN!', holdCap: 'The chain breaks. Phew.', holdSay: 'The chain broke. Your investments are safe.', nearTxt: 'STILL STANDING!', nearCap: 'It wobbles, but it stays up.', nearSay: 'It wobbles, but it stays up.' }
   ];
+  var PH_DN = 10, PH_DH = 36;
   var PH_CX = 170, PH_GY = 340, PH_Y0 = 130;
   var ph = { inited: false, raf: 0, phase: 'idle', sc: null, si: 0, dur: 6000, guess: null, outcome: '', score: 0, streak: 0, hx: PH_CX, hy: PH_Y0, sag: 0, rot: 0, z: 1, shx: 0, shy: 0, sx: 1, sy: 1, ta: 0, ropeOn: true, vig: 0, flash: 0, dust: [], burst: [], capIdx: -1, timer: 0 };
   function phBuild(si) {
-    var sc = PH_SC[si], s, i;
-    ph.sc = sc; ph.si = si;
+    var sc = PH_SC[si], s, i, tx = sc.tx || PH_CX;
+    ph.sc = sc; ph.si = si; ph.ms = 1; ph.tilt = 0; ph.d0 = 0;
     s = '<defs><pattern id="phz" width="14" height="14" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="7" height="14" fill="#f2b84b"/><rect x="7" width="7" height="14" fill="#1b2a30"/></pattern></defs>';
     s += '<g id="ph-cam"><rect x="-200" y="-200" width="740" height="540" fill="#07161c"/><rect x="-200" y="' + PH_GY + '" width="740" height="300" fill="#0d2229"/><line x1="-200" x2="540" y1="' + PH_GY + '" y2="' + PH_GY + '" stroke="#1f5666" stroke-width="2"/>';
-    s += '<rect x="14" y="20" width="312" height="16" rx="3" fill="url(#phz)" stroke="#0e171a" stroke-width="2"/>';
-    s += '<text x="' + PH_CX + '" y="' + (PH_GY + 24) + '" font-size="11" fill="#8fb3bf" letter-spacing="2" ' + PH_FONT + '>' + sc.tn + '</text>';
+    s += '<rect id="ph-beam" x="14" y="20" width="312" height="16" rx="3" fill="url(#phz)" stroke="#0e171a" stroke-width="2"' + (sc.dom ? ' display="none"' : '') + '/>';
+    if (sc.melt) s += '<ellipse id="ph-pud" cx="' + tx + '" cy="' + (PH_GY + 2) + '" rx="1" ry="4" fill="#a8e2f3" opacity=".55"/>';
+    s += '<text x="' + tx + '" y="' + (PH_GY + 24) + '" font-size="11" fill="#8fb3bf" letter-spacing="2" ' + PH_FONT + '>' + sc.tn + '</text>';
     s += '<g id="ph-tgt">' + PH_TGT[si]() + '</g>';
-    s += '<g id="ph-swing"><line id="ph-rope" x1="' + PH_CX + '" y1="36" x2="' + PH_CX + '" y2="' + (PH_Y0 - sc.ra) + '" stroke="#c9a46a" stroke-width="5" stroke-linecap="round"/>';
-    s += '<g id="ph-heavy">' + PH_HEAVY[si]() + '<g id="ph-fib" opacity="0" stroke="#f3e2bd" stroke-width="1.6" stroke-linecap="round"><line x1="-4" y1="' + (-sc.ra - 16) + '" x2="3" y2="' + (-sc.ra - 8) + '"/><line x1="3" y1="' + (-sc.ra - 18) + '" x2="-3" y2="' + (-sc.ra - 10) + '"/><line x1="-2" y1="' + (-sc.ra - 12) + '" x2="5" y2="' + (-sc.ra - 5) + '"/><line x1="4" y1="' + (-sc.ra - 14) + '" x2="-5" y2="' + (-sc.ra - 7) + '"/></g></g></g>';
-    s += '<g id="ph-dust" fill="#9fb4bb">';
+    if (sc.dom) {
+      s += '<g id="ph-doms">';
+      ph.dom = [];
+      var gap = ph.outcome === 'hold' ? ph.gapIdx : -1;
+      for (i = 0; i < PH_DN; i++) {
+        var px = 18 + 18 * i + (i > gap && gap >= 0 ? 30 : 0);
+        ph.dom.push({ px: px, a: 0 });
+        s += '<g class="dm" transform="translate(' + px + ' ' + PH_GY + ')"><rect x="-10" y="-' + PH_DH + '" width="10" height="' + PH_DH + '" rx="2" fill="#f4efe0" stroke="#1b2a30" stroke-width="2"/><circle cx="-5" cy="-' + (PH_DH - 9) + '" r="1.6" fill="#1b2a30"/><circle cx="-5" cy="-' + (PH_DH / 2) + '" r="1.6" fill="#1b2a30"/><circle cx="-5" cy="-9" r="1.6" fill="#1b2a30"/></g>';
+      }
+      s += '</g>';
+    } else { ph.dom = []; }
+    s += '<g id="ph-swing"><line id="ph-rope" x1="' + PH_CX + '" y1="36" x2="' + PH_CX + '" y2="' + (PH_Y0 - sc.ra) + '" stroke="' + (sc.rc || '#c9a46a') + '" stroke-width="5" stroke-linecap="round"' + (sc.dom ? ' display="none"' : '') + '/>';
+    s += '<g id="ph-heavy"><g id="ph-art">' + PH_HEAVY[si]() + '</g>' + (sc.dom ? '' : '<g id="ph-fib" opacity="0" stroke="#f3e2bd" stroke-width="1.6" stroke-linecap="round"><line x1="-4" y1="' + (-sc.ra - 16) + '" x2="3" y2="' + (-sc.ra - 8) + '"/><line x1="3" y1="' + (-sc.ra - 18) + '" x2="-3" y2="' + (-sc.ra - 10) + '"/><line x1="-2" y1="' + (-sc.ra - 12) + '" x2="5" y2="' + (-sc.ra - 5) + '"/><line x1="4" y1="' + (-sc.ra - 14) + '" x2="-5" y2="' + (-sc.ra - 7) + '"/></g>') + '</g></g>';
+    s += '<g id="ph-dust" fill="' + (sc.dcol || '#9fb4bb') + '">';
     ph.dust = [];
     for (i = 0; i < 10; i++) s += '<circle r="1.8" cx="-50" cy="-50" opacity="0"/>';
     s += '</g><g id="ph-burst" fill="' + sc.col + '" stroke="#00000055" stroke-width=".8">';
@@ -2048,8 +2079,14 @@ var GL_PLAY = [
     var sc = ph.sc; if (!sc) return;
     $('ph-swing').setAttribute('transform', 'rotate(' + ph.rot.toFixed(2) + ' ' + PH_CX + ' 36)');
     $('ph-heavy').setAttribute('transform', 'translate(' + ph.hx.toFixed(1) + ' ' + ph.hy.toFixed(1) + ')');
-    var r = $('ph-rope'); r.setAttribute('y2', (ph.hy - sc.ra).toFixed(1)); r.style.display = ph.ropeOn ? '' : 'none';
-    $('ph-tgt').setAttribute('transform', 'translate(' + PH_CX + ' ' + PH_GY + ') rotate(' + ph.ta.toFixed(2) + ') scale(' + ph.sx.toFixed(3) + ' ' + ph.sy.toFixed(3) + ')');
+    var r = $('ph-rope'); r.setAttribute('y2', (ph.hy - sc.ra).toFixed(1)); if (!sc.dom) r.style.display = ph.ropeOn ? '' : 'none';
+    var tx = sc.tx || PH_CX;
+    $('ph-tgt').setAttribute('transform', sc.dom
+      ? 'translate(' + (tx + sc.tw) + ' ' + PH_GY + ') rotate(' + ph.tilt.toFixed(2) + ') translate(' + (-sc.tw) + ' 0) rotate(' + ph.ta.toFixed(2) + ')'
+      : 'translate(' + PH_CX + ' ' + PH_GY + ') rotate(' + ph.ta.toFixed(2) + ') scale(' + ph.sx.toFixed(3) + ' ' + ph.sy.toFixed(3) + ')');
+    var art = $('ph-art'); if (art && sc.melt) art.setAttribute('transform', 'translate(0 ' + (-sc.ra * (1 - ph.ms)).toFixed(1) + ') scale(' + ph.ms.toFixed(3) + ')');
+    var pd = $('ph-pud'); if (pd) pd.setAttribute('rx', (3 + 70 * (1 - ph.ms) / 0.9).toFixed(1));
+    if (sc.dom) { var dm = document.querySelectorAll('#ph-doms .dm'); ph.dom.forEach(function (d, i) { dm[i].setAttribute('transform', 'translate(' + d.px + ' ' + PH_GY + ') rotate(' + d.a.toFixed(1) + ')'); }); }
     $('ph-cam').setAttribute('transform', 'translate(' + (PH_CX + ph.shx).toFixed(1) + ' ' + (230 + ph.shy).toFixed(1) + ') scale(' + ph.z.toFixed(3) + ') translate(' + (-PH_CX) + ' -230)');
     $('ph-vig').setAttribute('opacity', Math.max(0, ph.vig).toFixed(3));
     $('ph-flash').setAttribute('opacity', Math.max(0, ph.flash).toFixed(3));
@@ -2064,6 +2101,7 @@ var GL_PLAY = [
     ph.dust.forEach(function (p) { if (p.life > 0) { p.y += p.vy * dt; p.life -= dt * 1.2; } });
     ph.burst.forEach(function (p) { if (p.life > 0) { p.vy += 900 * dt; p.x += p.vx * dt; p.y += p.vy * dt; if (p.y > PH_GY - 3) { p.y = PH_GY - 3; p.vy *= -.35; p.vx *= .7; } p.life -= dt * .7; } });
   }
+  function phFib(v) { var f = $('ph-fib'); if (f) f.setAttribute('opacity', v); }
   function phSetCap(t) { $('ph-cap').textContent = t; }
   function phBanner(txt, cls) { var b = $('ph-banner'); b.textContent = txt || ''; b.className = 'ph-banner' + (txt ? ' on ' + cls : ''); }
   function phFrame(now) {
@@ -2072,22 +2110,40 @@ var GL_PLAY = [
     if (ph.phase === 'tension') {
       t = now - ph.t0; p = Math.min(1, t / ph.dur);
       var f = 6 + 30 * p;
-      ph.rot = Math.sin(t / 1000 * f) * (0.4 + 5 * p * p);
-      ph.sag = 10 * p; ph.hy = PH_Y0 + ph.sag;
+      ph.rot = ph.sc.dom ? 0 : Math.sin(t / 1000 * f) * (0.4 + 5 * p * p);
+      ph.sag = ph.sc.dom ? 0 : 10 * p; ph.hy = PH_Y0 + ph.sag;
+      if (sc.dom) { ph.dom.forEach(function (d, i) { d.a = Math.sin(t / 1000 * (f + i)) * 1.6 * p + (i === 0 ? p * 9 : 0); }); }
+      if (sc.melt) {
+        ph.ms = 1 - 0.3 * p;
+        if (Math.random() < 0.12 + 0.4 * p) { var mp = ph.dust.filter(function (q) { return q.life <= 0; })[0]; if (mp) { mp.x = PH_CX - 36 + Math.random() * 72; mp.y = ph.hy + sc.hb * ph.ms - sc.ra * (1 - ph.ms); mp.vy = 60 + Math.random() * 60; mp.life = 1; } }
+      }
       ph.z = 1 + 0.22 * Math.pow(p, 1.5);
       var sk = p > 0.8 ? (p - 0.8) * 16 : 0; ph.shx = (Math.random() - .5) * sk; ph.shy = (Math.random() - .5) * sk;
       ph.vig = 0.06 + 0.34 * p * (0.55 + 0.45 * Math.sin(t / 1000 * (5 + 12 * p)));
-      $('ph-fib').setAttribute('opacity', p.toFixed(2));
-      $('ph-rope').setAttribute('stroke-width', (5 - 2.2 * p).toFixed(2));
-      if (Math.random() < 0.03 + 0.25 * p) { var dp = ph.dust.filter(function (q) { return q.life <= 0; })[0]; if (dp) { dp.x = PH_CX - 20 + Math.random() * 40; dp.y = 40; dp.vy = 40 + Math.random() * 90; dp.life = 1; } }
+      phFib(p.toFixed(2));
+      if (!sc.dom) $('ph-rope').setAttribute('stroke-width', (5 - 2.2 * p).toFixed(2));
+      if (!sc.dom && !sc.melt && Math.random() < 0.03 + 0.25 * p) { var dp = ph.dust.filter(function (q) { return q.life <= 0; })[0]; if (dp) { dp.x = PH_CX - 20 + Math.random() * 40; dp.y = 40; dp.vy = 40 + Math.random() * 90; dp.life = 1; } }
       if (now >= ph.nextCreak) { tone(80 + Math.random() * 50, 0.28, 'sawtooth', 0.045, 0, 55); ph.nextCreak = now + 750 - 520 * p; }
       if (p > 0.55 && now >= ph.nextTick) { SFX.tick(); ph.nextTick = now + 420 - 300 * p; }
       var rem = Math.ceil((ph.dur - t) / 1000);
       $('ph-count').textContent = rem <= 3 && rem >= 1 ? rem : '';
       var ci = p < 0.35 ? 0 : p < 0.7 ? 1 : 2;
-      if (ci !== ph.capIdx) { ph.capIdx = ci; phSetCap([sc.line, 'The rope is fraying. Will it hold?', 'Do not blink.'][ci]); if (ci === 1) speak('The rope is fraying. Will it hold?'); if (ci === 2) speak('Do not blink.'); }
+      if (ci !== ph.capIdx) { ph.capIdx = ci; var mid = sc.dom ? 'The chain is about to start. Will it reach?' : sc.melt ? 'It is melting fast. Will it fall?' : 'The rope is fraying. Will it hold?'; phSetCap([sc.line, mid, 'Do not blink.'][ci]); if (ci === 1) speak(mid); if (ci === 2) speak('Do not blink.'); }
       $('ph-bar').style.width = (p * 100).toFixed(1) + '%';
       if (p >= 1) phResolve(now);
+    } else if (ph.phase === 'dom') {
+      u = (now - ph.d0) / 1000;
+      var last = ph.outcome === 'hold' ? ph.gapIdx : PH_DN - 1;
+      ph.dom.forEach(function (d, i) { if (i > last) { d.a = 0; return; } var q = Math.max(0, Math.min(1, (u - i * 0.12) / 0.2)); d.a = q * (i === last ? 90 : 72); });
+      ph.z = 1 + 0.22 * Math.exp(-2 * u); ph.vig = Math.max(0, ph.vig - dt * .5);
+      var endT = last * 0.12 + 0.2;
+      if (u > last * 0.12 + 0.1 && !ph.domHit) {
+        ph.domHit = true;
+        if (ph.outcome === 'hold') { tone(140, 0.25, 'triangle', 0.14, 0, 90); tone(520, 0.4, 'sine', 0.1, 0.1, 380); phBanner(ph.sc.holdTxt, 'hold'); phSetCap(ph.sc.holdCap); }
+        else phImpact(now);
+      }
+      if (ph.outcome === 'hold' && u > endT + 1.5) { phFinish(); return; }
+      var ti = Math.floor(u / 0.12); if (ti !== ph.domTick && ti <= last) { ph.domTick = ti; tone(300 + ti * 20, 0.05, 'square', 0.07); }
     } else if (ph.phase === 'fall') {
       ph.vy += 1900 * dt; ph.hy += ph.vy * dt;
       if (ph.outcome === 'near') ph.hx = PH_CX + (ph.landX - PH_CX) * Math.min(1, (ph.hy - ph.fromY) / ph.dist);
@@ -2099,7 +2155,10 @@ var GL_PLAY = [
       ph.shx = (Math.random() - .5) * 12 * k; ph.shy = (Math.random() - .5) * 12 * k;
       ph.z = 1 + 0.22 * Math.exp(-3 * u);
       ph.flash = 0.6 * Math.exp(-12 * u); ph.vig = Math.max(0, ph.vig - dt * .6);
-      if (ph.outcome === 'crush') { var q = Math.min(1, u / 0.1); ph.sy = 1 - 0.82 * q; ph.sx = 1 + 0.4 * q; }
+      if (sc.dom) {
+        var du = (now - ph.d0) / 1000; ph.dom.forEach(function (d, i) { var q = Math.max(0, Math.min(1, (du - i * 0.12) / 0.2)); d.a = q * (i === PH_DN - 1 ? 90 : 72); });
+        if (ph.outcome === 'crush') ph.tilt = Math.min(95, 300 * u * u); else ph.ta = 3 * Math.exp(-3 * u) * Math.sin(20 * u);
+      } else if (ph.outcome === 'crush') { var q2 = Math.min(1, u / 0.1); ph.sy = 1 - 0.82 * q2; ph.sx = 1 + 0.4 * q2; }
       else { ph.ta = 7 * Math.exp(-3 * u) * Math.sin(20 * u); }
       if (u > 1.5) { phFinish(); return; }
     } else if (ph.phase === 'hold') {
@@ -2107,6 +2166,7 @@ var GL_PLAY = [
       ph.hy = PH_Y0 + ph.sag + 24 * (1 - Math.exp(-5 * u) * Math.cos(18 * u));
       ph.rot = 2.5 * Math.exp(-3 * u) * Math.sin(14 * u);
       ph.z = 1 + 0.22 * Math.exp(-3 * u); ph.shx = ph.shy = 0; ph.vig = Math.max(0, ph.vig - dt * .6);
+      if (sc.melt) ph.ms = Math.max(0.08, ph.ms - dt * 0.7);
       if (u > 1.6) { phFinish(); return; }
     }
     phParticles(dt); phApply();
@@ -2116,16 +2176,18 @@ var GL_PLAY = [
     var sc = ph.sc;
     $('ph-count').textContent = ''; $('ph-bar').style.width = '100%';
     ph.fromY = ph.hy; ph.vy = 0;
+    if (sc.dom) { ph.phase = 'dom'; ph.d0 = now; ph.domHit = false; ph.domTick = -1; phSetCap('It starts.'); tone(420, 0.06, 'square', 0.09); return; }
     if (ph.outcome === 'hold') {
       ph.phase = 'hold'; ph.h0 = now;
-      $('ph-fib').setAttribute('opacity', '1');
+      phFib('1');
       tone(140, 0.25, 'triangle', 0.14, 0, 90); tone(520, 0.4, 'sine', 0.1, 0.1, 380);
-      phBanner('HOLDS!', 'hold'); phSetCap('Somehow, it holds.');
+      phBanner(sc.holdTxt || 'HOLDS!', 'hold'); phSetCap(sc.holdCap || 'Somehow, it holds.');
       return;
     }
     ph.phase = 'fall'; ph.ropeOn = false; ph.rot = 0;
-    $('ph-fib').setAttribute('opacity', '0');
-    if (ph.outcome === 'crush') ph.ly = PH_GY - sc.th - sc.hb; else { ph.ly = PH_GY - sc.hb; ph.landX = PH_CX + sc.tw + sc.hw + 10; }
+    phFib('0');
+    var hbE = sc.melt ? sc.hb * ph.ms - sc.ra * (1 - ph.ms) : sc.hb;
+    if (ph.outcome === 'crush') ph.ly = PH_GY - sc.th - hbE; else { ph.ly = PH_GY - hbE; ph.landX = PH_CX + sc.tw + sc.hw * ph.ms + 10; }
     ph.dist = ph.ly - ph.fromY;
     tone(900, 0.08, 'square', 0.1, 0, 200); tone(600, 0.5, 'sawtooth', 0.07, 0.04, 110);
     phSetCap('SNAP.');
@@ -2134,7 +2196,10 @@ var GL_PLAY = [
     var sc = ph.sc;
     ph.phase = 'after'; ph.i0 = now; ph.flash = 0.6;
     tone(70, 0.5, 'sawtooth', 0.2, 0, 35); tone(110, 0.35, 'square', 0.1, 0.02, 45);
-    if (ph.outcome === 'crush') { phBurst(PH_CX, PH_GY - sc.th * 0.5, 16, 520); phBanner('CRUSHED!', 'crush'); phSetCap('Everything you saved. Gone.'); }
+    if (sc.dom) {
+      if (ph.outcome === 'crush') { phBurst(sc.tx + sc.tw * 0.4, PH_GY - sc.th * 0.5, 16, 520); phBanner('COLLAPSE!', 'crush'); phSetCap('Everything you invested. Gone.'); }
+      else { phBurst(sc.tx - sc.tw, PH_GY - 6, 5, 200); phBanner(sc.nearTxt, 'near'); phSetCap(sc.nearCap); }
+    } else if (ph.outcome === 'crush') { phBurst(PH_CX, PH_GY - sc.th * 0.5, 16, 520); phBanner('CRUSHED!', 'crush'); phSetCap('Everything you saved. Gone.'); }
     else { phBurst(ph.hx, PH_GY - 6, 6, 260); phBanner('NEAR MISS!', 'near'); phSetCap('Inches. Pure luck.'); }
   }
   function phFinish() {
@@ -2147,7 +2212,7 @@ var GL_PLAY = [
     }
     if (ph.score > (best.ph || 0)) { best.ph = ph.score; saveBest(); }
     phHud();
-    said = ph.outcome === 'crush' ? 'Crushed. That money is gone.' : ph.outcome === 'hold' ? 'It holds. Barely.' : 'Near miss. You got lucky.';
+    said = ph.outcome === 'crush' ? (ph.sc.dom ? 'Collapse. That money is gone.' : 'Crushed. That money is gone.') : ph.outcome === 'hold' ? (ph.sc.holdSay || 'It holds. Barely.') : (ph.sc.nearSay || 'Near miss. You got lucky.');
     $('ph-status').textContent = (ph.guess ? (win ? 'You called it. ' : 'Wrong call. ') : 'No call made. ') + said;
     speak(said);
     $('ph-go').disabled = false; $('ph-go').textContent = 'Next hook';
@@ -2162,8 +2227,10 @@ var GL_PLAY = [
     if (v === 'random' && si === ph.si && ph.started) si = (si + 1 + Math.floor(Math.random() * (PH_SC.length - 1))) % PH_SC.length;
     ph.started = true;
     ph.dur = +$('ph-len').value || 6000;
+    var od = $('ph-odds').value, cut = od === 'danger' ? [0.75, 0.85] : od === 'lucky' ? [0.25, 0.7] : [0.5, 0.75], r = Math.random();
+    ph.outcome = r < cut[0] ? 'crush' : r < cut[1] ? 'hold' : 'near';
+    ph.gapIdx = 3 + Math.floor(Math.random() * 4);
     phBuild(si); phBanner('');
-    var r = Math.random(); ph.outcome = r < 0.5 ? 'crush' : r < 0.75 ? 'hold' : 'near';
     ph.guess = null; ph.capIdx = -1;
     $('ph-fall').disabled = false; $('ph-hold').disabled = false;
     $('ph-fall').setAttribute('aria-pressed', 'false'); $('ph-hold').setAttribute('aria-pressed', 'false');
@@ -2195,12 +2262,13 @@ var GL_PLAY = [
       $('ph-go').addEventListener('click', phStart);
       $('ph-fall').addEventListener('click', function () { phGuess('fall'); });
       $('ph-hold').addEventListener('click', function () { phGuess('hold'); });
-      $('ph-scene').addEventListener('change', function () { if (ph.phase === 'idle') { phBuild($('ph-scene').value === 'random' ? 0 : +$('ph-scene').value); phSetCap(ph.sc.line); } });
+      $('ph-scene').addEventListener('change', function () { ph.outcome = ''; if (ph.phase === 'idle') { phBuild($('ph-scene').value === 'random' ? 0 : +$('ph-scene').value); phSetCap(ph.sc.line); } });
       ph.inited = true; ph.started = false;
     }
     phHud();
-    if (ph.phase === 'idle') { phBuild($('ph-scene').value === 'random' ? 0 : +$('ph-scene').value); phSetCap(ph.sc.line); $('ph-status').textContent = 'Pick a scene and press Start the hook.'; }
+    if (ph.phase === 'idle') { ph.outcome = ''; phBuild($('ph-scene').value === 'random' ? 0 : +$('ph-scene').value); phSetCap(ph.sc.line); $('ph-status').textContent = 'Pick a scene and press Start the hook.'; }
   }
+
 
   /* ---------- tabs ---------- */
   var GAMES = ['shuffle', 'hl', 'ab', 'mem', 'orb', 'peril', 'ideas'], cur = 'shuffle';
