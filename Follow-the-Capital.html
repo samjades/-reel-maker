@@ -233,6 +233,21 @@ input[type="text"], input[type="search"] { font: inherit; color: var(--ink); bac
 .stage.shownum .cupnum { opacity: 1; }
 .stage.nonum .cupnum { display: none; }
 #voice { flex: 1 1 160px; min-width: 0; max-width: 260px; }
+.idf.glance { background: rgba(255,255,255,.03); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; }
+.pc-glance { display: grid; gap: 8px; font-size: 12px; line-height: 1.4; border-top: 1px solid #1f5666; padding-top: 12px; }
+.pc-glance b { display: block; color: var(--gold); font-size: 10px; letter-spacing: .1em; text-transform: uppercase; font-weight: 600; }
+.tblkey { font-size: 12px; line-height: 1.5; color: var(--muted); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; margin-bottom: 10px; background: rgba(255,255,255,.03); }
+.tblkey b { color: var(--ink); }
+.tblkey ul { margin: 6px 0 0; padding-left: 16px; }
+.tblwrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; background: var(--panel); }
+.idtable { border-collapse: collapse; width: 100%; table-layout: fixed; font-size: 12px; line-height: 1.4; }
+.idtable th { text-align: left; font-size: 10.5px; letter-spacing: 0; text-transform: uppercase; color: var(--muted); padding: 10px 8px; border-bottom: 1px solid var(--line); vertical-align: bottom; overflow-wrap: anywhere; }
+.idtable th:nth-child(1) { width: 31%; } .idtable th:nth-child(2) { width: 18%; } .idtable th:nth-child(3), .idtable th:nth-child(4) { width: 25.5%; }
+.idtable td { padding: 12px 8px; border-bottom: 1px solid var(--line); vertical-align: top; overflow-wrap: anywhere; }
+.idtable td:first-child { font-weight: 600; }
+.idtable .sub { display: block; font-weight: 400; color: var(--muted); font-size: 11.5px; margin-top: 4px; }
+.idtable tbody tr:last-child td { border-bottom: 0; }
+.idtable td.lk { color: var(--muted); }
 .app[data-ratio="169"] #g-ideas { display: flex; }
 .app[data-ratio="916"] #g-ideas { justify-content: flex-start; }
 .opts { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; }
@@ -466,6 +481,8 @@ input[type="text"], input[type="search"] { font: inherit; color: var(--ink); bac
     <div class="opts">
       <label for="id-lib">Library</label>
       <select id="id-lib"></select>
+      <label for="id-view">View</label>
+      <select id="id-view"><option value="table">Table</option><option value="cards">Cards</option></select>
       <label for="id-cat">Category</label>
       <select id="id-cat"></select>
       <label for="id-q">Search</label>
@@ -1443,8 +1460,212 @@ var PLAYS = [
   /* Soft gate only. Anyone who can open this page can read its source, so share the link with top subscribers only. */
   var UNLOCK_CODE = 'TOPSUB';
   var FREE = [0, 9, 18, 27, 36, 45];
+  /* At a glance, in the same order as IDEAS and PLAYS: [startup capital, margin, main carrying costs and fees] */
+var GL_BIZ = [
+["$0 to $100", "85% to 95%", "Email sending tool $20 to $50 a month, list cleaning, your time"],
+["$50 to $200", "80% to 90%", "Form and PDF tool $15 to $40 a month, hosting, support time"],
+["$50 to $150", "75% to 90%", "Messaging tool $20 to $60 a month, SMS or WhatsApp message fees"],
+["$0 to $100", "90% to 95%", "Spreadsheet software, travel to the restaurant, menu printing"],
+["$50 to $200", "80% to 90%", "Document software $10 to $30 a month, courier or notary fees, your time"],
+["$300 to $800", "60% to 80%", "Lawyer review $300 to $600 per template version, document software"],
+["$100 to $300", "80% to 90%", "Travel, counting app $10 to $30 a month, helper wages on busy days"],
+["$0 to $100", "85% to 95%", "Alert and search tools $10 to $40 a month, newsletter software"],
+["$0 to $100", "90% to 95%", "Writing software $0 to $30 a month, your time"],
+
+["$100 to $400", "75% to 90%", "Business messaging fees (about $0.01 to $0.08 a message), hosting $10 to $30 a month"],
+["$100 to $400", "80% to 90%", "Hosting $10 to $30 a month, SMS fees, payment processing 2% to 3%"],
+["$50 to $200", "85% to 95%", "Hosting $5 to $15 a month, printing if you offer it"],
+["$100 to $300", "80% to 90%", "Hosting, payment processing 1.5% to 3%, SMS reminders"],
+["$100 to $400", "70% to 85%", "Data collection time or tools $20 to $60 a month, hosting"],
+["$100 to $300", "80% to 90%", "Email sending $10 to $30 a month, accounting connections, hosting"],
+["$100 to $300", "70% to 85%", "Payment processing 1.5% to 3% per deposit, hosting $10 a month"],
+["$50 to $200", "85% to 95%", "Hosting $5 to $20 a month, domain about $12 a year"],
+["$100 to $300", "80% to 90%", "Hosting $10 to $25 a month, notification fees"],
+
+["$100 to $500", "55% to 75%", "Voice AI fees $0.05 to $0.15 a minute, phone number $2 to $10 a month, platform subscription $30 to $100"],
+["$100 to $400", "70% to 85%", "AI usage $0.05 to $0.50 per document, hosting, lawyer review retainer if you offer one"],
+["$50 to $200", "70% to 85%", "AI usage, an editor for spot checks, spreadsheet tools"],
+["$100 to $300", "75% to 90%", "AI usage $20 to $100 a month, help-desk software connections"],
+["$100 to $400", "65% to 80%", "Speech-to-text fees, AI usage, CRM connection fees"],
+["$100 to $300", "70% to 85%", "Data collection tools $20 to $60 a month, storage, report templates"],
+["$50 to $200", "85% to 95%", "Transcription $10 to $30 a month, AI usage"],
+["$100 to $400", "65% to 80%", "AI usage and hosting $20 to $80 a month per client, document storage"],
+["$100 to $400", "60% to 80%", "WhatsApp messaging fees, image reading fees, a bookkeeper to check accuracy"],
+
+["$100 to $400", "35% to 50%", "Cobbler's share about 50%, materials, delivery fuel"],
+["$300 to $1,000", "35% to 55%", "Technician wages, oil and filters, fuel, tools, liability cover"],
+["$300 to $900", "50% to 65%", "Pump and brushes, cleaning agents, transport fuel, helper wages"],
+["$200 to $800", "30% to 40%", "Stock cost, restocking trips, shrinkage 3% to 8%, payment code fees"],
+["$150 to $500", "55% to 70%", "Cleaning supplies, vacuum or steam machine, transport, helper wages"],
+["$300 to $1,000", "25% to 40%", "Ingredients, packaging, cooking labour, delivery, food licence"],
+["$500 to $2,000", "8% to 15%", "Cylinder stock, delivery vehicle fuel, safety equipment, licence"],
+["$150 to $500", "60% to 75%", "Sewing machine, thread, stall rental, helper wages"],
+["$500 to $1,500", "35% to 50%", "Washing machines or laundry fees, detergent, transport, staff wages"],
+
+["$50 to $200", "50% to 70%", "Runner wages or fees, transport, phone data, payment fees 3% to 6%"],
+["$100 to $400", "25% to 40%", "Lawyer and surveyor fees paid onward, courier, payment fees about 3%"],
+["$200 to $1,000", "10% to 15%", "Shipping, import duty, payment fees, return risk"],
+["$50 to $250", "70% to 85%", "Translation fees, template software, support time"],
+["$500 to $2,000", "25% to 40%", "Product cost, packaging, international courier $30 to $80 a box, export paperwork"],
+["$50 to $200", "85% to 95%", "Research time, hosting, payment fees 3% to 6%"],
+["$50 to $200", "60% to 80%", "Native reviewer $10 to $30 per label, design software"],
+["$500 to $2,000", "40% to 50%", "Assistant wages, equipment, software seats, payment fees"],
+["$50 to $250", "75% to 90%", "Video call software $0 to $20 a month, venue if in person, ads"],
+
+["$50 to $200", "80% to 90%", "Video platform $0 to $30 a month, ads, payment fees 3% to 6%"],
+["$100 to $400", "65% to 80%", "Venue or call software, tutor fees, printing"],
+["$0 to $150", "85% to 95%", "Store fees 5% to 10%, payment fees about 3%, design software"],
+["$0 to $100", "85% to 95%", "Newsletter platform $0 to $40 a month, platform cut on paid plans about 10%, research time"],
+["$0 to $100", "85% to 95%", "Webinar software $0 to $40 a month, ticketing fees 3% to 6%"],
+["$100 to $500", "75% to 90%", "Website and hosting $10 to $30 a month, verification time, payment fees"],
+["$0 to $100", "35% to 40% after speaker pay", "Speaker share 60%, travel, slide design"],
+["$0 to $100", "85% to 95%", "Video call software, scoring sheets, your time"],
+["$150 to $500", "70% to 85%", "Reviewer fee $100 to $300, design software, certificate printing"],
+
+["$200 to $800", "65% to 80%", "Website $10 to $30 a month, verification time, ads to attract users"],
+["$0 to $150", "85% to 95%", "Newsletter tool $0 to $40 a month, source subscriptions, your time"],
+["$50 to $300", "80% to 90%", "Survey tool $0 to $30 a month, hosting, data cleaning time"],
+["$300 to $1,000", "65% to 80%", "Website and booking system $20 to $60 a month, ads, vendor onboarding time"],
+["$100 to $400", "80% to 90%", "Hosting $10 to $20 a month, payment fees, moderation time"],
+["$50 to $200", "80% to 90%", "Data collection time, spreadsheet tools, hosting"],
+["$100 to $400", "80% to 90%", "Job board software $0 to $50 a month, ads to reach candidates, payment fees"],
+["$0 to $150", "85% to 95%", "Newsletter tool $0 to $40 a month, source tracking"],
+["$100 to $400", "70% to 85%", "Map and form tools $10 to $40 a month, SMS fees, lead handling time"],
+
+["$300 to $1,500", "25% to 45%", "Printer minimum orders, shipping, design time, unsold stock"],
+["$1,000 to $5,000", "15% to 30%", "Fabric and tailoring, measuring staff, storage, slow school payments"],
+["$300 to $1,200", "60% to 75%", "Bag purchase, cleaning, replacements for losses"],
+["$300 to $1,500", "50% to 70%", "Locker build, solar or mains power, security, stall rent"],
+["$500 to $2,500", "30% to 50%", "Drums, vehicle fuel, collection labour, disposal permits"],
+["$200 to $900", "45% to 60%", "Bulk product, containers, stand rent, water and cleaning"],
+["$200 to $800", "30% to 45%", "Printing partner cost, samples, delivery, unsold sizes"],
+["$100 to $500", "80% to 90% of the 8% fee", "Delivery, bank fees, time spent chasing payment"],
+["$300 to $1,000", "35% to 55%", "Seeds, soil, pots, shipping, losses from dead plants"],
+
+["$50 to $200", "70% to 85%", "Accountant review fees, reminder software $10 to $30 a month"],
+["$100 to $400", "75% to 90%", "Hosting, payslip software, rate-update time every quarter"],
+["$0 to $100", "90% to 95%", "Spreadsheet software, client calls"],
+["$0 to $150", "85% to 95%", "Spreadsheet and document tools, optional accountant review"],
+["$100 to $400", "75% to 90%", "Hosting $10 to $20 a month, SMS reminders, support time"],
+["$100 to $500", "5% to 15% of premium, paid by the insurer", "Licensed partner arrangement, marketing, comparison tool"],
+["$0 to $100", "90% to 95%", "Travel, your time, spreadsheet tools"],
+["$0 to $150", "85% to 95%", "Template software, hosting, payment fees"],
+["$50 to $200", "60% to 80%", "Accounting software $20 to $50 a month, helper wages for data entry"],
+
+["$50 to $200", "75% to 90%", "Messaging tool $20 to $60 a month, SMS or WhatsApp fees"],
+["$50 to $250", "75% to 90%", "Website hosting $10 to $30 a month, booking tool, ad budget if you manage it"],
+["$100 to $400", "75% to 90%", "Hosting, form and calculator tool $20 to $50 a month, lead follow-up time"],
+["$100 to $400", "70% to 85%", "Booking engine fees $30 to $100 a month, email tool, payment fees"],
+["$100 to $500", "65% to 80%", "Event costs, ads, printing, email tool"],
+["$50 to $250", "80% to 90%", "Gallery software $10 to $30 a month, print partner costs"],
+["$100 to $400", "75% to 90%", "Messaging tool $20 to $60 a month, community moderation time"],
+["$800 to $3,000", "40% to 60%", "Cameras and encoder, cables, travel, internet, maintenance visits"],
+["$50 to $200", "80% to 90%", "Hosting, payment fees 3% to 4%, delivery coordination"]
+];
+var GL_PLAY = [
+["$0 to $200", "85% to 95%", "Video call and spreadsheet tools, travel for site visits, your time per client"],
+["$0 to $300", "85% to 95%", "Travel to sites, spreadsheet tools, workshop printing"],
+["$0 to $300", "85% to 95%", "Travel, logging sheet templates, optional fleet software trial fees"],
+["$0 to $200", "85% to 95%", "Travel, template design, reminder tool demo fees"],
+["$50 to $300", "80% to 90%", "Stopwatch and clipboard, travel, workshop materials"],
+["$0 to $200", "85% to 95%", "Travel, spreadsheet tools, your time"],
+["$0 to $200", "85% to 95%", "Training handouts, travel, reminder tool demo"],
+["$100 to $400", "80% to 90%", "Travel and two days on site, floor plan tools, measuring tape and labels"],
+["$0 to $200", "85% to 95%", "Calendar and spreadsheet tools, site visits, vendor calls"],
+
+["$0 to $100", "90% to 95%", "Video call software, templates, your time"],
+["$0 to $100", "90% to 95%", "Video call software, workshop slides"],
+["$0 to $150", "90% to 95%", "Spreadsheet tools, weekly call time"],
+["$0 to $200", "85% to 95%", "Payment tool trial fees, templates, shop visit travel"],
+["$0 to $100", "90% to 95%", "Template drafting, optional lawyer check $100 to $300"],
+["$0 to $100", "90% to 95%", "Worksheet design, call software"],
+["$0 to $100", "90% to 95%", "Templates, call software"],
+["$0 to $200", "85% to 95%", "Process mapping tools, travel"],
+["$0 to $100", "90% to 95%", "Proposal templates, call software"],
+
+["$0 to $100", "90% to 95%", "Market data subscriptions $0 to $40 a month, call software"],
+["$0 to $150", "90% to 95%", "CV and portfolio tools, call software"],
+["$0 to $100", "90% to 95%", "Templates, call software"],
+["$0 to $200", "85% to 95%", "Portfolio hosting, learning materials, call software"],
+["$0 to $100", "90% to 95%", "Process mapping tools, call software"],
+["$0 to $150", "90% to 95%", "Recording software, scoring sheets, call software"],
+["$0 to $200", "85% to 95%", "Website or portfolio hosting $5 to $20 a month, call software"],
+["$0 to $150", "90% to 95%", "Outreach tool $0 to $40 a month, call software"],
+["$0 to $100", "85% to 95%", "Group call software, tracking sheets"],
+
+["$0 to $150", "90% to 95%", "Spreadsheet and CRM tools, call software"],
+["$50 to $300", "80% to 90%", "Email sending tool and domain $20 to $60 a month, list data fees"],
+["$0 to $150", "90% to 95%", "Spreadsheet tools, confidentiality agreement drafting"],
+["$0 to $100", "90% to 95%", "Templates, call software"],
+["$0 to $200", "85% to 95%", "Research subscriptions, call software, sample shipping if needed"],
+["$0 to $200", "85% to 95%", "Call recording software $0 to $30 a month, workshop materials"],
+["$0 to $150", "90% to 95%", "Templates, optional lawyer review for agreements"],
+["$0 to $200", "85% to 95%", "Tender database access $0 to $40 a month, workshop materials"],
+["$0 to $100", "90% to 95%", "Templates, optional lawyer review $100 to $400"],
+
+["$0 to $100", "85% to 95%", "Newsletter platform $0 to $40 a month, platform cut on paid subscriptions about 10%"],
+["$0 to $100", "90% to 95%", "Analytics tools, design software"],
+["$0 to $200", "85% to 95%", "Webinar software $0 to $60 a month, ads for the first sessions"],
+["$0 to $150", "90% to 95%", "Writing and design tools, interview call software"],
+["$0 to $100", "90% to 95%", "Community memberships, survey tools"],
+["$150 to $600", "75% to 85%", "Microphone and editing software $10 to $30 a month, hosting $10 to $20 a month, editor fees"],
+["$0 to $100", "90% to 95%", "Design tool, scheduling tool $0 to $20 a month"],
+["$0 to $150", "85% to 95%", "Course platform $0 to $50 a month, payment fees 3% to 6%"],
+["$100 to $400", "75% to 90%", "Phone tripod and microphone, editing software $10 to $25 a month"],
+
+["$100 to $400", "70% to 85%", "AI usage and hosting $30 to $100 a month, document tools, travel for on-site training"],
+["$100 to $400", "70% to 85%", "Approved AI tool licences $30 to $100 a month, compliance review time"],
+["$100 to $400", "70% to 85%", "Transcription and AI usage $0.20 to $1 per call hour, tool subscription"],
+["$50 to $200", "80% to 90%", "AI usage, help-centre software connections, editing time"],
+["$0 to $100", "90% to 95%", "AI subscriptions $20 to $40 a month, workshop slides"],
+["$100 to $400", "65% to 80%", "Document AI usage $0.01 to $0.10 per page, hosting, testing time"],
+["$50 to $200", "75% to 90%", "Transcription $10 to $30 a month, AI usage, setup time"],
+["$50 to $200", "75% to 90%", "Chat tool $20 to $60 a month, AI usage, hosting"],
+["$0 to $100", "90% to 95%", "Templates, optional legal review $100 to $400"],
+
+["$0 to $200", "85% to 95%", "Costing templates, shipping rate lookups, call software"],
+["$0 to $200", "85% to 95%", "Scorecard design, video call software, optional travel"],
+["$50 to $300", "80% to 90%", "Spec-sheet design, lab test referrals, travel to farms"],
+["$0 to $100", "90% to 95%", "Spreadsheet tools, freight rate sources"],
+["$50 to $300", "80% to 90%", "Sample shipping, sourcing platform fees, call software"],
+["$0 to $100", "90% to 95%", "Guide design, call software"],
+["$100 to $400", "75% to 90%", "Travel to suppliers, sample testing costs, spreadsheet tools"],
+["$0 to $100", "90% to 95%", "Spreadsheet tools, exhibitor list access"],
+["$0 to $200", "85% to 95%", "Survey tools, call software, supplier vetting time"],
+
+["$0 to $150", "90% to 95%", "Market data tools $0 to $40 a month, spreadsheet templates"],
+["$100 to $300", "80% to 90%", "Lawyer review of the checklist $100 to $300, workshop venue or call software"],
+["$50 to $250", "85% to 95%", "Price tracking sheets, course hosting $0 to $30 a month, mechanic advice fees"],
+["$0 to $150", "90% to 95%", "Spreadsheet tools, site visits"],
+["$0 to $150", "90% to 95%", "Public record search fees, site visit travel"],
+["$50 to $300", "80% to 90%", "Cost sheets, site visits, optional professional advice referrals"],
+["$0 to $200", "85% to 95%", "Template drafting, travel to the property"],
+["$0 to $200", "85% to 95%", "Price survey costs, travel, optional lawyer review"],
+["$50 to $250", "85% to 95%", "Auction preview attendance, course hosting $0 to $30 a month"],
+
+["$0 to $150", "90% to 95%", "Writing tools, donor database access $0 to $50 a month"],
+["$0 to $150", "90% to 95%", "Donor database access $0 to $50 a month, spreadsheet tools"],
+["$0 to $150", "90% to 95%", "Slide software, call software, recording tool"],
+["$0 to $100", "90% to 95%", "Templates, call software"],
+["$0 to $200", "85% to 95%", "Design software, campaign page tools, video editing"],
+["$0 to $100", "90% to 95%", "Investor database access $0 to $50 a month, call software"],
+["$0 to $150", "90% to 95%", "Guide design, call software, bank product research time"],
+["$100 to $400", "75% to 90%", "Travel to member meetings, registration paperwork help, printing"],
+["$0 to $200", "85% to 95%", "Travel, document printing, tracking sheets"],
+
+["$300 to $1,500", "60% to 80%", "A demo drone and licence, insurance, course hosting"],
+["$200 to $1,000", "65% to 80%", "Training kit and panels for the lab day, venue, safety gear"],
+["$0 to $200", "90% to 95%", "Accounting software demo licence $0 to $40 a month, templates"],
+["$100 to $400", "85% to 95%", "Microphone and recording software, demo editing"],
+["$0 to $150", "85% to 95%", "Glossary tools, native reviewer fees on samples"],
+["$0 to $100", "90% to 95%", "Costing templates, call software"],
+["$0 to $150", "90% to 95%", "Timing sheets, travel to the shop, call software"],
+["$100 to $400", "80% to 90%", "Demo tools, travel, course hosting"],
+["$50 to $250", "80% to 90%", "Bid templates, travel to sites, sample photo reports"]
+];
+
   var LIBS = { play: { label: 'Coaching playbooks', items: PLAYS, cats: PCATS }, biz: { label: 'Business ideas', items: IDEAS, cats: CATS } };
-  var lib = 'play', saved = {}, unlocked = false, iq = '', icat = 'all', onlySaved = false, ideasReady = false, dayOffset = 0;
+  var lib = 'play', saved = {}, unlocked = false, iq = '', icat = 'all', onlySaved = false, ideasReady = false, dayOffset = 0, view = 'table';
   try { saved = JSON.parse(localStorage.getItem('ftc-saved2') || '{}') || {}; unlocked = localStorage.getItem('ftc-unlock') === '1'; } catch (e) {}
   function rng(seed) {
     return function () {
@@ -1466,13 +1687,22 @@ var PLAYS = [
   }
   var PLAY_ORDER = buildOrder(PLAYS, PCATS, 4417);
   function mk(tag, cls, text) { var e = document.createElement(tag); if (cls) e.className = cls; if (text !== undefined) e.textContent = text; return e; }
-  function norm(key, it) {
+  function glanceOf(key, i, tag) {
+    var g = (key === 'play' ? GL_PLAY : GL_BIZ)[i] || ['', '', ''];
+    return [['Cost to start', g[0]], ['What you charge, and what you keep', tag + '. You keep about ' + g[1] + ' of it as profit.'], ['What you pay to keep it running', g[2]]];
+  }
+  function norm(key, it, gi) {
     if (key === 'play') {
-      return { cat: it[0], title: it[1], tag: it[8], fields: [['Who pays', it[3]], ['The method you teach', it[4].split(' | ')], ['Your coaching offer', it[5]], ['How to land the first client', it[6]], ['Watch out', it[7]]] };
+      return { cat: it[0], title: it[1], tag: it[8], glance: glanceOf(key, gi, it[8]), fields: [['Who pays', it[3]], ['The method you teach', it[4].split(' | ')], ['Your coaching offer', it[5]], ['How to land the first client', it[6]], ['Watch out', it[7]]] };
     }
-    return { cat: it[0], title: it[1], tag: it[7], fields: [['What you sell', it[2]], ['How it earns', it[3]], ['First move this week', it[4]], ['Watch out', it[5]], ['Startup cost', COSTS[it[6]]]] };
+    return { cat: it[0], title: it[1], tag: it[7], glance: glanceOf(key, gi, it[7]), fields: [['What you sell', it[2]], ['How it earns', it[3]], ['First move this week', it[4]], ['Watch out', it[5]]] };
   }
   function fieldsInto(parent, n) {
+    if (n.glance) {
+      var gl = mk('dl', 'idf glance');
+      n.glance.forEach(function (f) { var w = mk('div'); w.appendChild(mk('dt', '', f[0])); w.appendChild(mk('dd', '', f[1])); gl.appendChild(w); });
+      parent.appendChild(gl);
+    }
     var dl = mk('dl', 'idf');
     n.fields.forEach(function (f) {
       var w = mk('div'), dt = mk('dt', '', f[0]), dd = mk('dd');
@@ -1484,6 +1714,7 @@ var PLAYS = [
   }
   function plainText(key, n) {
     var lines = [n.title + ' (' + LIBS[key].cats[n.cat] + ')'];
+    if (n.glance) n.glance.forEach(function (f) { lines.push(f[0] + ': ' + f[1]); });
     n.fields.forEach(function (f) {
       if (Array.isArray(f[1])) lines.push(f[0] + ':\n' + f[1].map(function (s, i) { return (i + 1) + '. ' + s; }).join('\n'));
       else lines.push(f[0] + ': ' + f[1]);
@@ -1505,13 +1736,18 @@ var PLAYS = [
   function dateOf(offset) { var d = new Date(); d.setDate(d.getDate() + offset); return d; }
   function fmtDate(d, o) { try { return d.toLocaleDateString('en-GB', o); } catch (e) { return ''; } }
   function dayNumber(offset) { var d = new Date(); return Math.floor(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) / 86400000) + offset; }
-  function playFor(offset) { var len = PLAYS.length; return PLAYS[PLAY_ORDER[((dayNumber(offset) % len) + len) % len]]; }
+  function playIdx(offset) { var len = PLAYS.length; return PLAY_ORDER[((dayNumber(offset) % len) + len) % len]; }
+  function playFor(offset) { return PLAYS[playIdx(offset)]; }
+  function glanceText(offset) {
+    var i = playIdx(offset);
+    return '\n\n' + glanceOf('play', i, PLAYS[i][8]).map(function (f) { return f[0] + ': ' + f[1]; }).join('\n');
+  }
   function dayOpen(offset) { return unlocked || offset === 0; }
   function captionFor(offset) {
     var it = playFor(offset);
     return it[1] + '\n' + it[2] + '\n\nWho pays: ' + it[3] + '\n\nThe method:\n' +
       it[4].split(' | ').map(function (s, i) { return (i + 1) + '. ' + s; }).join('\n') +
-      '\n\nYour offer: ' + it[5] + '\nHow to land the first client: ' + it[6] + '\n\nSave this and follow for a new playbook every day.';
+      '\n\nYour offer: ' + it[5] + '\nHow to land the first client: ' + it[6] + glanceText(offset) + '\n\nSave this and follow for a new playbook every day.';
   }
   function renderCard() {
     var it = playFor(dayOffset), open = dayOpen(dayOffset), c = $('pcard');
@@ -1524,6 +1760,9 @@ var PLAYS = [
       var by = mk('div', 'pc-row'); by.appendChild(mk('b', '', 'Who pays')); by.appendChild(document.createTextNode(' ' + it[3])); c.appendChild(by);
       var ol = mk('ol', 'pc-steps'); it[4].split(' | ').forEach(function (s) { ol.appendChild(mk('li', '', s)); }); c.appendChild(ol);
       var of = mk('div', 'pc-row'); of.appendChild(mk('b', '', 'Your offer')); of.appendChild(document.createTextNode(' ' + it[5])); c.appendChild(of);
+      var gb = mk('div', 'pc-glance');
+      glanceOf('play', playIdx(dayOffset), it[8]).forEach(function (f) { var sp = mk('span'); sp.appendChild(mk('b', '', f[0])); sp.appendChild(document.createTextNode(f[1])); gb.appendChild(sp); });
+      c.appendChild(gb);
     } else {
       c.appendChild(mk('p', 'pc-lock', 'The buyer, the three-step method and the coaching offer are for top subscribers. Enter the access code below to open this card.'));
     }
@@ -1546,19 +1785,35 @@ var PLAYS = [
     $('id-grow').hidden = unlocked;
     $('id-gmsg').textContent = unlocked ? 'Top subscriber access is on. Every card and plan is open.' : 'Today\'s card and ' + FREE.length + ' sample plans per library are open. Enter the top subscriber code to open everything.';
   }
-  function renderList() {
-    var L = LIBS[lib], list = $('id-list'), q = iq.trim().toLowerCase(), n = 0;
-    list.innerHTML = '';
-    L.items.forEach(function (it, i) {
-      var nm = norm(lib, it), key = lib + ':' + i;
-      if (icat !== 'all' && String(it[0]) !== icat) return;
-      if (onlySaved && !saved[key]) return;
-      if (q && (nm.title + ' ' + L.cats[it[0]] + ' ' + JSON.stringify(nm.fields)).toLowerCase().indexOf(q) < 0) return;
-      n++;
-      var open = unlocked || FREE.indexOf(i) >= 0;
+  function renderTable(rows, list) {
+    var key = mk('div', 'tblkey');
+    key.innerHTML = '<b>How to read this table</b><ul><li><b>Cost to start:</b> cash you need before your first client.</li><li><b>What you charge, and what you keep:</b> the price per client, then the share left as profit after costs. Example: charge $1,000 and keep 80% = $800 in your pocket.</li><li><b>What you pay to keep it running:</b> the regular bills, such as software, fees and your time.</li></ul>';
+    list.appendChild(key);
+    var wrap = mk('div', 'tblwrap'), t = mk('table', 'idtable'), head = mk('thead'), hr = mk('tr');
+    ['What the idea is', 'Cost to start', 'What you charge, and what you keep', 'What you pay to keep it running'].forEach(function (h) { hr.appendChild(mk('th', '', h)); });
+    head.appendChild(hr); t.appendChild(head);
+    var body = mk('tbody');
+    rows.forEach(function (r) {
+      var tr = mk('tr'), g = r.nm.glance;
+      var parts = r.it[2].split('. '), plain = parts.length > 1 ? parts.slice(1).join('. ') : parts[0];
+      var c1 = mk('td', '', r.nm.title); c1.appendChild(mk('span', 'sub', plain)); tr.appendChild(c1);
+      if (r.open) {
+        var gl = r.it && GL_BIZ ? (lib === 'play' ? GL_PLAY : GL_BIZ)[r.i] || ['', '', ''] : ['', '', ''];
+        tr.appendChild(mk('td', '', g[0][1]));
+        var c3 = mk('td', '', g[1][1].split('. You keep')[0]); c3.appendChild(mk('span', 'sub', 'You keep about ' + gl[1] + ' as profit'));
+        tr.appendChild(c3); tr.appendChild(mk('td', '', g[2][1]));
+      }
+      else { var td = mk('td', 'lk', 'Locked. Enter the access code to see the start-up money, price, profit and running costs.'); td.colSpan = 3; tr.appendChild(td); }
+      body.appendChild(tr);
+    });
+    t.appendChild(body); wrap.appendChild(t); list.appendChild(wrap);
+  }
+  function renderCards(rows, list, L) {
+    rows.forEach(function (r) {
+      var nm = r.nm, key = r.key, open = r.open;
       var d = mk('details', 'idea'), s = mk('summary');
       s.appendChild(mk('span', 'it', nm.title));
-      s.appendChild(mk('span', 'ic', L.cats[it[0]] + (open ? '' : ' · Locked')));
+      s.appendChild(mk('span', 'ic', L.cats[r.it[0]] + (open ? '' : ' · Locked')));
       s.appendChild(mk('span', 'iv', nm.tag));
       d.appendChild(s);
       var b = mk('div', 'ib');
@@ -1579,7 +1834,19 @@ var PLAYS = [
       }
       b.appendChild(acts); d.appendChild(b); list.appendChild(d);
     });
-    $('id-count').textContent = 'Showing ' + n + ' of ' + L.items.length + ' ' + L.label.toLowerCase() + (unlocked ? '.' : '. ' + FREE.length + ' are free to read.');
+  }
+  function renderList() {
+    var L = LIBS[lib], list = $('id-list'), q = iq.trim().toLowerCase(), rows = [];
+    list.innerHTML = '';
+    L.items.forEach(function (it, i) {
+      var nm = norm(lib, it, i), key = lib + ':' + i;
+      if (icat !== 'all' && String(it[0]) !== icat) return;
+      if (onlySaved && !saved[key]) return;
+      if (q && (nm.title + ' ' + L.cats[it[0]] + ' ' + JSON.stringify(nm.fields) + ' ' + JSON.stringify(nm.glance)).toLowerCase().indexOf(q) < 0) return;
+      rows.push({ it: it, i: i, nm: nm, key: key, open: unlocked || FREE.indexOf(i) >= 0 });
+    });
+    if (view === 'table') renderTable(rows, list); else renderCards(rows, list, L);
+    $('id-count').textContent = 'Showing ' + rows.length + ' of ' + L.items.length + ' ' + L.label.toLowerCase() + (unlocked ? '.' : '. ' + FREE.length + ' are free to read.');
   }
   function fillCats() {
     var sel = $('id-cat'); sel.innerHTML = '';
@@ -1595,6 +1862,7 @@ var PLAYS = [
       fillCats();
       $('id-cat').addEventListener('change', function () { icat = $('id-cat').value; renderList(); });
       $('id-q').addEventListener('input', function () { iq = $('id-q').value; renderList(); });
+      $('id-view').addEventListener('change', function () { view = $('id-view').value; renderList(); });
       $('id-saved').addEventListener('change', function () { onlySaved = $('id-saved').checked; renderList(); });
       $('id-unlock').addEventListener('click', function () {
         if ($('id-code').value.trim().toLowerCase() === UNLOCK_CODE.toLowerCase()) {
