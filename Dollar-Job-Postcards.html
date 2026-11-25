@@ -1,4 +1,8 @@
-<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Dollar Job Postcards</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -68,7 +72,18 @@ canvas { width: 100%; height: auto; display: block; }
 .small-file input { font-size: 13px; max-width: 100%; }
 .cap { display: flex; flex-direction: column; gap: 10px; }
 .cap textarea { min-height: 170px; line-height: 1.45; }
+.reel { margin-top: 44px; padding-top: 28px; border-top: 1.5px solid var(--line); }
+.reel h2 { font-family: var(--font-display); font-size: clamp(1.3rem, 3vw, 1.7rem); margin: 0 0 6px; }
+.reel > p { margin: 0 0 20px; color: var(--muted); max-width: 62ch; }
+.reel-grid { display: grid; grid-template-columns: minmax(0, 300px) minmax(0, 1fr); gap: 32px; align-items: start; }
+@media (max-width: 820px) { .reel-grid { grid-template-columns: minmax(0, 1fr); } .reel-stage { max-width: 300px; } }
+.reel-ctl { display: flex; flex-direction: column; gap: 14px; min-width: 0; max-width: 560px; }
+.check { display: flex; align-items: center; gap: 8px; font-weight: 600; }
+.check input { width: 18px; height: 18px; accent-color: var(--green); }
+.reel-ctl textarea { min-height: 220px; line-height: 1.5; }
 </style>
+</head>
+<body>
 
 <div class="wrap">
   <header>
@@ -151,6 +166,42 @@ canvas { width: 100%; height: auto; display: block; }
       </div>
     </div>
   </div>
+
+  <section class="reel" aria-labelledby="reel-h">
+    <h2 id="reel-h">Slide reel</h2>
+    <p>The hook, three tips and a follow slide, all built from your inputs above. Press play to hear it with the free Adam AI voice, or export a finished video with the voiceover included.</p>
+    <div class="reel-grid">
+      <div class="stage reel-stage"><canvas id="reelCanvas" width="1080" height="1920" aria-label="Reel preview"></canvas></div>
+      <div class="reel-ctl">
+        <div class="actions">
+          <button class="btn primary" id="playReel" type="button">Play reel</button>
+          <button class="btn" id="genReel" type="button">Generate AI voiceover</button>
+          <button class="btn" id="exportReel" type="button">Export video</button>
+        </div>
+        <label class="check" for="vo"><input type="checkbox" id="vo" checked> Voiceover on</label>
+        <div>
+          <label class="lbl" for="voice">Voiceover voice</label>
+          <select id="voice">
+            <option value="am_adam" selected>Adam, American male (AI)</option>
+            <option value="am_michael">Michael, American male (AI)</option>
+            <option value="bm_george">George, British male (AI)</option>
+            <option value="af_heart">Heart, American female (AI)</option>
+            <option value="af_bella">Bella, American female (AI)</option>
+            <option value="af_nicole">Nicole, American female (AI)</option>
+            <option value="af_sarah">Sarah, American female (AI)</option>
+            <option value="bf_emma">Emma, British female (AI)</option>
+            <option value="browser">Browser voice (instant, no download)</option>
+          </select>
+          <p class="note" style="margin-top:6px">The AI voices are the free open Kokoro model. The first use downloads about 90 MB into your browser. If that download is blocked in this view, pick Browser voice.</p>
+        </div>
+        <p class="note" id="reelNote" role="status"></p>
+        <div>
+          <label class="lbl" for="script">Voiceover script</label>
+          <textarea id="script" readonly></textarea>
+        </div>
+      </div>
+    </div>
+  </section>
 </div>
 
 <script>
@@ -331,9 +382,10 @@ canvas { width: 100%; height: auto; display: block; }
     return { px: minPx, lines: wrap(ctx, text, maxW) };
   }
 
-  function render() {
-    var parts = els.size.value.split("x"), W = +parts[0], H = +parts[1];
-    var c = els.canvas, ctx = c.getContext("2d");
+  function render(over) {
+    if (!over || !over.W) over = null;
+    var parts = els.size.value.split("x"), W = over ? over.W : +parts[0], H = over ? over.H : +parts[1];
+    var c = (over && over.canvas) || els.canvas, ctx = c.getContext("2d");
     if (c.width !== W || c.height !== H) { c.width = W; c.height = H; }
     var M = 80;
 
@@ -355,7 +407,7 @@ canvas { width: 100%; height: auto; display: block; }
     ctx.restore();
 
     // tag (top left)
-    var tag = els.tag.value.trim();
+    var tag = ((over ? over.tag : els.tag.value) || "").trim();
     var tagH = 0;
     if (tag) {
       ctx.save();
@@ -396,8 +448,8 @@ canvas { width: 100%; height: auto; display: block; }
     var top = py + D + 62 + 70;
     var footerY = H - 150;
     var area = footerY - top - 40;
-    var headText = els.headline.value.trim() || " ";
-    var subText = els.sub.value.trim();
+    var headText = ((over ? over.head : els.headline.value) || "").trim() || " ";
+    var subText = ((over ? over.sub : els.sub.value) || "").trim();
     var maxW = W - M * 2;
 
     var hdl = fit(ctx, headText, "'Archivo Black', Impact, sans-serif", 400, maxW, area * (subText ? 0.64 : 0.9), H > 1500 ? 124 : 104, 44, 1.08);
@@ -429,6 +481,222 @@ canvas { width: 100%; height: auto; display: block; }
     ctx.font = "700 28px Archivo, Arial, sans-serif";
     ctx.fillText("Save smart. Spend wisely. Build wealth.", M, H - 36);
   }
+
+  // ---- slide reel ----
+  var RW = 1080, RH = 1920;
+  var reel = { token: 0, playing: false };
+  var rc = document.getElementById("reelCanvas");
+  var offs = document.createElement("canvas"); offs.width = RW; offs.height = RH;
+  var playBtn = document.getElementById("playReel");
+  var reelNote = document.getElementById("reelNote");
+  var voiceSel = document.getElementById("voice");
+
+  function reelSlides() {
+    var base = TIPS[currentTopic()] || TIPS_DEFAULT;
+    var first = els.sub.value.trim();
+    var tips = (first ? [first] : []).concat(base.filter(function (t) { return t !== first; })).slice(0, 3);
+    var hook = els.headline.value.trim();
+    var out = [{ tag: els.tag.value.trim() || "Money tip", head: hook || " ", say: hook || "Money tip" }];
+    tips.forEach(function (t, i) { out.push({ tag: "Tip " + (i + 1) + " of " + tips.length, head: t, say: "Tip " + (i + 1) + ". " + t }); });
+    out.push({ tag: "Follow for more", head: "Give every dollar a job.", sub: "Follow " + HANDLE + " for more money tips.", say: "Give every dollar a job. Follow give every dollar a job for more money tips." });
+    return out;
+  }
+
+  function paintSlide(sl) { render({ canvas: offs, W: RW, H: RH, tag: sl.tag, head: sl.head, sub: sl.sub || "" }); }
+
+  function drawFrame(i, n, t, dur) {
+    var ctx = rc.getContext("2d");
+    var k = Math.min(1, t / dur), z = 1 + 0.035 * k, a = Math.min(1, t / 400);
+    ctx.globalAlpha = 1; ctx.fillStyle = CREAM; ctx.fillRect(0, 0, RW, RH);
+    ctx.save(); ctx.globalAlpha = a; ctx.translate(RW / 2, RH / 2); ctx.scale(z, z); ctx.drawImage(offs, -RW / 2, -RH / 2); ctx.restore();
+    var gap = 10, bw = (RW - 160 - gap * (n - 1)) / n;
+    for (var s = 0; s < n; s++) {
+      var x = 80 + s * (bw + gap), f = s < i ? 1 : (s === i ? k : 0);
+      ctx.fillStyle = "rgba(14,31,77,0.18)"; ctx.fillRect(x, 28, bw, 8);
+      ctx.fillStyle = NAVY; ctx.fillRect(x, 28, bw * f, 8);
+    }
+  }
+
+  function idle() { var sl = reelSlides(); paintSlide(sl[0]); drawFrame(0, sl.length, 400, 1e9); }
+
+  function updateScript() {
+    var el = document.getElementById("script");
+    if (el) el.value = reelSlides().map(function (s, i) { return (i + 1) + ". " + s.say; }).join("\n\n");
+    if (!reel.playing) idle();
+  }
+
+  // ---- voiceover: free Kokoro AI voices (Adam by default), browser voice as the fallback ----
+  var hasSpeech = "speechSynthesis" in window && typeof SpeechSynthesisUtterance !== "undefined";
+  var kokoro = { tts: null, busy: false };
+  var voiceData = { key: "", buffers: null };
+  var CAND_AUDIO = ["video/mp4;codecs=avc1,mp4a.40.2", "video/webm;codecs=vp9,opus", "video/webm;codecs=vp8,opus", "video/webm", "video/mp4"];
+  var CAND_SILENT = ["video/mp4;codecs=avc1", "video/webm;codecs=vp9", "video/webm;codecs=vp8", "video/webm", "video/mp4"];
+  var genBtn = document.getElementById("genReel");
+
+  function note(m) { reelNote.textContent = m; }
+  function sleep(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
+  function currentMode() { if (!document.getElementById("vo").checked) return "silent"; return voiceSel.value === "browser" ? "browser" : "ai"; }
+  function voiceKey(slides) { return voiceSel.value + "::" + JSON.stringify(slides.map(function (s) { return s.say; })); }
+
+  function browserVoice() {
+    if (!hasSpeech) return null;
+    var vs = speechSynthesis.getVoices().filter(function (v) { return /^en/i.test(v.lang); });
+    var pref = /daniel|google uk english male|david|guy|aaron|alex|fred|mark|james|ryan|george|thomas/i;
+    return vs.filter(function (v) { return pref.test(v.name); })[0] || vs[0] || null;
+  }
+
+  function speakText(text) {
+    return new Promise(function (res) {
+      if (!hasSpeech || !text) { res(); return; }
+      try {
+        speechSynthesis.cancel();
+        var u = new SpeechSynthesisUtterance(text), v = browserVoice();
+        if (v) { u.voice = v; u.lang = v.lang; } else { u.lang = "en-US"; }
+        u.rate = 0.98; u.pitch = 0.85; u.onend = res; u.onerror = res;
+        speechSynthesis.speak(u);
+        setTimeout(res, 20000);
+      } catch (e) { res(); }
+    });
+  }
+
+  // Generates one audio clip per slide with the free Kokoro model, running in the browser.
+  async function ensureAIVoice(slides) {
+    var key = voiceKey(slides);
+    if (voiceData.key === key && voiceData.buffers) return voiceData.buffers;
+    if (kokoro.busy) throw new Error("Already generating, please wait.");
+    kokoro.busy = true; genBtn.disabled = true;
+    try {
+      if (!kokoro.tts) {
+        note("Loading the free AI voice library...");
+        var mod = await import("https://cdn.jsdelivr.net/npm/kokoro-js@1.2.1/+esm");
+        if (!mod.KokoroTTS) throw new Error("The voice library did not load.");
+        note("Loading the free AI voice model. The first download is about 90 MB.");
+        kokoro.tts = await mod.KokoroTTS.from_pretrained("onnx-community/Kokoro-82M-v1.0-ONNX", {
+          dtype: "q8", device: "wasm",
+          progress_callback: function (p) { if (p && p.status === "progress" && typeof p.progress === "number") note("Downloading the voice model (one time only)... " + Math.round(p.progress) + "%"); }
+        });
+      }
+      var ac = new (window.AudioContext || window.webkitAudioContext)(), bufs = [];
+      for (var i = 0; i < slides.length; i++) {
+        note("Generating narration " + (i + 1) + " of " + slides.length + ". Keep this tab open.");
+        var out = await kokoro.tts.generate(slides[i].say, { voice: voiceSel.value });
+        var b = ac.createBuffer(1, out.audio.length, out.sampling_rate || 24000);
+        b.copyToChannel(out.audio, 0);
+        bufs.push(b);
+      }
+      try { ac.close(); } catch (e) {}
+      voiceData = { key: key, buffers: bufs };
+      note("AI voiceover ready. Press Play reel or Export video.");
+      return bufs;
+    } finally { kokoro.busy = false; genBtn.disabled = false; }
+  }
+
+  function stopReel() {
+    reel.token++; reel.playing = false; playBtn.textContent = "Play reel";
+    try { if (hasSpeech) speechSynthesis.cancel(); } catch (e) {}
+    (reel.nodes || []).forEach(function (n) { try { n.stop(); } catch (e) {} });
+    reel.nodes = [];
+    if (reel.ac) { try { reel.ac.close(); } catch (e) {} reel.ac = null; }
+    idle();
+  }
+
+  // mode: "ai" (Kokoro voice), "browser" (device voice) or "silent"
+  async function runReel(mode, hooks) {
+    hooks = hooks || {};
+    var my = ++reel.token; reel.playing = true; playBtn.textContent = "Stop"; reel.nodes = [];
+    var slides = reelSlides(), n = slides.length, bufs = null, ac = null, dest = null;
+    function bail(msg) {
+      if (my === reel.token) { reel.playing = false; playBtn.textContent = "Play reel"; }
+      if (msg) note(msg);
+      return false;
+    }
+    if (mode === "ai") {
+      try { bufs = await ensureAIVoice(slides); }
+      catch (e) { return bail("The AI voice could not load here (" + (e && e.message || e) + "). Pick Browser voice in the list to use your device's voice instead."); }
+      if (my !== reel.token) return false;
+      ac = new (window.AudioContext || window.webkitAudioContext)(); reel.ac = ac;
+      try { await ac.resume(); } catch (e) {}
+      if (hooks.wantDest) dest = ac.createMediaStreamDestination();
+    }
+    if (hooks.onReady) { try { hooks.onReady(dest); } catch (e) { return bail("Could not start recording: " + (e && e.message || e)); } }
+    for (var i = 0; i < n; i++) {
+      if (my !== reel.token) return false;
+      paintSlide(slides[i]);
+      var dur = Math.max(3800, slides[i].say.length * 75 + 1200), voice = Promise.resolve();
+      if (mode === "ai") {
+        dur = Math.max(2800, bufs[i].duration * 1000 + 600);
+        var src = ac.createBufferSource(); src.buffer = bufs[i]; src.connect(ac.destination);
+        if (dest) src.connect(dest);
+        src.start(); reel.nodes.push(src);
+      } else if (mode === "browser") { voice = speakText(slides[i].say); }
+      var start = performance.now();
+      await new Promise(function (res) {
+        (function f() {
+          if (my !== reel.token) { res(); return; }
+          var t = performance.now() - start;
+          drawFrame(i, n, Math.min(t, dur), dur);
+          if (t < dur) requestAnimationFrame(f); else res();
+        })();
+      });
+      await voice;
+      if (my === reel.token) await sleep(250);
+    }
+    if (my !== reel.token) return false;
+    reel.playing = false; playBtn.textContent = "Play reel"; reel.nodes = [];
+    if (ac && !hooks.keepAudio) { try { ac.close(); } catch (e) {} reel.ac = null; }
+    return true;
+  }
+
+  playBtn.addEventListener("click", function () {
+    if (reel.playing) { stopReel(); return; }
+    note("");
+    runReel(currentMode());
+  });
+
+  genBtn.addEventListener("click", function () {
+    if (voiceSel.value === "browser") { note("Browser voice needs no generating. Press Play reel."); return; }
+    ensureAIVoice(reelSlides()).catch(function (e) {
+      note("The AI voice could not load here (" + (e && e.message || e) + "). Pick Browser voice in the list to use your device's voice instead.");
+    });
+  });
+
+  document.getElementById("exportReel").addEventListener("click", async function () {
+    if (reel.playing) return;
+    var mode = currentMode(), runMode = mode === "ai" ? "ai" : "silent";
+    var dl = null;
+    try { dl = window.claude && window.claude.use ? await window.claude.use("downloads") : null; } catch (e) {}
+    if (!window.MediaRecorder || !rc.captureStream) { note("This browser cannot record video from the page."); return; }
+    var chunks = [], rec = null, stopped = null, canvasStream = rc.captureStream(30);
+    var ok = await runReel(runMode, {
+      wantDest: runMode === "ai", keepAudio: true,
+      onReady: function (dest) {
+        var tracks = canvasStream.getVideoTracks().concat(dest ? dest.stream.getAudioTracks() : []);
+        var cands = dest ? CAND_AUDIO : CAND_SILENT;
+        var mime = cands.filter(function (m) { return MediaRecorder.isTypeSupported(m); })[0];
+        rec = new MediaRecorder(new MediaStream(tracks), mime ? { mimeType: mime, videoBitsPerSecond: 5000000 } : undefined);
+        rec.ondataavailable = function (e) { if (e.data && e.data.size) chunks.push(e.data); };
+        stopped = new Promise(function (res) { rec.onstop = res; });
+        rec.start(250);
+        note(dest ? "Recording the reel with the voiceover. Keep this tab open, and you will hear it while it records." : "Recording the reel. This video will be silent" + (mode === "browser" ? " because browser voices cannot be recorded. Choose an AI voice to include the voiceover." : "."));
+      }
+    });
+    await sleep(300);
+    if (rec && rec.state !== "inactive") { try { rec.stop(); } catch (e) {} }
+    if (stopped) await stopped;
+    if (reel.ac) { try { reel.ac.close(); } catch (e) {} reel.ac = null; }
+    if (!ok || !chunks.length) { if (/^Recording/.test(reelNote.textContent)) note("Recording stopped."); return; }
+    var type = (rec && rec.mimeType) || "video/webm", ext = type.indexOf("mp4") >= 0 ? "mp4" : "webm";
+    var blob = new Blob(chunks, { type: type.split(";")[0] }), fname = "giveeverydollarajob-reel." + ext;
+    if (dl) {
+      dl.save({ filename: fname, data: blob }).then(
+        function () { note("Video saved."); },
+        function (err) { note(err && err.code === "declined" ? "Download cancelled." : "Video download is not available in this view."); }
+      );
+    } else {
+      try { var a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = fname; document.body.appendChild(a); a.click(); a.remove(); note("Video downloaded."); }
+      catch (e) { note("Video download is not available in this view."); }
+    }
+  });
 
   // ---- dollar notes (generic banknote artwork, not a real currency design) ----
   function rr(ctx, x, y, w, h, r) {
@@ -502,6 +770,7 @@ canvas { width: 100%; height: auto; display: block; }
     var h = els.headline.value.trim(), s = els.sub.value.trim();
     var parts = [h, s, CTAS[(state.cta || 0) % CTAS.length], hashtags().join(" ")].filter(Boolean);
     els.caption.value = parts.join("\n\n");
+    updateScript();
   }
 
   document.getElementById("recap").addEventListener("click", function () { state.cta = (state.cta || 0) + 1; buildCaption(); say("Caption rewritten."); });
@@ -517,14 +786,20 @@ canvas { width: 100%; height: auto; display: block; }
   document.getElementById("show").addEventListener("click", function () {
     render();
     els.out.src = els.canvas.toDataURL("image/png");
-    els.saved.classList.add("on");
-    try {
-      var a = document.createElement("a");
-      a.href = els.out.src; a.download = "giveeverydollarajob-postcard.png";
-      document.body.appendChild(a); a.click(); a.remove();
-    } catch (e) {}
-    say("If no download started, right-click or press and hold the image below and choose Save image.");
-    els.out.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    var manual = "Right-click or press and hold the image below and choose Save image.";
+    var fallback = function (msg) { els.saved.classList.add("on"); say(msg); els.out.scrollIntoView({ behavior: "smooth", block: "nearest" }); };
+    var cl = window.claude;
+    if (!cl || !cl.use) { try { var a = document.createElement("a"); a.href = els.out.src; a.download = "giveeverydollarajob-postcard.png"; document.body.appendChild(a); a.click(); a.remove(); } catch (e) {} fallback(manual); return; }
+    cl.use("downloads").then(function (dl) {
+      if (!dl) { fallback(manual); return; }
+      els.canvas.toBlob(function (blob) {
+        if (!blob) { fallback(manual); return; }
+        dl.save({ filename: "giveeverydollarajob-postcard.png", data: blob }).then(
+          function () { say("Postcard saved."); },
+          function (err) { if (err && err.code === "declined") { say("Download cancelled."); } else { fallback("Download is not available here. " + manual); } }
+        );
+      }, "image/png");
+    }, function () { fallback(manual); });
   });
 
   document.getElementById("copy").addEventListener("click", function () {
@@ -545,9 +820,10 @@ canvas { width: 100%; height: auto; display: block; }
     Promise.all([
       document.fonts.load("400 60px 'Archivo Black'"), document.fonts.load("600 40px Archivo"),
       document.fonts.load("700 30px Archivo"), document.fonts.load("700 60px Caveat")
-    ]).then(render, render);
+    ]).then(function () { render(); updateScript(); }, function () { render(); updateScript(); });
   }
 })();
 </script>
 
-</body></html>
+</body>
+</html>
