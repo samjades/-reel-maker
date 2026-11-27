@@ -177,6 +177,7 @@ canvas { width: 100%; height: auto; display: block; }
       </div>
       <div class="cap">
         <label class="lbl" for="caption">Caption and hashtags</label>
+        <div class="chips" id="chips-plat"></div>
         <textarea id="caption" rows="8"></textarea>
         <div class="actions">
           <button class="btn primary" id="copycap" type="button">Copy caption</button>
@@ -213,6 +214,14 @@ canvas { width: 100%; height: auto; display: block; }
           </select>
           <p class="note" style="margin-top:6px">The AI voices are the free open Kokoro model. The first use downloads about 90 MB into your browser. If that download is blocked in this view, pick Browser voice.</p>
         </div>
+        <div>
+          <label class="lbl" for="vsize">Video size</label>
+          <select id="vsize">
+            <option value="720x1280" selected>720 x 1280 (works best on phones)</option>
+            <option value="1080x1920">1080 x 1920 (full HD, needs a stronger phone)</option>
+          </select>
+          <p class="note" style="margin-top:6px">Export makes an MP4 (H.264) when your Chrome supports it, which is what YouTube and Facebook want. Keep the tab open while it records.</p>
+        </div>
         <p class="note" id="reelNote" role="status"></p>
         <div>
           <label class="lbl" for="script">Voiceover script</label>
@@ -221,6 +230,37 @@ canvas { width: 100%; height: auto; display: block; }
           <p class="note" style="margin-top:6px">Edit any line to change what is spoken. Keep one numbered paragraph per slide, with a blank line between them. The on-screen slide text does not change.</p>
         </div>
       </div>
+    </div>
+  </section>
+
+  <section class="reel" aria-labelledby="post-h">
+    <h2 id="post-h">Post your reel</h2>
+    <p>Export the reel first. Each button below copies that platform's caption, with hashtags matched to your content, and opens its upload page. Pick the video you just saved and paste.</p>
+    <div class="reel-ctl">
+      <div class="actions">
+        <a class="btn primary" id="goYT" target="_blank" rel="noopener" href="https://studio.youtube.com">Copy caption + open YouTube</a>
+        <a class="btn primary" id="goFB" target="_blank" rel="noopener" href="https://business.facebook.com/latest/reels_composer">Copy caption + open Facebook Reels</a>
+        <a class="btn primary" id="goTT" target="_blank" rel="noopener" href="https://www.tiktok.com/tiktokstudio/upload">Copy caption + open TikTok</a>
+      </div>
+      <div>
+        <p class="group-title">Automatic posting</p>
+        <p class="note">This only works in the standalone page opened from your own https website. The claude.ai view blocks these connections, so use the buttons above there.</p>
+      </div>
+      <div>
+        <label class="lbl" for="gcid">YouTube: Google OAuth client ID</label>
+        <input type="text" id="gcid" placeholder="1234567890-abc.apps.googleusercontent.com" autocomplete="off">
+        <p class="note" style="margin-top:6px">In Google Cloud Console, turn on YouTube Data API v3, create a Web application OAuth client, and add your site address under Authorized JavaScript origins.</p>
+        <label class="lbl" for="ytPrivacy" style="margin-top:10px">Visibility</label>
+        <select id="ytPrivacy"><option value="public">Public</option><option value="unlisted">Unlisted</option><option value="private">Private</option></select>
+        <div class="actions" style="margin-top:10px"><button class="btn" id="pubYT" type="button">Publish to YouTube now</button></div>
+      </div>
+      <div>
+        <label class="lbl" for="hookUrl">Facebook + TikTok: automation webhook URL</label>
+        <input type="text" id="hookUrl" placeholder="https://hook.make.com/... or your n8n / Zapier webhook" autocomplete="off">
+        <p class="note" style="margin-top:6px">Facebook and TikTok do not accept uploads straight from a web page. Make a free Make.com or n8n scenario that starts with a webhook and posts the received video to your Facebook Page and TikTok account. It receives: video, ytTitle, ytDesc, fbCaption, ttCaption.</p>
+        <div class="actions" style="margin-top:10px"><button class="btn" id="pubHook" type="button">Send to webhook</button></div>
+      </div>
+      <p class="note" id="postNote" role="status"></p>
     </div>
   </section>
 </div>
@@ -564,8 +604,11 @@ canvas { width: 100%; height: auto; display: block; }
   var hasSpeech = "speechSynthesis" in window && typeof SpeechSynthesisUtterance !== "undefined";
   var kokoro = { tts: null, busy: false };
   var voiceData = { key: "", buffers: null };
-  var CAND_AUDIO = ["video/mp4;codecs=avc1,mp4a.40.2", "video/webm;codecs=vp9,opus", "video/webm;codecs=vp8,opus", "video/webm", "video/mp4"];
-  var CAND_SILENT = ["video/mp4;codecs=avc1", "video/webm;codecs=vp9", "video/webm;codecs=vp8", "video/webm", "video/mp4"];
+  var MP4_A = ["video/mp4;codecs=avc1.42E01E,mp4a.40.2", "video/mp4;codecs=avc1.4D401E,mp4a.40.2", "video/mp4;codecs=avc1.64001F,mp4a.40.2", "video/mp4;codecs=avc1,mp4a.40.2", "video/mp4;codecs=avc1.42E01E,opus", "video/mp4"];
+  var MP4_V = ["video/mp4;codecs=avc1.42E01E", "video/mp4;codecs=avc1.4D401E", "video/mp4;codecs=avc1", "video/mp4"];
+  var WEBM_A = ["video/webm;codecs=vp9,opus", "video/webm;codecs=vp8,opus", "video/webm"];
+  var WEBM_V = ["video/webm;codecs=vp9", "video/webm;codecs=vp8", "video/webm"];
+  var lastReel = null;
   var genBtn = document.getElementById("genReel");
 
   function note(m) { reelNote.textContent = m; }
@@ -700,21 +743,27 @@ canvas { width: 100%; height: auto; display: block; }
     var mode = currentMode(), runMode = mode === "ai" ? "ai" : "silent";
     var dl = null;
     try { dl = window.claude && window.claude.use ? await window.claude.use("downloads") : null; } catch (e) {}
-    if (!window.MediaRecorder || !rc.captureStream) { note("This browser cannot record video from the page."); return; }
-    var chunks = [], rec = null, stopped = null, canvasStream = rc.captureStream(30);
+    if (!window.MediaRecorder) { note("This browser cannot record video. Use Chrome on your phone or computer."); return; }
+    var dims = document.getElementById("vsize").value.split("x"), EW = +dims[0], EH = +dims[1];
+    var ec = document.createElement("canvas"); ec.width = EW; ec.height = EH;
+    if (!ec.captureStream) { note("This browser cannot record video from the page. Use Chrome."); return; }
+    var ectx = ec.getContext("2d"), copying = true;
+    (function cp() { if (!copying) return; ectx.drawImage(rc, 0, 0, EW, EH); requestAnimationFrame(cp); })();
+    var chunks = [], rec = null, stopped = null, canvasStream = ec.captureStream(30);
     var ok = await runReel(runMode, {
       wantDest: runMode === "ai", keepAudio: true,
       onReady: function (dest) {
         var tracks = canvasStream.getVideoTracks().concat(dest ? dest.stream.getAudioTracks() : []);
-        var cands = dest ? CAND_AUDIO : CAND_SILENT;
+        var cands = dest ? MP4_A.concat(WEBM_A) : MP4_V.concat(WEBM_V);
         var mime = cands.filter(function (m) { return MediaRecorder.isTypeSupported(m); })[0];
-        rec = new MediaRecorder(new MediaStream(tracks), mime ? { mimeType: mime, videoBitsPerSecond: 5000000 } : undefined);
+        rec = new MediaRecorder(new MediaStream(tracks), mime ? { mimeType: mime, videoBitsPerSecond: EW > 800 ? 6000000 : 4000000 } : undefined);
         rec.ondataavailable = function (e) { if (e.data && e.data.size) chunks.push(e.data); };
         stopped = new Promise(function (res) { rec.onstop = res; });
         rec.start(250);
-        note(dest ? "Recording the reel with the voiceover. Keep this tab open, and you will hear it while it records." : "Recording the reel. This video will be silent" + (mode === "browser" ? " because browser voices cannot be recorded. Choose an AI voice to include the voiceover." : "."));
+        note(dest ? "Recording the reel with the voiceover. Keep this tab open and the screen on, and you will hear it while it records." : "Recording the reel. This video will be silent" + (mode === "browser" ? " because browser voices cannot be recorded. Choose an AI voice to include the voiceover." : "."));
       }
     });
+    copying = false;
     await sleep(300);
     if (rec && rec.state !== "inactive") { try { rec.stop(); } catch (e) {} }
     if (stopped) await stopped;
@@ -722,13 +771,15 @@ canvas { width: 100%; height: auto; display: block; }
     if (!ok || !chunks.length) { if (/^Recording/.test(reelNote.textContent)) note("Recording stopped."); return; }
     var type = (rec && rec.mimeType) || "video/webm", ext = type.indexOf("mp4") >= 0 ? "mp4" : "webm";
     var blob = new Blob(chunks, { type: type.split(";")[0] }), fname = "giveeverydollarajob-reel." + ext;
+    lastReel = { blob: blob, type: blob.type, name: fname };
+    var okMsg = ext === "mp4" ? "MP4 saved. It is ready for YouTube Shorts and Facebook Reels." : "Saved as WebM, because this Chrome cannot record MP4. Update Chrome to version 126 or newer and export again. YouTube accepts WebM, but Facebook may reject it.";
     if (dl) {
       dl.save({ filename: fname, data: blob }).then(
-        function () { note("Video saved."); },
+        function () { note(okMsg); },
         function (err) { note(err && err.code === "declined" ? "Download cancelled." : "Video download is not available in this view."); }
       );
     } else {
-      try { var a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = fname; document.body.appendChild(a); a.click(); a.remove(); note("Video downloaded."); }
+      try { var a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = fname; document.body.appendChild(a); a.click(); a.remove(); note(okMsg.replace("saved", "downloaded")); }
       catch (e) { note("Video download is not available in this view."); }
     }
   });
@@ -858,27 +909,58 @@ canvas { width: 100%; height: auto; display: block; }
   ];
   var HOOK_TAGS = { question: "moneyquestions", mistake: "moneymistakes", myth: "mythbusting", tip: "moneytips", warning: "moneywarning", checklist: "moneychecklist", challenge: "moneychallenge", shift: "moneymindset" };
   var VOCAB = [
-    [/deductible/, "deductible"], [/premium/, "lowerpremiums"], [/quote/, "comparequotes"], [/closing|break-even/, "closingcosts"],
-    [/\bapr\b|\brates?\b/, "interestrates"], [/repay/, "loanrepayment"], [/beneficiar/, "beneficiaries"], [/\bfees?\b/, "hiddenfees"],
-    [/cover/, "coverage"], [/budget/, "budgeting"], [/debt/, "debtfree"], [/credit/, "creditscore"]
+    [/deductible/, "deductible"], [/premium/, "insurancepremium"], [/quotes?\b/, "comparequotes"], [/\bclaims?\b/, "insuranceclaim"],
+    [/coverage|covered|covers?\b/, "insurancecoverage"], [/polic(y|ies)/, "insurancepolicy"], [/beneficiar/, "beneficiaries"],
+    [/discount|bundl/, "insurancediscounts"], [/driv|\bcar\b|vehicle|mileage/, "caradvice"], [/family|baby|marriage/, "familyprotection"],
+    [/closing cost|break-even|break even/, "closingcosts"], [/\bapr\b|interest|\brates?\b/, "interestrates"], [/repay/, "loanrepayment"],
+    [/\bfees?\b|fine print/, "hiddenfees"], [/credit/, "creditscore"], [/\bdebt\b|borrow/, "debtfree"], [/budget/, "budgeting"],
+    [/sav(e|ing)/, "savemoney"], [/compare|comparing/, "comparison"], [/lender|\bbank\b/, "banking"], [/\bhome\b|house/, "homeowner"]
   ];
+  var INS_ONLY = ["deductible", "insurancepremium", "insuranceclaim", "insurancecoverage", "insurancepolicy", "beneficiaries", "insurancediscounts", "caradvice", "familyprotection"];
+  var LOAN_ONLY = ["closingcosts", "interestrates", "loanrepayment", "hiddenfees", "creditscore", "debtfree", "banking"];
+  var PLATFORMS = [["general", "General"], ["yt", "YouTube Shorts"], ["fb", "Facebook Reels"], ["tt", "TikTok"]];
+  var PLAT_TAG = { yt: "shorts", fb: "reels", tt: "fyp" };
+  var PLAT_CTA = { yt: "Subscribe for more simple money tips.", fb: "Follow for more simple money tips.", tt: "Follow for more money tips." };
 
-  function hashtags() {
+  // 3 to 5 hashtags built from the topic, the wording of the slides and the hook type
+  function hashtags(platform) {
     var topic = currentTopic(), l = topic.toLowerCase(), out = [];
     function add(t) { t = String(t).toLowerCase().replace(/[^a-z0-9]/g, ""); if (t.length > 2 && out.indexOf("#" + t) < 0) out.push("#" + t); }
+    var body = (reelSlides().map(function (x) { return x.say; }).join(" ") + " " + els.headline.value + " " + els.sub.value).toLowerCase();
+    if (PLAT_TAG[platform]) add(PLAT_TAG[platform]);
     add(topic);
     if (/insur/.test(l)) add("insurance"); else if (/mortgage|refinanc|home/.test(l)) add("mortgage"); else if (/loan|borrow|debt/.test(l)) add("loans");
-    var body = (els.headline.value + " " + els.sub.value).toLowerCase();
-    for (var i = 0; i < VOCAB.length; i++) { if (VOCAB[i][0].test(body)) { add(VOCAB[i][1]); break; } }
+    if (/refinanc/.test(l)) add("refinance");
+    var hits = VOCAB.map(function (v, i) { var m = body.match(new RegExp(v[0].source, "g")); return { t: v[1], n: m ? m.length : 0, i: i }; })
+      .filter(function (h) {
+        if (h.n === 0) return false;
+        if (INS_ONLY.indexOf(h.t) >= 0 && /mortgage|refinanc|loan|borrow|debt|credit/.test(l) && !/insur/.test(l)) return false;
+        if (LOAN_ONLY.indexOf(h.t) >= 0 && /insur/.test(l)) return false;
+        return true;
+      }).sort(function (a, b) { return b.n - a.n || a.i - b.i; });
+    hits.slice(0, 2).forEach(function (h) { add(h.t); });
     add(HOOK_TAGS[state.hook] || "moneytips");
     add("personalfinance");
     return out.slice(0, 5);
   }
 
-  function buildCaption() {
+  function captionFor(platform) {
     var h = els.headline.value.trim(), s = els.sub.value.trim();
-    var parts = [h, s, CTAS[(state.cta || 0) % CTAS.length], hashtags().join(" ")].filter(Boolean);
-    els.caption.value = parts.join("\n\n");
+    var cta = PLAT_CTA[platform] || CTAS[(state.cta || 0) % CTAS.length];
+    return [h, s, cta, hashtags(platform).join(" ")].filter(Boolean).join("\n\n");
+  }
+
+  function buildPlatChips() {
+    var box = document.getElementById("chips-plat");
+    box.innerHTML = "";
+    PLATFORMS.forEach(function (p) {
+      chip(box, p[1], (state.platform || "general") === p[0], function () { state.platform = p[0]; buildCaption(); });
+    });
+  }
+
+  function buildCaption() {
+    els.caption.value = captionFor(state.platform || "general");
+    buildPlatChips();
     resetScript();
   }
 
@@ -888,6 +970,100 @@ canvas { width: 100%; height: auto; display: block; }
     try {
       navigator.clipboard.writeText(els.caption.value).then(function () { say("Caption copied."); }, fallback);
     } catch (e) { fallback(); }
+  });
+
+
+  // ---- posting ----
+  var LS = { get: function (k) { try { return localStorage.getItem(k) || ""; } catch (e) { return ""; } }, set: function (k, v) { try { localStorage.setItem(k, v); } catch (e) {} } };
+  var gcid = document.getElementById("gcid"), hookUrl = document.getElementById("hookUrl");
+  gcid.value = LS.get("gdj_gcid"); hookUrl.value = LS.get("gdj_hook");
+  gcid.addEventListener("change", function () { LS.set("gdj_gcid", gcid.value.trim()); });
+  hookUrl.addEventListener("change", function () { LS.set("gdj_hook", hookUrl.value.trim()); });
+  function postNote(m) { document.getElementById("postNote").textContent = m; }
+
+  function copyTxt(text, okMsg) {
+    function fb() {
+      var ta = document.createElement("textarea"); ta.value = text; ta.style.position = "fixed"; ta.style.opacity = "0";
+      document.body.appendChild(ta); ta.select(); var ok = false;
+      try { ok = document.execCommand("copy"); } catch (e) {}
+      ta.remove(); postNote(ok ? okMsg : "Could not copy automatically. Pick the platform in the Caption box above and copy it from there.");
+    }
+    try { navigator.clipboard.writeText(text).then(function () { postNote(okMsg); }, fb); } catch (e) { fb(); }
+  }
+
+  [["goYT", "yt"], ["goFB", "fb"], ["goTT", "tt"]].forEach(function (x) {
+    document.getElementById(x[0]).addEventListener("click", function () {
+      copyTxt(captionFor(x[1]), "Caption copied. On the upload page, pick your saved video and paste the caption." + (lastReel ? "" : " Export the reel first if you have not yet."));
+    });
+  });
+
+  function loadGIS() {
+    return new Promise(function (res, rej) {
+      if (window.google && google.accounts && google.accounts.oauth2) return res();
+      var sc = document.createElement("script"); sc.src = "https://accounts.google.com/gsi/client";
+      sc.onload = function () { res(); }; sc.onerror = function () { rej(new Error("Could not load Google sign-in. This view may block it.")); };
+      document.head.appendChild(sc);
+    });
+  }
+  function ytToken(cid) {
+    return new Promise(function (res, rej) {
+      var tc = google.accounts.oauth2.initTokenClient({
+        client_id: cid, scope: "https://www.googleapis.com/auth/youtube.upload",
+        callback: function (r) { r.access_token ? res(r.access_token) : rej(new Error(r.error_description || r.error || "Sign-in failed")); },
+        error_callback: function (e) { rej(new Error("Google sign-in was closed or blocked (" + (e && e.type || "error") + ").")); }
+      });
+      tc.requestAccessToken({ prompt: "" });
+    });
+  }
+
+  document.getElementById("pubYT").addEventListener("click", async function () {
+    if (!lastReel) { postNote("Export your reel first."); return; }
+    var cid = gcid.value.trim();
+    if (!cid) { postNote("Paste your Google OAuth client ID first."); return; }
+    var btn = document.getElementById("pubYT"); btn.disabled = true;
+    try {
+      postNote("Opening Google sign-in...");
+      await loadGIS();
+      var token = await ytToken(cid), cap = captionFor("yt");
+      var meta = { snippet: { title: cap.split("\n")[0].slice(0, 95) || "My reel", description: cap, categoryId: "22" }, status: { privacyStatus: document.getElementById("ytPrivacy").value, selfDeclaredMadeForKids: false } };
+      postNote("Starting the YouTube upload...");
+      var init = await fetch("https://www.googleapis.com/upload/youtube/v3/videos?uploadType=resumable&part=snippet,status", {
+        method: "POST",
+        headers: { "Authorization": "Bearer " + token, "Content-Type": "application/json; charset=UTF-8", "X-Upload-Content-Type": lastReel.type, "X-Upload-Content-Length": String(lastReel.blob.size) },
+        body: JSON.stringify(meta)
+      });
+      if (!init.ok) { var d = ""; try { d = (await init.json()).error.message; } catch (e) {} throw new Error("YouTube refused the upload (" + init.status + "). " + d); }
+      var loc = init.headers.get("Location");
+      if (!loc) throw new Error("YouTube did not return an upload address. Check the authorized origin in your OAuth client.");
+      await new Promise(function (res, rej) {
+        var x = new XMLHttpRequest(); x.open("PUT", loc); x.setRequestHeader("Content-Type", lastReel.type);
+        x.upload.onprogress = function (e) { if (e.lengthComputable) postNote("Uploading to YouTube... " + Math.round(e.loaded / e.total * 100) + "%"); };
+        x.onload = function () { x.status >= 200 && x.status < 300 ? res() : rej(new Error("Upload failed (" + x.status + ").")); };
+        x.onerror = function () { rej(new Error("Network error during upload.")); };
+        x.send(lastReel.blob);
+      });
+      postNote("Uploaded to YouTube. Check YouTube Studio.");
+    } catch (err) { postNote("YouTube publish failed: " + (err && err.message || err) + " In the claude.ai view this is expected. Use the standalone page on your own https site."); }
+    finally { btn.disabled = false; }
+  });
+
+  document.getElementById("pubHook").addEventListener("click", async function () {
+    if (!lastReel) { postNote("Export your reel first."); return; }
+    var url = hookUrl.value.trim();
+    if (!/^https:\/\//i.test(url)) { postNote("Paste your https webhook URL first."); return; }
+    var btn = document.getElementById("pubHook"); btn.disabled = true;
+    try {
+      var fd = new FormData();
+      fd.append("video", lastReel.blob, lastReel.name);
+      var yt = captionFor("yt");
+      fd.append("ytTitle", yt.split("\n")[0].slice(0, 95)); fd.append("ytDesc", yt);
+      fd.append("fbCaption", captionFor("fb")); fd.append("ttCaption", captionFor("tt"));
+      fd.append("ytPrivacy", document.getElementById("ytPrivacy").value);
+      postNote("Sending the video and captions to your automation...");
+      await fetch(url, { method: "POST", body: fd, mode: "no-cors" });
+      postNote("Sent. Check your automation's run history to confirm Facebook and TikTok posted. This page cannot see the result.");
+    } catch (err) { postNote("Could not reach the webhook: " + (err && err.message || err) + " In the claude.ai view this is expected. Use the standalone page on your own https site."); }
+    finally { btn.disabled = false; }
   });
 
   function say(msg) { els.note.textContent = msg; }
