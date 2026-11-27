@@ -216,7 +216,9 @@ canvas { width: 100%; height: auto; display: block; }
         <p class="note" id="reelNote" role="status"></p>
         <div>
           <label class="lbl" for="script">Voiceover script</label>
-          <textarea id="script" readonly></textarea>
+          <textarea id="script" rows="10"></textarea>
+          <div class="actions" style="margin-top:8px"><button class="btn" id="resetScript" type="button">Reset script</button></div>
+          <p class="note" style="margin-top:6px">Edit any line to change what is spoken. Keep one numbered paragraph per slide, with a blank line between them. The on-screen slide text does not change.</p>
         </div>
       </div>
     </div>
@@ -519,6 +521,11 @@ canvas { width: 100%; height: auto; display: block; }
     var out = [{ tag: els.tag.value.trim() || "Money tip", head: hook || " ", say: hook || "Money tip" }];
     tips.forEach(function (t, i) { out.push({ tag: "Tip " + (i + 1) + " of " + tips.length, head: t, say: "Tip " + (i + 1) + ". " + t }); });
     out.push({ tag: "Follow for more", head: "Give every dollar a job.", sub: "Follow " + HANDLE + " for more money tips.", say: "Give every dollar a job. Follow give every dollar a job for more money tips." });
+    if (scriptEdited) {
+      var el = document.getElementById("script"), blocks = el.value.split(/\n\s*\n/).map(function (b) { return b.replace(/^\s*\d+\.\s*/, "").replace(/\s+/g, " ").trim(); }).filter(Boolean);
+      if (blocks.length < out.length) { blocks = el.value.split(/\n/).map(function (b) { return b.replace(/^\s*\d+\.\s*/, "").trim(); }).filter(Boolean); }
+      out.forEach(function (sl, i) { if (blocks[i]) sl.say = blocks[i]; });
+    }
     return out;
   }
 
@@ -539,11 +546,19 @@ canvas { width: 100%; height: auto; display: block; }
 
   function idle() { var sl = reelSlides(); paintSlide(sl[0]); drawFrame(0, sl.length, 400, 1e9); }
 
-  function updateScript() {
+  var scriptEdited = false;
+  function resetScript() {
+    scriptEdited = false;
     var el = document.getElementById("script");
     if (el) el.value = reelSlides().map(function (s, i) { return (i + 1) + ". " + s.say; }).join("\n\n");
     if (!reel.playing) idle();
   }
+  function updateScript() {
+    if (!scriptEdited) { resetScript(); return; }
+    if (!reel.playing) idle();
+  }
+  document.getElementById("script").addEventListener("input", function () { scriptEdited = true; });
+  document.getElementById("resetScript").addEventListener("click", function () { resetScript(); });
 
   // ---- voiceover: free Kokoro AI voices (Adam by default), browser voice as the fallback ----
   var hasSpeech = "speechSynthesis" in window && typeof SpeechSynthesisUtterance !== "undefined";
@@ -864,7 +879,7 @@ canvas { width: 100%; height: auto; display: block; }
     var h = els.headline.value.trim(), s = els.sub.value.trim();
     var parts = [h, s, CTAS[(state.cta || 0) % CTAS.length], hashtags().join(" ")].filter(Boolean);
     els.caption.value = parts.join("\n\n");
-    updateScript();
+    resetScript();
   }
 
   document.getElementById("recap").addEventListener("click", function () { state.cta = (state.cta || 0) + 1; buildCaption(); say("Caption rewritten."); });
